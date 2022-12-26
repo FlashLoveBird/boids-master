@@ -36,6 +36,9 @@ function collider:new(level, x, y, width, height, cell_width, cell_height)
   local cw = cell_width or CELL_WIDTH
   local ch = cell_height or CELL_HEIGHT
   
+  print("cw,ch")
+  print(cw,ch)
+  
 	-- computer cell dimensions based on global cell width / height
 	local cols, rows = math.ceil(width / cw), math.ceil(height / ch)
 	cw, ch = width / cols, height / rows
@@ -463,7 +466,7 @@ function collider:get_objects_at_position(p, storage)
 end
 
 function collider:get_objects_at_bbox(bbox, storage)
-  local p1x, p1y = bbox.x, bbox.y
+	local p1x, p1y = bbox.x, bbox.y
 	local p2x, p2y = p1x + bbox.width, p1y + bbox.height
 	
 	local i1, j1 = self:get_cell_index(p1x, p1y)

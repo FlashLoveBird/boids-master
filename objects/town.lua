@@ -19,7 +19,7 @@ tw.area_changed = false
 tw.boid_hash = nil
 tw.collision_table = nil
 tw.polygonizer_update_rate = 1.5   -- updates per second
-tw.min_radius = 50
+tw.min_radius = 0
 local startTime = os.time()
 local endTime = startTime+10
 
@@ -34,9 +34,8 @@ function tw:new(level, flock)
   tw.collision_table = {}
   tw.update_timer = timer:new(level:get_master_timer(), 1/tw.polygonizer_update_rate)
   tw.update_timer:start()
-  townGraphic = love.graphics.newImage("images/Default/house.png")
+  townGraphic = love.graphics.newImage("images/3D/tentClosed.png")
   
-  print("ajout d'une ville")
   return tw
 end
 
@@ -44,10 +43,6 @@ function tw:add_town(x, y, radius)
   local p = self.level_map:add_point_to_source_polygonizer(x, y, radius)
   self.sources[#self.sources + 1] = self:_new_town(x, y, radius, p)
   self:_calculate_total_area()
-  print('add house at')
-  print(x)
-  print(y)
-  print(radius)
   return p
 end
 
@@ -83,7 +78,6 @@ function tw:_new_town(x, y, radius, primitive)
   source.radius = radius
   source.starting_radius = radius
   source.primitive = primitive
-  
   return source
 end
 
@@ -122,7 +116,7 @@ function tw:_update_area(dt)
 	local r = s.radius
 	local newR = r + 20
 	table.clear(objects)
-	flock:get_boids_in_radius(s.x, s.y, newR, objects)
+	--flock:get_boids_in_radius(s.x, s.y, newR, objects)
 	local count = 0
 	if #objects>0 then
 		for i=1,#objects do
@@ -176,8 +170,8 @@ function tw:draw()
   local sources = self.sources
   for i=1,#sources do
     local s = sources[i]
-    lg.setColor(255, 0, 0, 255)
-    --lg.circle("line", s.x, s.y, s.radius)
+    lg.setColor(255, 255, 255, 255)
+    lg.circle("line", s.x, s.y, s.radius)
 	love.graphics.draw(townGraphic, s.x-50, s.y-50)
     
     local sr = s.starting_radius

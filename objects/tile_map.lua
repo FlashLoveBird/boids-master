@@ -87,11 +87,18 @@ tile_map.collider = nil
 tile_map.top_left = nil
 tile_map.bottom_right = nil
 
+tile_map.map = {}
+tile_map.initMap=false
+tile_map.count=0
+tile_map.countTree=0
+
+local nbTree = 10
+
 local tile_map_mt = { __index = tile_map }
 function tile_map:new(level, columns, rows, tile_width, tile_height)
   tile_width = tile_width or TILE_WIDTH
   tile_height = tile_height or TILE_HEIGHT
-
+  
   local tmap = setmetatable({}, tile_map_mt)
   
   tmap.level = level
@@ -830,6 +837,7 @@ end
 function tile_map:_generate_chunk(i, j)
   local off_x, off_y = self.offset_x, self.offset_y
   local chunk = tile_chunk:new()
+  local element = false
   chunk:set_parent(self)
   chunk:set_spritesheet(self.spritesheet, self.spritesheet_quads)
   
@@ -843,6 +851,35 @@ function tile_map:_generate_chunk(i, j)
   if maxx > self.tile_cols then maxx = self.tile_cols end
   if maxy > self.tile_rows then maxy = self.tile_rows end
   
+  local map = self.map
+  if self.initMap==false then
+	  for x = 0, 200 do
+		map[x] = {}
+		for y = 0, 200 do
+			map[x][y] = nil
+		end
+	  end
+	  self.map = map
+	  self.level:setTreeMap(map)
+	  self.initMap=true
+	  print("map creeee")
+  end
+	  --[[for x=5,100 do
+		for y=5,100 do
+			local randX = 32*x
+			local randY = 32*y
+			local caseX = math.floor( randX / 32 ) + 1
+			local caseY = math.floor( randY / 32 ) + 1
+			if (caseX==25 and caseY==25) or (caseX==35 and caseY==35) or (caseX==55 and caseY==35) or (caseX==35 and caseY==35) or (caseX==85 and caseY==35) or (caseX==135 and caseY==35)  then
+				map[caseX][caseY] = self.level:addTree(caseX,caseY)
+				map[caseX][caseY]:add(nil)
+				map[caseX][caseY]:setNumEmits(0)
+				map[caseX][caseY]:setState(true)
+			end
+		end
+	  end--]]
+--self.level:setTreeMap(map)	  
+  
   -- put those tiles in the chunk
   local tiles = {}
   local diag_tiles = {}
@@ -853,6 +890,8 @@ function tile_map:_generate_chunk(i, j)
     local row = {}
     idx = 1
     for x=minx,maxx do
+	  local count = self.count
+	  local countTree = self.countTree
       local tile = map_tiles[y][x]
       tile:set_chunk(chunk)
       tile:set_parent(self)
@@ -868,7 +907,46 @@ function tile_map:_generate_chunk(i, j)
 																			     
 	      diag_tiles[#diag_tiles + 1] = diag_tile
       end
-      
+	  if x > 80 and x<360 and y > 80 and y<320 and x<320 and countTree<nbTree and element==false and math.random(0,10000)==1 then
+		local newX = math.floor(x/2)
+		local newY = math.floor(y/2)
+		map[newX][newY] = self.level:addTree(newX,newY)
+		map[newX][newY]:add(nil)
+		map[newX][newY]:setNumEmits(0)
+		map[newX][newY]:setState(true)
+		map[newX][newY]:set_position(newX,newY)
+		map[newX][newY]:setFlock(flock)
+		self.level:setTreeMap(map)
+		self.countTree = countTree + 1
+		element = true
+      elseif x > 40 and x<360 and y > 40 and y<360 and x<360 and count<nbBush and element==false and math.random(0,15000)==1 then
+		local newX = math.floor(x/2)
+		local newY = math.floor(y/2)
+		local path = 0
+		local startX =  newX-5 
+		local startY =  newY-5
+		local maxX =  newX+5 
+		local maxY =  newY+5
+		element = true
+		for caseX = startX, maxX do
+			for caseY = startY, maxY do
+				if map[caseX] then
+					if map[caseX][caseY]~=nil then
+						path = 1
+					end
+				end
+			end
+		end
+		if path==0 then 
+			map[newX][newY] = self.level:addBush(newX,newY)
+			map[newX][newY]:setState(true)
+			map[newX][newY]:set_position(newX,newY)
+			self.count = count + 1
+			print("ajout dun bush en")
+			print(newX,newY)
+		end
+		
+      end
       row[idx] = tile
       idx = idx + 1
     end
@@ -876,7 +954,8 @@ function tile_map:_generate_chunk(i, j)
     tiles[idy] = row
     idy = idy + 1
   end
-  
+  self.map = map
+  self.level:setTreeMap(map)
   chunk:set_tiles(tiles)
   chunk:set_diagonal_tiles(diag_tiles)
   chunk:init_sprite_batch()
@@ -1059,7 +1138,7 @@ function tile_map:update(dt)
   
   local update_chunks = self:update_chunks_in_active_area()
   for i=1,#update_chunks do
-    update_chunks[i]:update(dt)
+    --update_chunks[i]:update(dt)
   end
   
   local chunks_in_view, chunks_in_view_by_id = self:update_chunks_in_view()
@@ -1069,6 +1148,7 @@ function tile_map:update(dt)
   if self.collider then
     self.collider:update(dt)
   end
+ 
 end
 
 --##########################################################################--

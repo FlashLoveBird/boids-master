@@ -18,6 +18,8 @@ function food_screen_state.mousepressed(x, y, button)
 end
 function food_screen_state.mousereleased(x, y, button)
 end
+function food_screen_state.wheelmoved(x, y)
+end
 
 
 --##########################################################################--
@@ -27,6 +29,9 @@ end
 --##########################################################################--
 function food_screen_state.load(level)
   lg.setBackgroundColor(0, 0, 0, 255)
+  
+  
+  
 end
 
 
@@ -55,17 +60,14 @@ function food_screen_state.draw()
 
   lg.setFont(FONTS.bebas_header)
   lg.setColor(251, 121, 0, 255)
-  lg.print("Food Resources", x, y)
+  lg.print("[Bird Game]", x, y)
   
   local y = y + 200
   local x = x + 20
   local ystep = 100
   lg.setFont(FONTS.verdana_text)
   lg.setColor(255, 255, 255, 255)
-  lg.print("Negate field function to draw boids\ninto food source\n", x, y)
-  
-  y = y + 1.5 * ystep
-  lg.print("Shrink radius of primitives as boids\nfeast", x, y)
+  lg.print("Dylan Thomas", x, y)
   
 end
 

@@ -58,7 +58,7 @@ function Luafinding:CalculatePath()
     local start, finish, positionOpenCheck = self.Start, self.Finish, self.PositionOpenCheck
     if not positionOpenCheck then return end
     positionIsOpen = type( positionOpenCheck ) == "table" and positionIsOpenTable or positionIsOpenCustom
-    if not positionIsOpen( finish, positionOpenCheck ) then print('probleme') return end
+    if not positionIsOpen( finish, positionOpenCheck ) then return end
     local open, closed = Heap(), {}
     start.gScore = 0
     start.hScore = distance( start, finish )

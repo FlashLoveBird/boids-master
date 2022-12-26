@@ -15,8 +15,8 @@ utils.load_graphics_settings = function()
     
     -- set default size to fullscreen size padded so that window is
     -- not too large
-    local width_pad = 100
-    local height_pad = 100
+    local width_pad = 0--1000
+    local height_pad = 0--1000
     local width = fs_width - width_pad
     local height = fs_height - height_pad
                       

@@ -30,8 +30,8 @@ level_map.inv_tile_height = nil
 
 -- tile_map query
 level_map.tile_map_collider = nil   -- collider containing tilemap bbox's
-level_map.query_cell_width = 2512
-level_map.query_cell_height = 2512
+level_map.query_cell_width = 2512 * 2
+level_map.query_cell_height = 2512 * 2
 
 -- object collider
 level_map.collider = nil
@@ -76,12 +76,13 @@ level_map.source_polygonizer_edited_tiles = nil
 
 -- ratio that field vectors will attract from [0-surface_theshold]
 level_map.source_polygonizer_attract_threshold_ratio = 0.4
-
+level_map.init = false
+level_map.map = {}
+level_map.gridMap = {}
 
 local level_map_mt = { __index = level_map }
 function level_map:new(level)
   local map = setmetatable({}, level_map_mt)
-  --level:set_level_map(map)
   map.level = level
   map.tile_maps = {}
   map.camera = level:get_camera()
@@ -354,10 +355,27 @@ end
 -- Food source polygonizer methods
 function level_map:_init_source_polygonizer()
   local b = self.bbox
+  local Poly = self.polygonizer
   self.source_polygonizer = polygonizer:new(self.level, b.x, b.y, b.width, b.height,
                                            self.tile_width, self.tile_height)
   self.source_polygonizer_edited_tiles = {}
   self.is_source_polygonizer_initialized = true
+  
+  
+  --[[for x=50,Poly.rows-50 do
+	for y=50,Poly.cols-50 do
+		if math.random(0,1000)==1 then
+			local count = 0
+			while count<5 do
+				local newx = math.random(-50,50)
+				local p = self:add_point_to_polygonizer(x*16+newx, y*16+newx, 0)
+				self:update_polygonizer()
+				count = count + 1
+			end
+		end
+	end
+  end--]]
+  
 end
 
 function level_map:set_source_polygonizer(tile_type, tile_gradient)
@@ -504,6 +522,67 @@ function level_map:_update_source_polygonizer_surface_tiles()
     end
     
   end
+end
+
+function level_map:setWallMap()
+	local Mymap = self.polygonizer.surface_cells
+	local Poly = self.polygonizer
+	local map = self.map
+	for x = 1, Poly.rows-1 do
+		map[x] = {}
+		for y = 1, Poly.cols-1 do
+			if x > Poly.rows-5 or y > Poly.cols-5 or x < 5 or y < 5 then
+				map[x][y] = false
+			else
+				map[x][y] = true
+			end	
+		end
+	end
+	local w, h = Poly.cell_width, Poly.cell_height
+	for idx=1,#Mymap do
+		local i, j = Mymap[idx].i, Mymap[idx].j
+		local x, y = Poly:_get_cell_position(i, j)
+		local caseX = math.floor( x / h ) + 1
+		local caseY = math.floor( y / w ) + 1
+		map[caseX][caseY]=false
+	end
+	self.init=true
+	self.map = map
+	self.gridMap = self:walkmap(200, 200, "Collision")
+	--print(dump(self.gridMap))
+end
+
+function level_map:walkmap(w, h, l)
+	local Mymap = self.polygonizer.surface_cells
+	local Poly = self.polygonizer
+	local walk = {}
+	for wy=0, h do
+		walk[wy] = {}
+		for wx=0, w do
+			walk[wy][wx] = 0
+		end
+	end
+	--[[for x, y, tile in map.tileLayers[l].tileData:iterate() do
+		x=x+1 -- shifting index from 1 to the right
+		y=y+1 -- shifting index from 1 down
+		walk[y][x] = 1
+	end--]]
+	--[[for idx=1,#Mymap do
+		local i, j = Mymap[idx].i, Mymap[idx].j
+		local x, y = Poly:_get_cell_position(i, j)
+		local caseX = math.floor( x / h )
+		local caseY = math.floor( y / w )
+		walk[caseY][caseX]=1
+	end--]]
+	return walk
+end
+
+function level_map:getWallMap()
+	return self.map
+end
+
+function level_map:getGridWallMap()
+	return self.gridMap
 end
 
 function level_map:update_source_polygonizer()
@@ -684,8 +763,6 @@ function level_map:load()
   
   -- initialize collider for tile_map bbox query
   local bbox = self.bbox
-  print('bbox.width')
-  print(bbox.width)
   local cl = collider:new(self.level, bbox.x, bbox.y, bbox.width, bbox.height,
                           self.query_cell_width, self.query_cell_height)
   self.tile_map_collider = cl
@@ -928,6 +1005,19 @@ function level_map:_update_camera_viewport()
   cbbox.x, cbbox.y, cbbox.width, cbbox.height = cpos.x, cpos.y, cw, ch
 end
 
+function dump(o)
+   if type(o) == 'table' then
+      local s = '{ '
+      for k,v in pairs(o) do
+         if type(k) ~= 'number' then k = '"'..k..'"' end
+         s = s .. '['..k..'] = ' .. dump(v) .. ',\n'
+      end
+      return s .. '} '
+   else
+      return tostring(o)
+   end
+end
+
 ------------------------------------------------------------------------------
 function level_map:draw()
   if not self:is_loaded() then return end
@@ -939,6 +1029,9 @@ function level_map:draw()
   self.camera:set()
   self.polygonizer:draw()
   self.camera:unset()
+  
+  lg.setColor(255,87,51, 255)
+  
 
   if self.db then
     self.camera:set()

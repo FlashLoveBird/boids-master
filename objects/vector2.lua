@@ -194,7 +194,7 @@ end
 
 ------------------------------------------------------------------------------
 function vector2:print()
-  print(self.x, self.y)
+  
 end
 
 -- Math operators that do not create new vectors

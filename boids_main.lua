@@ -2,10 +2,14 @@ math.randomseed(os.time())
 for i=1,5 do math.random() end
 
 local scrnum = 0
+
+local TLfres = require "tlfres"
+
 function love.keypressed(key, unicode)
 
   if key == "escape" then
-    love.event.push('quit')
+    --love.event.push('quit')
+	BOIDS:escape()
   end
   
   if (DEBUG or true) and key == '1' then
@@ -15,9 +19,7 @@ function love.keypressed(key, unicode)
   BOIDS:keypressed(key)
   
   if key == "p" then
-    local screenshot = love.graphics.newScreenshot()
-    screenshot:encode(tostring(scrnum)..".png")
-    scrnum = scrnum + 1
+    local screenshot = love.graphics.captureScreenshot(os.time() .. ".png")
   end
   
   if key == "backspace" then
@@ -34,11 +36,21 @@ function love.mousepressed(x, y, button)
   if button == "l" and STATES.continue_button.bbox:contains_coordinate(mpos.x, mpos.y) then
     love.keypressed("return")
   end
+  
 end
+
+function love.wheelmoved(x, y)
+    BOIDS:wheelmoved(x, y)
+end
+
 function love.mousereleased(x, y, button)
   local mpos = MOUSE_INPUT:get_position()
   BOIDS:mousereleased(mpos.x, mpos.y, button)
   love.audio.play(click)
+end
+
+function love.resize(w, h)
+  print(("Fenêtre redimensionnée à la largeur : %d et la hauteur : %d."):format(w, h))
 end
 
 function love.load(args)
@@ -49,6 +61,8 @@ function love.load(args)
   lk = love.keyboard
   li = love.image
   
+  print('args[3]')
+  print(args[3])
   ARGS = args
   DEBUG = true
   FREEZE = false
@@ -62,9 +76,13 @@ function love.load(args)
   CELL_HEIGHT = 64
   MAX_IMAGE_WIDTH = 2048                  -- in pixels
   MAX_IMAGE_HEIGHT = 2048
-  ACTIVE_AREA_WIDTH = 2220
-  ACTIVE_AREA_HEIGHT= 3200
+  ACTIVE_AREA_WIDTH = 6400 -- 32*8*25 
+  ACTIVE_AREA_HEIGHT= 6400
   RED, GREEN, BLUE, ALPHA = 1, 2, 3, 4
+  
+  nbBush = 0
+  nbNids = 0
+  nbNidsPred = 0
   
   -- global assets
   require("boids_utils")
@@ -105,6 +123,8 @@ function love.load(args)
   BOIDS:add_state(states.obstacle_demo_state, "obstacle_demo_state")
   
   BOIDS:add_state(states.food_screen_state, "food_screen_state")
+  BOIDS:add_state(states.food_menu_state, "food_menu_state")
+  BOIDS:add_state(states.food_config_state, "food_config_state")
   BOIDS:add_state(states.food_demo_load_state, "food_demo_load_state")
   BOIDS:add_state(states.food_demo_state, "food_demo_state")
   
@@ -122,7 +142,7 @@ function love.load(args)
   
   BOIDS:add_state(states.exit_screen_state, "exit_screen_state")
   
-  BOIDS:load_state("food_demo_load_state")
+  BOIDS:load_state("food_screen_state")
   
   love.mouse.setVisible(false)
   
@@ -139,6 +159,10 @@ function love.load(args)
                      text = text,
                      bbox = bbox:new(x, y, tw+2*pad, th+2*pad),
                      color = {255, 255, 255, 255}}--]]
+					 
+  --love.window.setFullscreen(true)
+  --love.resize(lg.getDimensions())
+  
 end
 
 function love.update(dt)
@@ -149,7 +173,7 @@ function love.update(dt)
   if love.keyboard.isDown('z') then dt = dt / 16 end
   if love.keyboard.isDown('x') then dt = dt * 3 end
   
-  dt = math.min(dt, 1)
+  dt = math.min(dt, 1/20)
 
   MASTER_TIMER:update(dt)
   MOUSE_INPUT:update(dt)
@@ -171,6 +195,7 @@ function love.update(dt)
 end
 
 function love.draw()
+  TLfres.beginRendering(1920, 1080)
   --lg.setPointStyle("rough")
 
   BOIDS:draw()
@@ -186,7 +211,7 @@ function love.draw()
   lg.setFont(b.font)
   lg.setColor(b.color)
   lg.print(b.text, b.bbox.x, b.bbox.y)--]]
-  
+  TLfres.endRendering()
 end
 
 

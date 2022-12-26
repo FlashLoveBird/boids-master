@@ -35,6 +35,7 @@ loader.load_objects = function()
   animation = require('objects/animation')
   animation_set = require('objects/animation_set')
   asset_set = require('objects/asset_set')
+  block_actions = require('objects/block_actions')
   
 
   -- Polygonizer objects
@@ -46,6 +47,7 @@ loader.load_objects = function()
   
   -- Boids objects
   seeker = require("objects/seeker")
+  predator_seeker = require("objects/predator_seeker")
   boid_graphic = require("objects/boid_graphic")
   boid = require("objects/boid")
   predator_graphic = require("objects/predator_graphic")
@@ -56,6 +58,7 @@ loader.load_objects = function()
   predator_emitter = require("objects/predator_emitter")
   boid_food_source = require("objects/boid_food_source")
   boid_wood_source = require("objects/boid_wood_source")
+  boid_water_source = require("objects/boid_water_source")
   town = require("objects/town")
   
   -- Hero objects
@@ -63,6 +66,12 @@ loader.load_objects = function()
   
    -- Tree objects
   tree = require("objects/tree")
+  
+   -- Bush objects
+  boush = require("objects/bush")
+  
+  -- Bush objects
+  big_boush = require("objects/big_bush")
   
   -- Egg objects
   egg = require("objects/egg")

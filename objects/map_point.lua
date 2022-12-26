@@ -6,7 +6,7 @@
 --##########################################################################--
 local map_point = {}
 map_point.table = MAP_POINT
-map_point.debug = false
+map_point.debug = true
 map_point.initialized = false
 
 map_point.pos = nil
@@ -663,10 +663,9 @@ function map_point:update(dt)
 	local change_tile = offset.x >= TILE_WIDTH or offset.y >= TILE_HEIGHT or
 	                    offset.x < 0 or offset.y < 0
 	                   
-	if change_tile then
+	if change_tile and next_pos.x<8000 and next_pos.y<8000 then --TODO : 8000 ? Rendre dynamique
 		local old_tile = self.tile
 		local new_tile = self:_get_tile(next_pos)
-
 		local c, n, p, off = self:_check_collision(old_tile, new_tile, self.pos, next_pos)
 		if c then
 			self.collided = true
@@ -718,7 +717,7 @@ function map_point:draw()
 		if tile then
 			-- occupied tile
 			lg.setColor(0, 255, 0, 40)
-			--lg.rectangle('fill', tile.x, tile.y, self.tile_width, self.tile_height)
+			lg.rectangle('fill', tile.x, tile.y, self.tile_width, self.tile_height)
 			
 			-- neighbours
 			local open = self.open_tiles
@@ -1025,30 +1024,33 @@ function map_point:_get_open_tiles(tile)
 	local upleft, upright, downleft, downright = true, true, true, true
 	local n = tile.neighbours
 	
-	if not n[UP].walkable or (n[UP].diagonal and not n[UP].diagonal.walkable) then
-		upleft, up, upright = false, false, false
-	end
-	if not n[DOWN].walkable or (n[DOWN].diagonal and not n[DOWN].diagonal.walkable) then
-		downleft, down, downright = false, false, false
-	end
-	if not n[LEFT].walkable or (n[LEFT].diagonal and not n[LEFT].diagonal.walkable) then
-		upleft, left, downleft = false, false, false
-	end
-	if not n[RIGHT].walkable or (n[RIGHT].diagonal and not n[RIGHT].diagonal.walkable)then
-		upright, right, downright = false, false, false
-	end
+	if n[UP] and n[DOWN] and n[LEFT] and n[RIGHT] then 
 	
-	if not n[UPLEFT].walkable or (n[UPLEFT].diagonal and not n[UPLEFT].diagonal.walkable) then 
-	  upleft = false 
-	end
-	if not n[UPRIGHT].walkable or (n[UPRIGHT].diagonal and not n[UPRIGHT].diagonal.walkable) then 
-	  upright = false 
-	end
-	if not n[DOWNLEFT].walkable or (n[DOWNLEFT].diagonal and not n[DOWNLEFT].diagonal.walkable) then 
-	  downleft = false 
-	end
-	if not n[DOWNRIGHT].walkable or (n[DOWNRIGHT].diagonal and not n[DOWNRIGHT].diagonal.walkable) then 
-	  downright = false 
+		if not n[UP].walkable or (n[UP].diagonal and not n[UP].diagonal.walkable) then
+			upleft, up, upright = false, false, false
+		end
+		if not n[DOWN].walkable or (n[DOWN].diagonal and not n[DOWN].diagonal.walkable) then
+			downleft, down, downright = false, false, false
+		end
+		if not n[LEFT].walkable or (n[LEFT].diagonal and not n[LEFT].diagonal.walkable) then
+			upleft, left, downleft = false, false, false
+		end
+		if not n[RIGHT].walkable or (n[RIGHT].diagonal and not n[RIGHT].diagonal.walkable)then
+			upright, right, downright = false, false, false
+		end
+		
+		if not n[UPLEFT].walkable or (n[UPLEFT].diagonal and not n[UPLEFT].diagonal.walkable) then 
+		  upleft = false 
+		end
+		if not n[UPRIGHT].walkable or (n[UPRIGHT].diagonal and not n[UPRIGHT].diagonal.walkable) then 
+		  upright = false 
+		end
+		if not n[DOWNLEFT].walkable or (n[DOWNLEFT].diagonal and not n[DOWNLEFT].diagonal.walkable) then 
+		  downleft = false 
+		end
+		if not n[DOWNRIGHT].walkable or (n[DOWNRIGHT].diagonal and not n[DOWNRIGHT].diagonal.walkable) then 
+		  downright = false 
+		end
 	end
 	
 	local open = self.open_tiles_table

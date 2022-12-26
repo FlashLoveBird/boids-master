@@ -23,6 +23,11 @@ level.shard_explosions = nil
 
 level.emitters = {}
 
+level.eggs = {}
+level.nbEggs = 1
+level.treeSelect = nil
+level.trees = {}
+
 
 -- cube explosions
 level.cube_motion_curves = nil
@@ -59,6 +64,10 @@ level.explosion_sound_effect_spread = 50
 level.food = 0
 level.wood = 0
 level.treeMap = nil
+level.pollution = 10
+level.wood_source = {}
+
+level.nbTree = 0
 
 local level_mt = { __index = level }
 function level:new()
@@ -77,9 +86,42 @@ function level:new()
   level.tile_explosion_flash_curves = {}
   level.audio_sample_sets = {}
   
+  level.eggs = {}
+  level.nbEggs = 1
+  
   level.screen_canvas = lg.newCanvas(SCR_WIDTH, SCR_HEIGHT)
   
+  level:init()
+  
   return level
+end
+
+function level:init()
+   --self.wood_source = boid_wood_source:new(self)
+   
+  animationBushInspire = self:newAnimation(love.graphics.newImage("images/bushInspire.png"), 529, 373, 1)
+  animationBushExpire = self:newAnimation(love.graphics.newImage("images/bushExpire.png"), 529, 373, 1)
+  animationBushBirth = self:newAnimation(love.graphics.newImage("images/birthBush.png"), 529, 373, 1)
+  animationBigBushInspire = self:newAnimation(love.graphics.newImage("images/bigBushInspire.png"), 529, 373, 2)
+  animationBigBushExpire = self:newAnimation(love.graphics.newImage("images/bigBushExpire.png"), 529, 373, 2)
+   
+end
+
+function level:newAnimation(image, width, height, duration)
+    local animation = {}
+    animation.spriteSheet = image;
+    animation.quads = {};
+
+    for y = 0, image:getHeight() - height, height do
+        for x = 0, image:getWidth() - width, width do
+            table.insert(animation.quads, love.graphics.newQuad(x, y, width, height, image:getDimensions()))
+        end
+    end
+
+    animation.duration = duration or 1
+    animation.currentTime = 0
+
+    return animation
 end
 
 function level:load()
@@ -91,6 +133,7 @@ function level:is_loaded()
   local map_loaded = false
   if self.level_map then
     map_loaded = self.level_map:is_loaded()
+	--self.wood_source = boid_wood_source:new(self)
   end
   
   local audio_loaded = false
@@ -100,13 +143,22 @@ function level:is_loaded()
   return map_loaded and audio_loaded
 end
 
+function level:setFlock(flock)
+	if #self.wood_source>0 then
+		for i=1, #self.wood_source do
+			self.wood_source[i] = boid_wood_source:new(self, flock)
+		end
+	end
+	--self.wood_source:setFlock(flock)
+end
+
 ----- set
 function level:set_camera(camera)
   self.camera = camera
   
   -- compute active area
   local center = camera:get_center()
-  local x, y = center.x - 0.5 * ACTIVE_AREA_WIDTH, center.y - ACTIVE_AREA_HEIGHT
+  local x, y = 0,0--center.x - 0.5 * ACTIVE_AREA_WIDTH, center.y - ACTIVE_AREA_HEIGHT
   self.active_area_bbox = bbox:new(x, y, ACTIVE_AREA_WIDTH, ACTIVE_AREA_HEIGHT)
 end
 
@@ -117,7 +169,7 @@ function level:set_camera_shake_curves(xcurves, ycurves)
   end
 end
 
-function level:addHome(x,y,width,height,depth,flock,level,nbEggs)
+function level:addHome(x,y,width,height,depth,flock,level,nbEggs, boidType)
 	local tpad = 2
 	local width, height = self.level_map.bbox.width - 2 * tpad * TILE_WIDTH, 
                         self.level_map.bbox.height - 2 * tpad * TILE_HEIGHT
@@ -126,7 +178,7 @@ function level:addHome(x,y,width,height,depth,flock,level,nbEggs)
 	local r = 200
 	local lvl = level
 	
-	local emitter = boid_emitter:new(lvl, flock, x, y, z, dx, dy, dz, r, nbEggs)
+	local emitter = boid_emitter:new(lvl, flock, x, y, z, dx, dy, dz, r, nbEggs, boidType)
 	emitter:set_dead_zone( 0, 4000, 3000, 100)
 	emitter:set_type("boid")
 	emitter:set_emission_rate(200)
@@ -135,14 +187,64 @@ function level:addHome(x,y,width,height,depth,flock,level,nbEggs)
 	emitter:start_emission()
 	self.emitters[#self.emitters + 1] = emitter
 	
-	if #self.emitters == 1 then
-		self.emitters[1]:add_food(100)
-		self.emitters[1]:add_wood(100)
+	if #self.emitters < 10 then
+		emitter:add_food(0)
+		emitter:add_wood(0)
 	end
+	return emitter
+end
+
+function level:addPredatorHome(x,y,width,height,depth,flock,level,nbEggs)
+	local tpad = 2
+	local width, height = self.level_map.bbox.width - 2 * tpad * TILE_WIDTH, 
+                        self.level_map.bbox.height - 2 * tpad * TILE_HEIGHT
+	local depth = 1500
+	local dx, dy, dz = 0, 1, 0.5
+	local r = 200
+	local lvl = level
+	
+	local emitter = predator_emitter:new(lvl, flock, x, y, z, dx, dy, dz, r, nbEggs)
+	emitter:set_dead_zone( 0, 4000, 3000, 100)
+	emitter:set_emission_rate(200)
+	emitter:set_boid_limit(2000)
+	emitter:set_position(x,y,100)
+	emitter:start_emission()
+	self.emitters[#self.emitters + 1] = emitter
+	
+	if #self.emitters == 1 then
+		--self.emitters[1]:add_food(1000)
+		--self.emitters[1]:add_wood(1000)
+	end
+	return emitter
 end
 
 function level:set_level_map(level_map)
   self.level_map = level_map
+end
+
+function level:canILandHere(caseX,caseY,r)
+  local treeMap = self.treeMap
+  local startX =  caseX-r 
+  local startY =  caseY-r
+  local maxX =  caseX+r
+  local maxY =  caseY+r
+  
+  for caseX = startX, maxX do
+	for caseY = startY, maxY do
+		if treeMap[caseX] then
+			if treeMap[caseX][caseY]~=nil then
+				return false
+			end
+		end
+		if caseX < 30 or caseY < 30 then
+			return false
+		end
+		if caseX > 170 or caseY > 170 then
+			return false
+		end
+	end
+  end
+  return true
 end
 
 function level:set_collider(level_collider)
@@ -214,12 +316,20 @@ end
 
 function level:getBoids()
 local boids = 0
+local boidPrey = 0
+local boidPred = 0
   for i=1,#self.emitters do
     if self.emitters[i] ~= nil then
-		boids = boids + self.emitters[i]:get_boids()
+		boids = boids + self.emitters[i]:getnbBoids()
+		boidPrey = boidPrey + self.emitters[i]:get_boids_prey()
+		boidPred = boidPred + self.emitters[i]:get_boids_pred()
 	end
   end
-return boids
+return boids,boidPrey,boidPred
+end
+
+function level:get_pollution()
+	return self.pollution
 end
 
 function level:get_collider()
@@ -330,7 +440,6 @@ function level:spawn_tile_explosion(x, y, power, radius, walkable_state)
   if not self.tile_explosion_is_initialized then
     return
   end
-  print('ok')
   if walkable_state == nil then
     walkable_state = true
   end
@@ -394,11 +503,55 @@ function level:getTreeMap()
 return self.treeMap
 end
 
-function level:addTree(numBoids)
-local te = tree:new(self,numBoids)
+function level:addTree(x,y)
+self.nbTree = self.nbTree + 1
+
+local animationTreeInspire = self:newAnimation(love.graphics.newImage("images/treeInspire.png"), 189, 147, 5)
+local animationTreeExpire = self:newAnimation(love.graphics.newImage("images/treeExpire.png"), 189, 147, 5)
+local animationTreeBirth = self:newAnimation(love.graphics.newImage("images/birthTree.png"), 189, 147, 5)
+local animationBigTreeInspire = self:newAnimation(love.graphics.newImage("images/bigTreeInspire.png"), 189, 147, 2)
+local animationBigTreeExpire = self:newAnimation(love.graphics.newImage("images/bigTreeExpire.png"), 189, 147, 2)
+local animationOmbre = self:newAnimation(love.graphics.newImage("images/ombreTree.png"), 326, 282, 2)
+local animationOmbreBirth = self:newAnimation(love.graphics.newImage("images/ombreTreeBirth.png"), 326, 293, 8)
+
+local te = tree:new(self,self.nbTree,animationTreeInspire,animationTreeExpire,animationTreeBirth,animationBigTreeInspire,animationBigTreeExpire,animationOmbre,animationOmbreBirth)
+--self.treeMap[x][y]=te
+
+self.trees[#self.trees + 1] = te
+
+self.pollution = self.pollution - 1
 return te
 end
 
+function level:addRock(x,y)
+local rock = 1
+self.treeMap[x][y]=rock
+end
+
+function level:addBush(x,y,flock)
+local bu = boush:new(self,flock,animationBushInspire,animationBushExpire,animationBushBirth,animationBigBushInspire,animationBigBushExpire)
+self.treeMap[x][y]=bu
+self.pollution = self.pollution - 1
+
+return bu
+end
+
+function level:addWood(x,y,flock)
+--self.wood_source[#self.wood_source+1]:add_wood(x, y, 200)
+
+
+self.wood_source[#self.wood_source +1] = boid_wood_source:new(self, flock, #self.wood_source +1)
+
+--table.insert(self.wood_source,1)
+
+local treeMap = self.treeMap
+self.wood_source[#self.wood_source]:add_wood(x, y, 200)
+self.wood_source[#self.wood_source]:force_polygonizer_update()
+end
+
+function level:removeWood(i)
+	table.remove(self.wood_source, i)
+end
 
 function level:keypressed(key)
   if key == 'c' and self.hero then
@@ -415,18 +568,37 @@ function level:mousereleased(x, y, button)
   end
 end
 
-function level:mousepressed(x, y, button)
+function level:set_select(treeSelect)
+  self.treeSelect = treeSelect
+end
+
+function level:mousepressed(x, y, button,flock)
   if self.mouse then
     self.mouse:mousepressed(x, y, button)
 	local treeMap = self.treeMap
-	  for x = 1, 100 do
-		for y = 1, 75 do
-			if treeMap[x][y]~=nil == true then
-				treeMap[x][y]:mousepressed(x, y, button)
+	  for mx = 1, 200 do
+		for my = 1, 200 do
+			if treeMap[mx][my]~=nil then
+				local vx, vy = self:get_camera():get_viewport()
+				local kx, ky = vx + x, vy + y
+				if self.treeSelect == treeMap[mx][my] then
+					treeMap[mx][my]:unselect()
+				end
+				treeMap[mx][my]:mousepressed(kx, ky, button)
 			end
 		end
 	  end
   end
+  local x, y = self:get_camera():get_viewport()
+  local mpos = self:get_mouse():get_position()
+  local mx, my = x + mpos.x, y + mpos.y
+  --self.eggs[self.nbEggs] = egg:new(nil,self.nbEggs,flock,true,true,mx,my,100,self) --boidEmit,index,flock,needHome,x,y,z,free
+  --self.nbEggs = self.nbEggs + 1
+  
+  if button == 2 and self.treeSelect then
+	self.treeSelect:unselect()
+  end
+  
 end
 
 function level:_update_active_area()
@@ -445,7 +617,6 @@ function level:update(dt)
   if self.hero then
     self.hero:update(dt)
     if self.camera then
-	  --print(self.hero:get_position())
       --self.camera:set_target(self.hero:get_position())
 	  
 	  
@@ -462,7 +633,6 @@ function level:update(dt)
   if self.level_map then self.level_map:update(dt) end
   if self.camera then self.camera:update(dt) end
   if self.active_area_bbox then self:_update_active_area() end
-  
   
   --if self.flock then self.emitter:update(dt) end
   
@@ -499,6 +669,28 @@ function level:update(dt)
   --for i=1,#sample_sets do
     --sample_sets[i]:update(dt)
   --end
+	
+  local trees = self.trees
+  
+  
+  
+  if #trees>0 then
+		for i=#trees,1,-1 do
+			if self.trees[i] ~= nil then
+				self.trees[i]:update(dt)
+			end
+		end
+	end
+  
+  local eggs = self.eggs
+	
+  if self.nbEggs>0 then
+		for i=1,self.nbEggs do
+			if self.eggs[i] ~= nil then
+				self.eggs[i]:update(dt)
+			end
+		end
+	end
   
 end
 
@@ -513,7 +705,7 @@ function level:draw()
     shard_set:draw_ground_layer()
   end
   
-  if self.hero then self.hero:draw() end
+
   
   for _,shard_set in pairs(self.shard_sets) do
     shard_set:draw_sky_layer()
@@ -524,21 +716,48 @@ function level:draw()
   end
   
   self.camera:unset()
+  --self.camera:draw()
+  
+  
+  if #self.wood_source>0 then
+	local cx, cy = self:get_camera():get_viewport()
+	for i=1, #self.wood_source do
+		if self.wood_source[i] ~= nil then
+			self.wood_source[i]:draw(cx, cy)
+		end
+	end
+  end
   
   local sample_sets = self.audio_sample_sets
   for i=1,#sample_sets do
     sample_sets[i]:draw()
   end
-  
+  local cx, cy = self:get_camera():get_viewport()
   local treeMap = self.treeMap
+  local treeSelect = self.treeSelect
   lg.setColor(255, 255, 255, 255)
-  for x = 1, 100 do
-	for y = 1, 75 do
+  for x = 0, 200 do
+	for y = 0, 200 do
 		if treeMap[x][y]~=nil then
-			local cx, cy = self:get_camera():get_viewport()
-			local mx, my = x*32-cx, y*32-cy
-			treeMap[x][y]:draw(mx, my)
+			if treeMap[x][y].state==true and treeMap[x][y].table=='bush' then
+				local mx, my = x*32-cx, y*32-cy
+				treeMap[x][y]:draw(mx-16, my-16)
+			end
 		end
+	end
+  end
+  
+  self.camera:set()
+  
+  if self.hero then self.hero:draw() end
+  
+  self.camera:unset()
+   
+  
+  for i=1,#self.trees do
+    if self.trees[i] ~= nil then
+		local mx, my = self.trees[i].x*32-cx, self.trees[i].y*32-cy
+		self.trees[i]:draw(mx-16, my-16)
 	end
   end
   
@@ -547,6 +766,27 @@ function level:draw()
 		self.emitters[i]:draw()
 	end
   end
+  
+  if treeSelect then
+		
+		lg.setColor(255, 255, 255, 255)
+		love.graphics.draw(bg, 1450, 200)
+		love.graphics.draw(tableImg, 1490, 220)
+		lg.setColor(0, 0, 0, 255)
+		lg.print(treeSelect.numEmits, 1600, 280)
+		if treeSelect.emmiter then
+			local nbBoids = treeSelect.emmiter:get_boids()
+			lg.print(nbBoids, 1600, 320)
+		end
+  end
+  
+  --[[if self.nbEggs>0 then
+		for i=1,self.nbEggs do
+			if self.eggs[i] ~= nil and self.eggs[i].eclose==false then
+				self.eggs[i]:draw(cx, cy)
+			end
+		end
+	end--]]
   
 end
 

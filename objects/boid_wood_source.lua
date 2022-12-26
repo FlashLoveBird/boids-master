@@ -6,44 +6,96 @@
 --##########################################################################--
 local bws = {}
 bws.table = 'bws'
-bws.debug = false
+bws.debug = true
 bws.level = nil
 bws.level_map = nil
 bws.flock = nil
 bws.sources = nil
-bws.depletion_rate = 300
+bws.depletion_rate = 1000000
 bws.surface_threshold = 0.5
-bws.area = 0
+bws.area = 10
 bws.unit_area = TILE_WIDTH * TILE_HEIGHT
 bws.area_changed = false
 bws.boid_hash = nil
 bws.collision_table = nil
 bws.polygonizer_update_rate = 1.5   -- updates per second
 bws.min_radius = 50
+bws.animationExtend = nil
+bws.animationDecrease = nil
+bws.x = 0
+bws.y = 0
+bws.index = nil
 
 local bws_mt = { __index = bws }
-function bws:new(level, flock)
+function bws:new(level, flock , index)
   local bws = setmetatable({}, bws_mt)
   bws.level = level
   bws.level_map = level:get_level_map()
+  print('nouveau init bois')
+  print(flock)
   bws.flock = flock
   bws.sources = {}
   bws.boid_hash = {}
   bws.collision_table = {}
   bws.update_timer = timer:new(level:get_master_timer(), 1/bws.polygonizer_update_rate)
   bws.update_timer:start()
-  
-  woodGraphic = love.graphics.newImage("images/env/wood.png")
+  bws:init(index)
   
   return bws
 end
 
+function bws:init(index)
+
+self.animationExtend = self:newAnimation(love.graphics.newImage("images/env/wood.png"), 100, 131, 5)
+self.animationDecrease = self:newAnimation(love.graphics.newImage("images/env/wood.png"), 100, 131, 5)
+self.index = index
+end
+
+function bws:getType()
+	return 2
+end
+
+
 function bws:add_wood(x, y, radius)
-  local p = self.level_map:add_point_to_source_polygonizer(x, y, radius)
-  self.sources[#self.sources + 1] = self:_new_wood_source(x, y, radius, p)
-  
+  local p = self.level_map:add_point_to_source_polygonizer(x*32, y*32, radius)
+  self.sources[#self.sources + 1] = self:_new_wood_source(x*32, y*32, radius, p)
   self:_calculate_total_area()
-  return p
+  self.x = x
+  self.y = y
+  local level = self.level:getTreeMap()
+  level[x][y] = self
+  self.level:setTreeMap(level)
+  print("ajouter de bois en")
+  print(x,y)
+end
+
+function bws:newAnimation(image, width, height, duration)
+    local animation = {}
+    animation.spriteSheet = image;
+    animation.quads = {};
+
+    for y = 0, image:getHeight() - height, height do
+        for x = 0, image:getWidth() - width, width do
+            table.insert(animation.quads, love.graphics.newQuad(x, y, width, height, image:getDimensions()))
+        end
+    end
+
+    animation.duration = duration or 1
+    animation.currentTime = 0
+
+    return animation
+end
+
+function bws:getPos()
+  return self.x, self.y
+end
+
+function bws:isSource()
+	if #self.sources>0 then
+		return true
+	else
+		return false
+	end
 end
 
 function bws:force_polygonizer_update()
@@ -106,13 +158,17 @@ function bws:_calculate_total_area()
   end
 end
 
+function bws:mousepressed(kx, ky, button)
+
+end
+
 function bws:_update_area(dt)
   local sources = self.sources
   local bhash = self.boid_hash
   local objects = self.collision_table
   table.clear_hash(bhash)
-  for i=#sources,1,-1 do
-    local s = sources[i]
+  if self.flock and sources[1] then
+    local s = sources[1]
     local r = s.radius
 	local newR = r + 50
     table.clear(objects)
@@ -143,6 +199,36 @@ function bws:_update_area(dt)
         table.remove(self.sources, i)
       end
     end
+	local animationExtend = self.animationExtend
+	local sr = s.starting_radius
+    local r = s.radius
+    local pct = math.floor(((r * r) / (sr * sr)) * 100)
+	if pct > 80 then
+		animationExtend.currentTime = 4
+	elseif pct > 60 then
+		animationExtend.currentTime = 3
+	elseif pct > 40 then
+		animationExtend.currentTime = 2
+	elseif pct > 20 then
+		animationExtend.currentTime = 1
+	elseif pct > 10 then
+		animationExtend.currentTime = 0
+	elseif pct < 10 then
+		local level = self.level:getTreeMap()
+		local x, y = self.x, self.y
+		local index = self.index
+		level[x][y] = nil
+		self.level:setTreeMap(level)
+		self:force_polygonizer_update()
+		self.level:removeWood(index)
+	end
+	
+	--animationExtend.currentTime = animationExtend.currentTime + dt
+	--if animationExtend.currentTime >= animationExtend.duration then
+	--	self.animationExtend.currentTime = animationExtend.currentTime - animationExtend.duration
+	--end
+	
+	
   end
 end
 
@@ -163,25 +249,30 @@ function bws:update(dt)
   self:_shuffle_wood_sources()
   self:_update_area(dt)
   self:_calculate_total_area()
-  self:_update_polygonizer()
+  self:_update_polygonizer()  
 end
 
 ------------------------------------------------------------------------------
-function bws:draw()
-  if not self.debug then return end
-  
+function bws:draw(x, y)
+  --if not self.debug then return end
   local sources = self.sources
+  local posx,posy = self.x,self.y
   for i=1,#sources do
     local s = sources[i]
     lg.setColor(255, 0, 0, 255)
-    --lg.circle("line", s.x, s.y, s.radius)
+    --lg.circle("line", x, y, s.radius)
     
     local sr = s.starting_radius
     local r = s.radius
     local pct = math.floor(((r * r) / (sr * sr)) * 100)
-    --lg.print(pct.."%", s.x, s.y)
+    --lg.print(pct.."%", x, y)
 	lg.setColor(255, 255, 255, 255)
-	love.graphics.draw(woodGraphic, s.x, s.y)
+	--love.graphics.draw(woodGraphic, x, y)
+	
+	local animationExtend = self.animationExtend
+	local spriteNum = math.floor(animationExtend.currentTime / animationExtend.duration * #animationExtend.quads) + 1
+	love.graphics.draw(animationExtend.spriteSheet, animationExtend.quads[spriteNum], posx*32-x, posy*32-y)
+	
   end
   
 end

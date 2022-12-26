@@ -29,9 +29,11 @@ be.graphic = nil
 be.eggs = nil
 be.food = 0
 be.wood = 0
+be.water = 0
+
 
 local be_mt = { __index = be }
-function be:new(level, flock, x, y, z, dirx, diry, dirz, radius, nbEgg)
+function be:new(level, flock, x, y, z, dirx, diry, dirz, radius, nbEgg, boidType, parent)
   local be = setmetatable({}, be_mt)
   be.flock = flock
   be.level = level
@@ -58,14 +60,18 @@ function be:new(level, flock, x, y, z, dirx, diry, dirz, radius, nbEgg)
   be.dead_zone_bbox = bbox:new(0, 0, 0, 0)
   
   for i=1, nbEgg do
-	be.eggs[i] = egg:new(be,i,flock)
+	be.eggs[i] = egg:new(be,i,flock,false,false,x,y,z,level,boidType) --boidEmit,index,flock,needHome,free,x,y,z,level,boidType
   end
   
   nid = love.graphics.newImage("images/home/nid.png")
   emptyNid = love.graphics.newImage("images/home/empty-nid.png")
   
   click = love.audio.newSource("sound/click1.mp3", "stream")
-    
+  
+  if parent then
+    self.active_boids[#self.active_boids + 1] = parent
+	parent.myIdTable = #self.active_boids
+  end    
   return be
 end
 
@@ -81,6 +87,34 @@ end
 
 function be:getnbBoids()
 	return self.boid_count
+end
+
+function be:get_boids_prey()
+  local count = 0
+  if #self.active_boids>0 then
+	  for i=1,#self.active_boids do
+		local b = self.active_boids[i]
+		if b~=nil then
+			if b.boidType==1 then
+				count = count + 1
+			end
+		end
+	  end
+  end
+  return count
+end
+
+function be:get_boids_pred()
+  local count = 0
+  for i=#self.active_boids,1,-1 do
+    local b = self.active_boids[i]
+	if b~=nil then
+		if b.boidType==2 then
+			count = count + 1
+		end
+	end
+  end
+  return count
 end
 
 function be:set_position(x, y, z)
@@ -154,6 +188,10 @@ function be:add_food(add)
   self.food = self.food + add
 end
 
+function be:min_food(add)
+  self.food = self.food - add
+end
+
 function be:get_food()
   return self.food
 end
@@ -162,8 +200,16 @@ function be:add_wood(add)
   self.wood = self.wood + add
 end
 
+function be:add_water(add)
+  self.water = self.water + add
+end
+
 function be:get_wood()
   return self.wood
+end
+
+function be:get_water()
+  return self.water
 end
 
 function be:get_boids()
@@ -187,7 +233,7 @@ function be:_get_spawn_point()
   return x, y, z
 end
 
-function be:_emit_boid(boidType,index,needHome)
+function be:_emit_boid(boidType,index,needHome,free)
   if not self.is_active then return end
   if self.boid_count >= self.boid_limit then return end
   if self.nbEgg <= 0 then return end
@@ -207,32 +253,54 @@ function be:_emit_boid(boidType,index,needHome)
   local x, y, z = self:_get_spawn_point()
   local dir = self.direction
   local boid
-  if self.is_random_direction then
+  if free==true then
     local dx, dy, dz = random_direction3()
-	if boidType=="predator" then
-		boid = self.flock:add_predator(x, y, z, dx, dy, dz, self.gradient)
-	elseif boidType=="boid" then
-		boid = self.flock:add_boid(x, y, z, dx, dy, dz, self.gradient)
-		self.active_boids[#self.active_boids + 1] = boid
+	if boidType == 0 then
+		boid = self.flock:add_boid(x, y, z, dx, dy, dz, true, self.gradient)
+	else
+		boid = self.flock:add_predator(x, y, z, dx, dy, dz, true, self.gradient)
 	end
+	self.active_boids[#self.active_boids + 1] = boid
+	boid.myIdTable = #self.active_boids
   else
-	if boidType=="predator" then
-		boid = self.flock:add_predator(x, y, z, dir.x, dir.y, dir.z, self.gradient)
-	elseif boidType=="boid" then
-		boid = self.flock:add_boid(x, y, z, dir.x, dir.y, dir.z, self.gradient)
-		self.active_boids[#self.active_boids + 1] = boid
+	if boidType == 0 then
+		boid = self.flock:add_boid(x, y, z, dir.x, dir.y, dir.z, false, self.gradient)
+	else
+		boid = self.flock:add_predator(x, y, z, dir.x, dir.y, dir.z, false, self.gradient)
 	end
+	self.active_boids[#self.active_boids + 1] = boid
+	boid.myIdTable = #self.active_boids
   end
   
   if self.is_waypoint_set then
     --boid:set_waypoint(self.waypoint.x, self.waypoint.y, self.waypoint.z)
   end
   self.boid_count = #self.active_boids
+  
   if needHome then
 	boid:set_needHome(true)
   end
   boid:set_emit_parent(self)
   
+end
+
+function be:remove_boid(boid)
+	--self.active_boids[boid.myIdTable] = nil
+	table.remove(self.active_boids, boid.myIdTable)
+	self.boid_count = self.boid_count - 1	
+	if #self.active_boids>0 then
+	  for i=1,#self.active_boids do
+		local b = self.active_boids[i]
+		if b~=nil and (b.myIdTable > boid.myIdTable or b.myIdTable == boid.myIdTable) then
+			b.myIdTable = b.myIdTable - 1
+		end
+	  end
+    end
+end
+
+function be:add_boid(boid)
+	self.active_boids[#self.active_boids+1] = boid
+	self.boid_count = self.boid_count + 1
 end
 
 function be:_destroy_boid(b)
@@ -258,39 +326,40 @@ local minFood = 0
 local nbFood = self.food
 local active = self.active_boids
 local flock = self.flock
-flock:get_boids_in_radius(self.position.x, self.position.y, 200, objects)
+flock:get_boids_in_radius(self.position.x, self.position.y, 70, objects)
     local count = 0
     for i=1,#objects do
 		if nbFood >1 then
 			if active[i] then
-				print("A FAIM ?")
-				local haveHunger = active[i]:feed()
+				local haveHunger = active[i]:feed(10)
 				if haveHunger==true then
 					minFood = minFood + 1
 					nbFood = nbFood - 1
 					self:add_food(-1)
-					print("MANGE")
 				end
 			end
 		end
     end
-	for i=1,#objects do
-		if nbFood >2 and objects[i]:haveKid() == true then
-			print("GO ENFANT")
-			objects[i]:pushKid()
-			self.nbEgg = self.nbEgg + 1
-			nbFood = nbFood - 1
-			minFood = minFood + 1
-			local nbEggs = self.nbEgg
-			
-			print(#active)
-			if #active > 2 then
-				self.eggs[nbEggs] = egg:new(self,nbEggs,flock,true)
-			else
-				self.eggs[nbEggs] = egg:new(self,nbEggs,flock,false)
+	if self.level:getBoids()<200 then
+		for i=1,#objects do	
+			if objects[i]:haveKid() == true then
+				for j=1,math.random(1,5) do
+					if nbFood >1 then
+						self.nbEgg = self.nbEgg + 1
+						nbFood = nbFood - 1
+						minFood = minFood + 1
+						local nbEggs = self.nbEgg
+						if #active > 19 then
+							print('freeEgg !')
+							self.eggs[nbEggs] = egg:new(self,nbEggs,flock,true,true, self.position.x, self.position.y, 20, self.level)
+						else
+							self.eggs[nbEggs] = egg:new(self, nbEggs, flock, false, true, self.position.x, self.position.y, 20, self.level)
+						end
+					end
+				end
+				objects[i]:pushKid()
 			end
 		end
-		
 	end
 
 return (-minFood)
@@ -326,21 +395,18 @@ function be:update(dt)
 	if not self.is_active then return end
 	local eggs = self.eggs
 	
-	if #eggs>0 then
-	end
-	
-	for i=1,#eggs do
-		if self.eggs[i] ~= nil then
-			self.eggs[i]:update(dt)
-			--print(self.position.x)
+	if self.nbEgg>0 then
+		for i=1,#eggs do
+			if self.eggs[i] ~= nil then
+				self.eggs[i]:update(dt)
+				--print(self.position.x)
+			end
 		end
 	end
-	
 end
 
 ------------------------------------------------------------------------------
 function be:draw()
-  
   if not self.is_active then return end
   local x, y = self.position.x, self.position.y
   --[[lg.setColor(255, 0, 0, 255)

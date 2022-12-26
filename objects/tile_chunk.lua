@@ -37,6 +37,7 @@ tile_chunk.update_count = 0
 
 tile_chunk.max_chunk_id = 0
 tile_chunk.diagonal_count = 0
+tile_chunk.chunkGraphic = nil
 
 local tile_chunk_mt = { __index = tile_chunk }
 function tile_chunk:new()
@@ -47,9 +48,8 @@ function tile_chunk:new()
 		type_list[t_type] = {}
 		type_list.count[t_type] = 0
 	end
-	
-	
-  chunkGraphic = love.graphics.newImage("images/env/parchmentBasic.png")
+  
+chunkGraphic = love.graphics.newImage("images/env/output.jpg")
 
   return setmetatable({ tiles = {},
   	                    diagonal_tiles = {},
@@ -130,7 +130,7 @@ end
 -- tile:update(dt) will be called until tile:halt_update() is called
 function tile_chunk:add_tile_to_update_list(tile)
 	self.update_list[tile] = tile
-	--self.update_list[#self.update_list + 1] = tile
+	self.update_list[#self.update_list + 1] = tile
 end
 
 function tile_chunk:set_id(id)
@@ -244,12 +244,13 @@ function tile_chunk:draw()
   if self.debug then
     --self:draw_debug()
   end
+  lg.setColor(255, 255, 255, 255)
   love.graphics.draw(chunkGraphic, self.x, self.y)
   
 end
 
 function tile_chunk:draw_debug()
-	lg.setColor(0, 255, 0, 255)
+	lg.setColor(0, 0, 0, 255)
 	lg.setLineWidth(1)
 	local x, y = self.x, self.y
 	local width, height = self.width * TILE_WIDTH, self.height * TILE_HEIGHT

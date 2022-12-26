@@ -66,6 +66,11 @@ function state_manager:load_next_state(...)
   self:load_state(state_key, ...)
 end
 
+function state_manager:escape()
+self.current_state.escape()
+end
+
+
 function state_manager:load_previous_state(...)
   local current_state = self.current_state
   local prev_state = nil
@@ -107,6 +112,12 @@ end
 function state_manager:mousereleased(x, y, button)
   self.current_state.mousereleased(x, y, button)
 end
+function state_manager:wheelmoved(x, y)
+  self.current_state.wheelmoved(x, y)
+end
+--function state_manager:resize(x, y)
+  --self.current_state.resize(x, y)
+--end
 
 
 return state_manager

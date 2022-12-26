@@ -145,6 +145,11 @@ function camera2d:get_size()
   return self.view_w, self.view_h
 end
 
+function camera2d:set_size(view_w,view_h)
+  self.view_w = view_w
+  self.view_h = view_h
+end
+
 function camera2d:get_viewport()
   return self.pos.x, self.pos.y, self.view_w, self.view_h
 end
@@ -244,7 +249,7 @@ function camera2d:update(dt)
   self.scale = self.scale_target:get_position().x
   
   -- commit the scale
-  self:set_scale(self.scale)
+  --self:set_scale(self.scale)
   
   -- set position
   self.target:update(dt)
@@ -256,13 +261,20 @@ function camera2d:update(dt)
   local bbox = self.viewport_bbox
   bbox.x, bbox.y = self.pos.x, self.pos.y
   bbox.width, bbox.height = self.view_w, self.view_h
+  
+  
+  width, height = love.graphics.getDimensions()
+  self:set_size(width,height)
 end
 
 ------------------------------------------------------------------------------
 function camera2d:draw()
-  if self.debug then
-    self.target:draw()
-  end
+  --if self.debug then
+    --self.target:draw()
+	width, height = love.graphics.getDimensions()
+	print(width, height)
+  --end
+    lg.rectangle( "fill", 0, 0, width, height)
 end
 
 return camera2d

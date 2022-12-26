@@ -77,7 +77,6 @@ function tile_palette:_generate_spritebatch_image()
           "size (w="..width..",h="..height..") exceeds MAX_IMAGE_WIDTH or "..
           "MAX_IMAGE_HEIGHT (w="..MAX_IMAGE_WIDTH..",h="..MAX_IMAGE_HEIGHT..")"
           
-    print(msg)
     return
   end
   

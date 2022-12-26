@@ -71,7 +71,6 @@ function fk:_init_bbox(x, y, width, height, depth)
   self.bbox = bbox:new(x, y, width, height)
   self.bbox.depth = depth
   self.temp_collision_bbox = bbox:new(0, 0, 0, 0)
-
 end
 
 function fk:_init_collider()
@@ -100,7 +99,7 @@ function fk:set_camera_tracking_on()
   self.user_interface:set_camera_tracking_on()
 end
 
-function fk:add_boid(x, y, z, dirx, diry, dirz, gradient)
+function fk:add_boid(x, y, z, dirx, diry, dirz, free, gradient)
   z = z or 0
   if not x or not y then
     print("ERROR in flock:add_boid - no position specified")
@@ -114,7 +113,7 @@ function fk:add_boid(x, y, z, dirx, diry, dirz, gradient)
   else
     new_boid = boid:new(self.level)
   end
-  new_boid:init(self, x, y, z, dirx, diry, dirz)
+  new_boid:init(self.level, self, x, y, z, dirx, diry, dirz, free)
   if gradient then
     new_boid:set_gradient(gradient)
   else
@@ -124,7 +123,7 @@ function fk:add_boid(x, y, z, dirx, diry, dirz, gradient)
   return new_boid
 end
 
-function fk:add_predator(x, y, z, dirx, diry, dirz, gradient)
+function fk:add_predator(x, y, z, dirx, diry, dirz, free, gradient)
   z = z or 0
   if not x or not y then
     print("ERROR in flock:add_boid - no position specified")
@@ -138,7 +137,7 @@ function fk:add_predator(x, y, z, dirx, diry, dirz, gradient)
   else
     new_boid = predator:new(self.level)
   end
-  new_boid:init(self, x, y, z, dirx, diry, dirz)
+  new_boid:init(self.level, self, x, y, z, dirx, diry, dirz, free, false)
   if gradient then
     new_boid:set_gradient(gradient)
   else
@@ -161,7 +160,6 @@ function fk:pan(boidMort,x,y)
         --boid.rule_weights[boid.separation_vector] = state.rules[3]
         --boid.rule_weights[boid.alignment_vector] = 0
 		if i < 2 then
-			print('couille')
 			boid:confuseMe()
 		end
 		
@@ -219,7 +217,7 @@ function fk:get_boids_in_radius(x, y, r, storage)
     local boid = storage[i]
     local p = boid.position
     local dx, dy, dz = p.x - x, p.y - y
-    if dx*dx + dy*dy > r * r then
+    if dx*dx + dy*dy > r * r or boid.boidType==2 then
       table.remove(storage, i)
     end
   end

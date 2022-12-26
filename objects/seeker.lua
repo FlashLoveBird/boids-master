@@ -18,7 +18,7 @@ sk.scale = 20     -- pixels / meter
 sk.mass = 1
 sk.inv_mass = 1 / sk.mass
 
-sk.max_speed = 0.8
+sk.max_speed = 3.5
 sk.max_force = 15
 
 sk.current_angle = nil   -- angle on x,y plane
@@ -237,6 +237,10 @@ function sk:_update_direction(dt)
   end
   self.current_zangle = zangle
   
+end
+
+function sk:update_speed(tired)
+  self.max_speed = 0.8 --tired/100 + 0.2
 end
 
 function sk:update(dt)

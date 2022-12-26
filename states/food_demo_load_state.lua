@@ -16,6 +16,8 @@ function food_demo_load.mousepressed(x, y, button)
 end
 function food_demo_load.mousereleased(x, y, button)
 end
+function food_demo_load.wheelmoved(x, y)
+end
 
 --##########################################################################--
 --[[----------------------------------------------------------------------]]--
@@ -67,7 +69,7 @@ function food_demo_load.construct_level_map(level)
   
   -- load map
   local map_directory = "images/menu"
-  local back = "background.png"
+  local back = "background2.png"
   local wall = "wall1.png"
   local map_data = require(map_directory.."/menu_map_data")
   
@@ -81,7 +83,8 @@ function food_demo_load.construct_level_map(level)
   	local slice_data = map_data[i]
   	local offx, offy = slice_data[back].x + 1, slice_data[back].y + 1
   	local w, h = slice_data[back].width, slice_data[back].height
-  	
+    
+	
   	local tmap = tile_map:new(level, w, h)
   	if slice_data[back] then
   	  local layer_data = slice_data[back]
@@ -90,8 +93,6 @@ function food_demo_load.construct_level_map(level)
   	  local layer = tile_layer:new(imgdata_layers[back], x, y, w, h, 
   	                               palette:get_gradient("allwhite"), 0, T_WALK)
       tmap:add_tile_layer(layer)
-	   print("layer_data.width")
-	  print(layer_data.width)
   	end
   	level_map:add_tile_map(tmap, offx, offy)
   end
@@ -102,6 +103,7 @@ function food_demo_load.pre_level_load(level)
   state.initialize_camera(level)
   state.initialize_audio(level)
   state.construct_level_map(level)
+  loaderImg = love.graphics.newImage("images/Jungle/menu/bg.png")
 end
 
 -- POST LEVEL LOAD FUNCTIONS
@@ -159,7 +161,10 @@ end
 --[[----------------------------------------------------------------------]]--
 --##########################################################################--
 function food_demo_load.draw()
-  --love.graphics.setBackgroundColor(0, 0, 0, 255)
+  love.graphics.setBackgroundColor(255, 255, 255, 255)
+  love.graphics.setColor(255, 255, 255, 255)
+  love.graphics.draw(loaderImg, 50, -300)
+  love.graphics.print("Chargement...", 500, 200)
 end
 
 return food_demo_load

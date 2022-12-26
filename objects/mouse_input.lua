@@ -17,6 +17,7 @@ mouse_input.height = SCR_HEIGHT
 
 mouse_input.left_pressed = false
 mouse_input.left_press_timer = nil
+mouse_input.color = 0
 
 local mouse_input_mt = { __index = mouse_input }
 function mouse_input:new(level)
@@ -46,6 +47,10 @@ function mouse_input:init()
   self.height = SCR_HEIGHT
   self.reference_pos = vector2:new(0.5*SCR_WIDTH, 0.5*SCR_HEIGHT)
   self.screen_pos = vector2:new(0.5*SCR_WIDTH, 0.5*SCR_HEIGHT)
+end
+
+function mouse_input:setColor(color)
+	self.color=color
 end
 
 function mouse_input:mousepressed(x, y, button)
@@ -166,7 +171,7 @@ end
 ]]--
 
 function mouse_input:draw()
-  lg.setColor(0, 0, 0, 255)
+  lg.setColor(self.color, 0, 0, 255)
   lg.setPointSize(3)
   local x, y = love.mouse.getPosition()
   local len = 10

@@ -20,7 +20,7 @@ local UPLEFT_TILE = 8
 
 local pgr = {}
 pgr.table = 'pgr'
-pgr.debug = false
+pgr.debug = true
 pgr.level = nil
 pgr.primitives = nil
 pgr.bbox = nil
@@ -57,6 +57,10 @@ pgr.is_current = false
 
 pgr.marching_square_draw_cases = {}
 pgr._init_marching_square_draw_cases = nil
+
+pgr.graphic = nil
+pgr.rock=nil
+
 do
   local cases = pgr.marching_square_draw_cases
   local tw, th = pgr.tile_width, pgr.tile_height
@@ -564,10 +568,25 @@ function pgr:new(level, x, y, width, height, tile_width, tile_height)
   
   pgr:_init_cell_tables()
   pgr:_init_textures()
+  pgr:initGraphics()
   
-  rock = love.graphics.newImage("images/Default/rocksA.png")
+  rock = love.graphics.newImage("images/3D/rockA.png")
+  plant = love.graphics.newImage("images/3D/rockA.png")
+  rock2 = love.graphics.newImage("images/3D/rockA.png")
   
   return pgr
+end
+
+function pgr:initGraphics()
+  self.graphic = math.random(1,3)
+  if self.graphic==1 then
+	self.rock = love.graphics.newImage("images/env/tree1.png")
+  elseif self.graphic==2 then
+	self.rock = love.graphics.newImage("images/env/tree2.png")
+  else
+	self.rock = love.graphics.newImage("images/env/tree3.png")
+  end
+
 end
 
 function pgr:set_surface_threshold(thresh)
@@ -681,7 +700,6 @@ function pgr:add_point(x, y, radius)
   radius = radius or self.default_radius
    
   if radius < self.min_radius then radius = self.min_radius end
-  
   
   local p = implicit_point:new(x, y, radius)
   local b = p:get_bbox()
@@ -1014,11 +1032,11 @@ end
 
 function pgr:_draw_debug()
   lg.setColor(0, 0, 255, 255)
-  --self.bbox:draw()
+  self.bbox:draw()
   
   -- polygonzied surface
-  lg.setColor(255, 255, 255, 255)
-  lg.draw(self.spritebatch, 0, 0)
+  --lg.setColor(255, 255, 255, 255)
+  --lg.draw(self.spritebatch, 0, 0)
   
   -- cell grid
   local cw, ch = self.cell_width, self.cell_height
@@ -1028,7 +1046,7 @@ function pgr:_draw_debug()
   local yf = self.bbox.y + self.bbox.height
   for i=1,self.cols-1 do
     x = x + cw
-    lg.line(x, yi, x, yf)
+    --lg.line(x, yi, x, yf)
   end
   
   local y = self.bbox.y
@@ -1036,7 +1054,7 @@ function pgr:_draw_debug()
   local xf = self.bbox.x + self.bbox.width
   for i=1,self.rows-1 do
     y = y + ch
-    lg.line(xi, y, xf, y)
+    --lg.line(xi, y, xf, y)
   end
   
   -- tile grid
@@ -1048,7 +1066,7 @@ function pgr:_draw_debug()
   for i=1,2*self.cols-1 do
     x = x + tw
 	lg.setColor(0, 0, 255, 30)
-    --lg.line(x, yi, x, yf)
+    lg.line(x, yi, x, yf)
   end
   
   local y = self.bbox.y
@@ -1056,7 +1074,7 @@ function pgr:_draw_debug()
   local xf = self.bbox.x + self.bbox.width
   for i=1,2*self.rows-1 do
     y = y + tw
-    --lg.line(xi, y, xf, y)
+    lg.line(xi, y, xf, y)
   end
   
   self.primitives:draw()
@@ -1083,7 +1101,7 @@ function pgr:_draw_debug()
   for idx=1,#cells do
     local i, j = cells[idx].i, cells[idx].j
     local x, y = self:_get_cell_position(i, j)
-    --lg.rectangle("fill", x, y, w, h)
+    lg.rectangle("fill", x, y, w, h)
   end
   
   -- cell at mouse position
@@ -1102,25 +1120,27 @@ end
 
 ------------------------------------------------------------------------------
 function pgr:draw()
-  --if not self.debug then return end
+  if not self.debug then return end
   local cells = self.surface_cells
+  --self:_draw_debug()
+  lg.setColor(255, 255, 255, 255)
   for idx=1,#cells do
     local i, j = cells[idx].i, cells[idx].j
     local x, y = self:_get_cell_position(i, j)
-	love.graphics.draw(rock, x, y)
+	if i%2 == 1 then
+		--love.graphics.draw(plant, x, y)
+	else
+		--love.graphics.draw(plant, x, y)
+	end
   end
-  --self:_draw_debug()
   
   local floodscells = self.flood_fill_cells
   for idx=1,#floodscells do
     local i, j = floodscells[idx].i, floodscells[idx].j
     local x, y = self:_get_cell_position(i, j)
-	--love.graphics.draw(rock, x-25, y-25)
+	love.graphics.draw(plant, x, y)
   end
   
-  
-  lg.setColor(255, 0, 0, 255)
-  --lg.circle("line", 60, 60, 100)
 end
 
 return pgr
