@@ -39,6 +39,16 @@ tile_chunk.max_chunk_id = 0
 tile_chunk.diagonal_count = 0
 tile_chunk.chunkGraphic = nil
 
+graph1 = love.graphics.newImage("images/env/nature-1.png")
+graph2 = love.graphics.newImage("images/env/nature-2.png")
+graph3 = love.graphics.newImage("images/env/nature-3.png")
+graph4 = love.graphics.newImage("images/env/nature-4.png")
+graph5 = love.graphics.newImage("images/env/nature-5.png")
+graph6 = love.graphics.newImage("images/env/nature-6.png")
+graph7 = love.graphics.newImage("images/env/nature-7.png")
+graph8 = love.graphics.newImage("images/env/nature-8.png")
+graph9 = love.graphics.newImage("images/env/nature-9.png")
+
 local tile_chunk_mt = { __index = tile_chunk }
 function tile_chunk:new()
 	local type_list = {}
@@ -49,13 +59,37 @@ function tile_chunk:new()
 		type_list.count[t_type] = 0
 	end
   
-chunkGraphic = love.graphics.newImage("images/env/output.jpg")
+  
+  
 
   return setmetatable({ tiles = {},
   	                    diagonal_tiles = {},
                         type_list = type_list,
                         quad_updates = {},
                         update_list = {}}, tile_chunk_mt)
+end
+
+
+function tile_chunk:init(grAph)
+	if grAph==1 then
+		self.chunkGraphic = graph1
+	elseif grAph==2 then
+		self.chunkGraphic = graph2
+	elseif grAph==3 then
+		self.chunkGraphic = graph3
+	elseif grAph==4 then
+		self.chunkGraphic = graph4
+	elseif grAph==5 then
+		self.chunkGraphic = graph5
+	elseif grAph==6 then
+		self.chunkGraphic = graph6
+	elseif grAph==7 then
+		self.chunkGraphic = graph7
+	elseif grAph==8 then
+		self.chunkGraphic = graph8
+	elseif grAph==9 then
+		self.chunkGraphic = graph9
+	end
 end
 
 -- position of top left corner
@@ -239,14 +273,15 @@ end
 ------------------------------------------------------------------------------
 function tile_chunk:draw() 
 	lg.setColor(255, 255, 255, 255)
-  lg.draw(self.sprite_batch, self.x, self.y)
+    lg.draw(self.sprite_batch, self.x, self.y)
   
   if self.debug then
     --self:draw_debug()
   end
   lg.setColor(255, 255, 255, 255)
-  love.graphics.draw(chunkGraphic, self.x, self.y)
-  
+  local x, y = self.x, self.y
+  local chunkGraphic = self.chunkGraphic
+  lg.draw(chunkGraphic, x, y)  
 end
 
 function tile_chunk:draw_debug()

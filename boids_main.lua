@@ -76,8 +76,8 @@ function love.load(args)
   CELL_HEIGHT = 64
   MAX_IMAGE_WIDTH = 2048                  -- in pixels
   MAX_IMAGE_HEIGHT = 2048
-  ACTIVE_AREA_WIDTH = 6400 -- 32*8*25 
-  ACTIVE_AREA_HEIGHT= 6400
+  ACTIVE_AREA_WIDTH = 12800--6400 -- 32*8*25 
+  ACTIVE_AREA_HEIGHT= 12800--6400
   RED, GREEN, BLUE, ALPHA = 1, 2, 3, 4
   
   nbBush = 0

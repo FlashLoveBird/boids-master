@@ -96,6 +96,8 @@ function hero:new(level, flock, x, y)
   inspiration = love.audio.newSource("sound/inspiration_forte.mp3", "stream")
   expiration = love.audio.newSource("sound/expiration.mp3", "stream")
   appeau = love.audio.newSource("sound/chouette.wav", "stream")
+  vol = love.audio.newSource("sound/vol.wav", "stream")
+  fuite = love.audio.newSource("sound/sing-3.mp3", "stream")
   
   eggHeroImg = love.graphics.newImage("images/solo-egg.png")
   hero:init()
@@ -211,15 +213,20 @@ function hero:update(dt)
 			hero.animation6.currentTime = hero.animation6.currentTime - hero.animation6.duration
 		end
 		
-		if self.level.master_timer then
+		--[[if self.level.master_timer then
 		local masterTime = self.level.master_timer:get_time()
 			if self.startBreathe < masterTime - 10 and self.breathing then
 				hero:cry()
 			end
-		end
+		end--]]
 	end
 	
 	local eggs = self.eggs
+	local radius = self.startBreathe
+	
+	if radius > 0 then
+		self.startBreathe = radius + 10
+	end
 	
 	if self.nbEggs>0 then
 		for i=1,#eggs do
@@ -238,8 +245,9 @@ function hero:update(dt)
 			if balls[i] > 0.99 and self.activeBlast[i]==false then
 				self.balls[i] = 0
 				self.activeBlast[i]=true
-				local woosh = love.audio.newSource("sound/whooosh.wav", "stream")
-				woosh:setVolume(0.1)
+				local i = math.random(1,2)
+				local woosh = love.audio.newSource("sound/champ"..i..".wav", "stream")
+				woosh:setVolume(1)
 				love.audio.play(woosh)
 			end
 		end
@@ -251,7 +259,7 @@ function hero:update(dt)
 			if self.animationBlast[i].currentTime >= self.animationBlast[i].duration then
 				self.animationBlast[i].currentTime = self.animationBlast[i].currentTime - self.animationBlast[i].duration
 			end
-			if self.animationBlast[i].currentTime > 1.9 then
+			if self.animationBlast[i].currentTime > 0.9 then
 				self:putEgg(self.destXEgg[i]-25,self.destYEgg[i]-25,self.elements[i])
 				table.remove(self.curves, i)
 				table.remove(self.balls, i)
@@ -296,6 +304,10 @@ function hero:set_position(pos)
 		self.pos:set(pos.x , pos.y )
 	end
   --self:set_target_position(pos)
+end
+
+function hero:get_position()
+	return self.pos
 end
 
 function hero:resetBlock()
@@ -369,14 +381,14 @@ end
 
 function hero:breathe()
 	love.audio.play(inspiration)
-	self.startBreathe = MASTER_TIMER.current_time
+	self.startBreathe = 1
 	self.breathing = true
 end
 
 function hero:expire(activeFlock)
 local boidsIn = self.boidsIn
 if self.breathing then
-  local radius = MASTER_TIMER.current_time - self.startBreathe
+  local radius = self.startBreathe
   self.breathing = false
   love.audio.play(appeau)
   
@@ -385,18 +397,56 @@ if self.breathing then
 	  local x = self.pos.x
 	  local y = self.pos.y
 	  if #activeFlock:get_active_boids()>0 then
-		  activeFlock:get_boids_in_radius(x, y, radius*100, objects)
+		  activeFlock:get_boids_in_radius(x, y, radius, objects)
 			local count = 0
 			if #objects>0 then
-				for i=1,#objects do
+				local maxI = 0
+				if #objects>50 then
+					maxI = 50
+				else
+					maxI = #objects
+				end
+				for i=1,maxI do
 					local boid = objects[i]
 					boid:goHero()
+					self.boidsIn = true
 				end
 			end
 	  end
   end
-  self.boidsIn = true
 end
+end
+
+function hero:wakeUp(activeFlock)
+local boidsIn = self.boidsIn
+if self.breathing then
+return end
+  local radius = 500
+  self.breathing = false
+  love.audio.play(fuite)
+  
+  if self.pos.x then
+	  local objects = {}
+	  local x = self.pos.x
+	  local y = self.pos.y
+	  if #activeFlock:get_active_boids()>0 then
+		  activeFlock:get_boids_in_radius(x, y, radius, objects)
+			local count = 0
+			if #objects>0 then
+				local maxI = 0
+				if #objects>50 then
+					maxI = 50
+				else
+					maxI = #objects
+				end
+				for i=1,maxI do
+					local boid = objects[i]
+					boid:activate()
+					boid:setObjectiv("fly")
+				end
+			end
+	  end
+  end
 end
 
 function hero:release(activeFlock)
@@ -409,6 +459,7 @@ activeFlock:get_boids_in_radius(x, y, 500, objects)
 		for i=1,#objects do
 			local boid = objects[i]
 			boid:setObjectiv("fly")
+			love.audio.play(vol)
 		end
 	end
 	self.boidsIn = false
@@ -446,7 +497,7 @@ function hero:setRandomPoints(mx, my, element)
 	self.destYEgg[#destYEgg+1] = my
 		
 	self.elements[#self.elements+1] = element
-	self.animationBlast[#self.animationBlast+1] = self:newAnimation(love.graphics.newImage("images/blast.png"), 90, 120, 2)
+	self.animationBlast[#self.animationBlast+1] = self:newAnimation(love.graphics.newImage("images/blast.png"), 90, 120, 1)
 	self.activeBlast[#self.activeBlast+1]=false
 	self.activeBlastX[#self.activeBlastX+1]=dx
 	self.activeBlastY[#self.activeBlastY+1]=dy
@@ -465,6 +516,7 @@ function hero:setRandomPoints(mx, my, element)
 		--map[cmx][cmy]:setState(true)
 		--map[cmx][cmy]:set_position(cmx,cmy)
 		--state.level:setTreeMap(map)
+		print('AJOUT BUSH')
 	end
 
 end
@@ -484,10 +536,11 @@ function hero:draw()
 	
 	  local x = self.pos.x
 	  local y = self.pos.y
-	  local radius = 0
+	  local radius = self.startBreathe
 	  local current_time = self.level.master_timer:get_time()
 	  if self.breathing == true then
-		radius = current_time - self.startBreathe
+		lg.setColor(255, 0, 0, 255)
+		--lg.circle("line", x+60, y+60, radius)
 	  end
 	  --love.graphics.circle("fill", x, y, 50, 100)
 	  lg.setColor(255, 255, 255, 255)
@@ -519,9 +572,6 @@ function hero:draw()
 	  end
 	  
 	  
-	  
-	  lg.setColor(255, 0, 0, 255)
-	  lg.circle("line", x+60, y+60, radius*100)
 	  
 	--end
 	

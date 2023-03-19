@@ -92,10 +92,13 @@ tile_map.initMap=false
 tile_map.count=0
 tile_map.countTree=0
 
+tile_map.mapSave = nil
+
 local nbTree = 10
+local nbBush = 5
 
 local tile_map_mt = { __index = tile_map }
-function tile_map:new(level, columns, rows, tile_width, tile_height)
+function tile_map:new(level, columns, rows, tile_width, tile_height, mapSave)
   tile_width = tile_width or TILE_WIDTH
   tile_height = tile_height or TILE_HEIGHT
   
@@ -171,6 +174,8 @@ function tile_map:new(level, columns, rows, tile_width, tile_height)
   tmap.neighbour_data = {}
   
   tmap.init_queue = {}
+  
+  tmap.mapSave = mapSave
   
   return tmap
 end
@@ -843,6 +848,17 @@ function tile_map:_generate_chunk(i, j)
   
   chunk:set_position((i-1) * self.tiles_per_chunk_col * self.tile_width + off_x, 
                      (j-1) * self.tiles_per_chunk_row * self.tile_height + off_y)
+					 
+  local rand = math.random(1,9)
+  if rand > 3 then
+	local rand2 = math.random(1,6)
+	if rand2 == 1 then
+		rand = math.random(4,9)
+	else
+		rand = math.random(1,3)
+	end
+  end
+  chunk:init(rand)
   
   -- calculate boundaries for which tiles fit into this chunk
   local t_per_c, t_per_r = self.tiles_per_chunk_col, self.tiles_per_chunk_row
@@ -853,9 +869,9 @@ function tile_map:_generate_chunk(i, j)
   
   local map = self.map
   if self.initMap==false then
-	  for x = 0, 200 do
+	  for x = 0, 800 do
 		map[x] = {}
-		for y = 0, 200 do
+		for y = 0, 800 do
 			map[x][y] = nil
 		end
 	  end
@@ -886,6 +902,7 @@ function tile_map:_generate_chunk(i, j)
   local idx, idy = 1, 1
   local map_tiles = self.tiles
   local tw, th = self.tile_width, self.tile_height
+  
   for y=miny,maxy do
     local row = {}
     idx = 1
@@ -907,46 +924,94 @@ function tile_map:_generate_chunk(i, j)
 																			     
 	      diag_tiles[#diag_tiles + 1] = diag_tile
       end
-	  if x > 80 and x<360 and y > 80 and y<320 and x<320 and countTree<nbTree and element==false and math.random(0,10000)==1 then
-		local newX = math.floor(x/2)
-		local newY = math.floor(y/2)
-		map[newX][newY] = self.level:addTree(newX,newY)
-		map[newX][newY]:add(nil)
-		map[newX][newY]:setNumEmits(0)
-		map[newX][newY]:setState(true)
-		map[newX][newY]:set_position(newX,newY)
-		map[newX][newY]:setFlock(flock)
-		self.level:setTreeMap(map)
-		self.countTree = countTree + 1
-		element = true
-      elseif x > 40 and x<360 and y > 40 and y<360 and x<360 and count<nbBush and element==false and math.random(0,15000)==1 then
-		local newX = math.floor(x/2)
-		local newY = math.floor(y/2)
-		local path = 0
-		local startX =  newX-5 
-		local startY =  newY-5
-		local maxX =  newX+5 
-		local maxY =  newY+5
-		element = true
-		for caseX = startX, maxX do
-			for caseY = startY, maxY do
-				if map[caseX] then
-					if map[caseX][caseY]~=nil then
-						path = 1
+	  
+		if self.mapSave==nil then
+		  
+			local newX = x
+			local newY = y
+			if x > 40 and x<280 and y > 40 and y<280 and countTree<nbTree and element==false and self.level:canILandHere(newX,newY,100)==true and math.random(1,10)==1 then
+				map[newX][newY] = self.level:addTree(newX,newY)
+				map[newX][newY]:add(nil)
+				map[newX][newY]:setNumEmits(0)
+				map[newX][newY]:setState(true)
+				map[newX][newY]:set_position(newX,newY)
+				--map[newX][newY]:setFlock(flock)
+				--self.level:setTreeMap(map)
+				self.countTree = countTree + 1
+				element = true
+				print("newX, newY")
+				print(newX, newY)
+				self.map = map
+				self.level:setTreeMap(map)
+			elseif x > 40 and x<280 and y > 40 and y<280 and count<nbBush and element==false and self.level:canILandHere(newX,newY,20)==true and math.random(1,5500)==1 then
+				local path = 0
+				local startX =  newX-5 
+				local startY =  newY-5
+				local maxX =  newX+5 
+				local maxY =  newY+5
+				element = true
+				for caseX = startX, maxX do
+					for caseY = startY, maxY do
+						if map[caseX] then
+							if map[caseX][caseY]~=nil then
+								path = 1
+							end
+						end
+					end
+				end
+				if path==0 then 
+					map[newX][newY] = self.level:addBush(newX,newY)
+					map[newX][newY]:setState(true)
+					map[newX][newY]:set_position(newX,newY)
+					self.count = count + 1
+					print("ajout dun bush en")
+					print(newX,newY)
+					self.map = map
+				    self.level:setTreeMap(map)
+				end
+			end
+		elseif self.mapSave[x]~=nil then
+			if self.mapSave[x][y]~=nil then
+				if self.mapSave[x][y]==1 then
+					map[x][y] = self.level:addTree(x,y)
+					map[x][y]:add(nil)
+					map[x][y]:setNumEmits(0)
+					map[x][y]:setState(true)
+					map[x][y]:set_position(x,y)
+					--map[newX][newY]:setFlock(flock)
+					--self.level:setTreeMap(map)
+					self.countTree = countTree + 1
+					element = true
+					self.map = map
+					self.level:setTreeMap(map)
+				elseif self.mapSave[x][y]==2 then
+					local path = 0
+					local startX =  x-5 
+					local startY =  y-5
+					local maxX =  x+5 
+					local maxY =  y+5
+					element = true
+					for caseX = startX, maxX do
+						for caseY = startY, maxY do
+							if map[caseX] then
+								if map[caseX][caseY]~=nil then
+									path = 1
+								end
+							end
+						end
+					end
+					if path==0 then 
+						map[x][y] = self.level:addBush(x,y)
+						map[x][y]:setState(true)
+						map[x][y]:set_position(x,y)
+						self.count = count + 1
+						print("ajout dun bush en")
+						self.map = map
+						self.level:setTreeMap(map)
 					end
 				end
 			end
 		end
-		if path==0 then 
-			map[newX][newY] = self.level:addBush(newX,newY)
-			map[newX][newY]:setState(true)
-			map[newX][newY]:set_position(newX,newY)
-			self.count = count + 1
-			print("ajout dun bush en")
-			print(newX,newY)
-		end
-		
-      end
       row[idx] = tile
       idx = idx + 1
     end
@@ -954,8 +1019,6 @@ function tile_map:_generate_chunk(i, j)
     tiles[idy] = row
     idy = idy + 1
   end
-  self.map = map
-  self.level:setTreeMap(map)
   chunk:set_tiles(tiles)
   chunk:set_diagonal_tiles(diag_tiles)
   chunk:init_sprite_batch()
@@ -1090,6 +1153,8 @@ function tile_map:_set_tile_type(i, j)
     quad_hash[px_val] = quad
   end
   
+  
+  
   -- set tile
   local tile_type_num = layer:get_tile_type()
   local tile = self.tiles[j][i]
@@ -1181,6 +1246,12 @@ function tile_map:draw()
   end
   
   camera:unset()
+  
+  --[[local layers = self.tile_layers
+  for i=1,#layers do
+      local layer = layers[i]
+      layer:draw_preview()
+  end--]]
   
 end
 

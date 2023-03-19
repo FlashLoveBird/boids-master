@@ -116,12 +116,13 @@ function tw:_update_area(dt)
 	local r = s.radius
 	local newR = r + 20
 	table.clear(objects)
-	--flock:get_boids_in_radius(s.x, s.y, newR, objects)
+	flock:get_boids_in_radius(s.x, s.y, newR, objects)
 	local count = 0
 	if #objects>0 then
 		for i=1,#objects do
 		  local randomNb = math.random(1,1000)
-		  if not bhash[objects[i]] and randomNb ==300 then
+		  if not bhash[objects[i]] and randomNb == 1 then
+			local dead = math.random(1,#objects)
 			flock:pan(objects[i],s.x,s.y)
 		  end
 		end

@@ -21,6 +21,7 @@ local nbGrpBird = 0
 local bitser = require "bitser"
 local save = nil
 local music = nil
+local nbNids = 1
 
 --##########################################################################--
 --[[----------------------------------------------------------------------]]--
@@ -111,12 +112,11 @@ function food_demo_state.mousepressed(x, y, button)
   ------------------------------------------------------------------AJOUT BOIS
   --[[local p = state.wood_source:add_wood(mx, my, 200)
   state.wood_source:force_polygonizer_update()--]]
-    
+  cmx = math.floor(mx /64)
+  cmy = math.floor(my /64)
+ 
   if button == 1 and state.selectItem == 3 then
-  
-	if mx > 5 and mx < 6400 and my > 5 and my < 6400 then
-		cmx = math.floor(mx /32)
-		cmy = math.floor(my /32)
+	if mx > 5 and mx < 25600 and my > 5 and my < 25600 then
 		if state.level:canILandHere(cmx,cmy,10) then
 			--state.hero:putEgg(mx-25,my-25,0)
 			state.hero:setRandomPoints(mx,my,0)
@@ -125,10 +125,7 @@ function food_demo_state.mousepressed(x, y, button)
 	
   end
   if button == 1 and state.selectItem == 1 then
-	cmx = math.floor(mx /32)
-	cmy = math.floor(my /32)
-	print(cmx,cmy)
-	if cmx > 5 and cmx < 200 and cmy > 5 and cmy < 200 and state.level:canILandHere(cmx,cmy,10) then
+	if cmx > 5 and cmx < 800 and cmy > 5 and cmy < 800 and state.level:canILandHere(cmx,cmy,10) then
 		--map[cmx][cmy] = state.level:addBush(cmx,cmy,state.flock)
 		--map[cmx][cmy]:setState(true)
 		--map[cmx][cmy]:set_position(cmx,cmy)
@@ -136,13 +133,14 @@ function food_demo_state.mousepressed(x, y, button)
 		
 		state.hero:setRandomPoints(mx,my,3)
 		
+		local level = state.level
+		local level_map = level:get_level_map()
+		local tilemap = level_map:get_tile_map()
 		
-		--[[save = nil
-		save = {"1","2"} -- il faut créer un tableau avec position de chaque arbre/buisson + oiseaux et save les stats des oiseaux
-		save = bitser.dumps(save)
-		love.filesystem.write("cucu.txt",save)
-		local printer = bitser.loads(love.filesystem.read("cucu.txt"))
-		print(dump(printer))--]]
+		local mapSave = level:getTreeMapSave()
+		
+		save = {mapSave}
+		bitser.dumpLoveFile('save.dat', mapSave)
 		
 		--local data = bitser.dumps(map(1))
 		--local instance = bitser.loads(data)
@@ -152,8 +150,6 @@ function food_demo_state.mousepressed(x, y, button)
    if button == 1 and state.selectItem == 2 then   
 	cmx = math.floor(mx /32)
 	cmy = math.floor(my /32)
-	print("jai le droit de poser un mur ici")
-	print(cmx,cmy)
 	if state.level:canILandHere(cmx,cmy,10) then
 		state.hero:setRandomPoints(mx,my,2)
 		--[[
@@ -166,8 +162,9 @@ function food_demo_state.mousepressed(x, y, button)
 		  state.start_fade()
 		end
 		level_map:setWallMap()
-		--state.level:spawn_cube_explosion(200, 200, 200, 300, 300)
+		
 		--]]
+		--state.level:spawn_cube_explosion(200, 200, 200, 300, 300)
 	end
   end
   if button == 1 and state.selectItem == 5 then
@@ -179,7 +176,7 @@ function food_demo_state.mousepressed(x, y, button)
 		cmy = math.floor(my /32)
 		if state.level:canILandHere(cmx,cmy,10) then
 			--state.hero:putEgg(mx-25,my-25,0)
-			state.hero:setRandomPoints(mx,my,0)
+			state.hero:setRandomPoints(mx,my,0) -- 0 = boid
 		end
 	end
   end  
@@ -342,7 +339,7 @@ function food_demo_state.load(level)
                       bbox = bbox:new(actionX+5*120, vy-110, 100, 100)}
   
   state.flock = flock:new(state.level,"boid", x+100, y+100, width-100, height-100, depth)
-  state.flock:set_gradient(require("gradients/named/whiteblack"))
+  state.flock:set_gradient(require("gradients/named/greenyellow"))
   local x, y, z = 1200, 300, 500
   local dx, dy, dz = 0, 1, 0.5
   local r = 200
@@ -431,8 +428,8 @@ function food_demo_state.load(level)
                       bbox = bbox:new(actionX+150, 30, 50, 50)}
   state.buttons[8] = {text="fastforward", x = actionX+200, y = 30, toggle = true, 
                       bbox = bbox:new(actionX+200, 30, 50, 50)}
-  state.buttons[9] = {text="fullscreen", x = vx/2-vx/4+50, y = vy/2-vy/4+50, toggle = true, 
-                      bbox = bbox:new(vx/2-vx/4+200, vy/2-vy/4+200, 100, 100)}						  
+  state.buttons[9] = {text="fullscreen", x = actionX+200, y = actionY-500, toggle = true, 
+                      bbox = bbox:new(actionX+200, actionY-500, 100, 100)}						  
 	
 	local level = state.level:getTreeMap()
 	local level_map = state.level:get_level_map()	
@@ -445,9 +442,14 @@ function food_demo_state.load(level)
 	local countRock = 0
 	local countTown = 0
 	local countPred = 0
+
+local target = vector2:new(1000, 1000)
+local cam = state.level:get_camera()
+
+
 	
-	for x=5, 200 do--Poly.rows-5 do
-		for y=5, 200 do--Poly.cols-5 do
+	for x=5, 800 do--Poly.rows-5 do
+		for y=5, 800 do--Poly.cols-5 do
 			local randX = 32*x
 			local randY = 32*y
 			local caseX = x--math.floor( randX / h ) 
@@ -467,8 +469,7 @@ function food_demo_state.load(level)
 					--map[caseX][caseY]:set_position(randX,randY)
 					--level[caseX][caseY]:add(state.level:addHome(randX-35,randY-60,10,10,0,state.flock,state.level,3))
 					--level[caseX][caseY]:setNumEmits(1)
-					--state.hero:set_posX(randX+50)
-					--state.hero:set_posY(randY+50)
+					
 								
 					
 					--boid = state.flock:add_boid(200, 200, z, dx, dy, dz, true, require("gradients/named/orange"))
@@ -491,14 +492,12 @@ function food_demo_state.load(level)
 					state.level:setFlock(state.flock)
 				end
 				if level[caseX][caseY]~=nil then
-					if count<nbNids and level[caseX][caseY]:getNumEmits()==0 and level[caseX][caseY].name<51 then
+					if count<nbNids and level[caseX][caseY]:getNumEmits()==0 and level[caseX][caseY].table=="tree" then
 						print('ajout de nid')
-						local emit = state.level:addHome(randX-35,randY-60,10,10,0,state.flock,state.level,10,0)
+						local emit = state.level:addHome(randX-35,randY-60,10,10,0,state.flock,state.level,50,0)
 						level[caseX][caseY]:add(emit)
 						level[caseX][caseY]:setNumEmits(1)
 						count = count + 1
-						state.hero:set_posX(randX+50)
-						state.hero:set_posY(randY+50)
 						--map[caseX][caseY] = state.level:addTree(0)
 						--map[caseX][caseY]:set_position(randX,randY)
 						--map[caseX][caseY]:add(nil)
@@ -514,6 +513,10 @@ function food_demo_state.load(level)
 							countPred = countPred + 1
 							print("appel creation home predator")
 						end--]]
+						state.hero:set_posX(caseX*32)
+						state.hero:set_posY(caseY*32)
+						target.x, target.y = caseX*32, caseY*32
+						cam:set_target(target,true)
 					end
 				elseif state.level:canILandHere(caseX,caseY,30) then
 					if caseX<190 and caseY<190 and caseX>10 and caseY>10 and countRock<10 then
@@ -550,7 +553,7 @@ function food_demo_state.load(level)
 	
 	--[[for x=0,Poly.rows do
 		local randY = math.random(-50,50)
-		local p = level_map:add_point_to_polygonizer(x*32, 200, 200)
+		local p = level_map:add_point_to_polygonizer(x*32, 500+randY, 250)
 		state.primitives[#state.primitives + 1] = p
 			if #state.primitives == 1 then
 			state.start_fade()
@@ -564,7 +567,7 @@ function food_demo_state.load(level)
 	
 	for y=0,Poly.cols do
 		local randX = math.random(-50,50)
-		local p = level_map:add_point_to_polygonizer(300+randX, y*32, 250)
+		local p = level_map:add_point_to_polygonizer(500+randX, y*32, 250)
 		state.primitives[#state.primitives + 1] = p
 			if #state.primitives == 1 then
 			state.start_fade()
@@ -583,7 +586,7 @@ function food_demo_state.load(level)
 	state.nbHome = state.nbHome -1	
 	
 	music = love.audio.newSource("sound/airtone2.mp3", "stream")
-	music:setVolume(1)
+	music:setVolume(0.8)
 	--love.audio.play(music)
 end
 
@@ -848,7 +851,7 @@ function food_demo_state.update(dt)
   end
   
   if os.time() >= endTime then
-	endTime = endTime + 1
+	--[[endTime = endTime + 1
 	if journeyTime == "SOIR" and state.call<6 then
 		local boids = state.flock.active_boids
 		if #boids > 10 then
@@ -858,7 +861,6 @@ function food_demo_state.update(dt)
 				local boid = boids[i]
 				if boid then
 					if boid.free == false then
-						boid.path=nil
 						boid:goHome()
 					end
 				end
@@ -872,7 +874,6 @@ function food_demo_state.update(dt)
 				local boid = boids[i]
 				if boid then
 					if boid.free == false then
-						boid.path=nil
 						boid:goHome()
 					end
 				end
@@ -880,10 +881,10 @@ function food_demo_state.update(dt)
 			end
 			state.call=state.call+1
 		end
-	end
+	end--]]
 	if journeyTime == "NUIT" then
 	    --local actualFood = state.level:getFood()
-		state.level:_feed_boids()
+		--state.level:_feed_boids()
 	end
   end
   food = state.level:getFood()
@@ -963,6 +964,18 @@ function food_demo_state.draw()
   
   lg.setColor(255, 255, 255, 255)
   
+  -- obstacle radius
+  local x, y = state.level:get_camera():get_viewport()
+  local mpos = state.level:get_mouse():get_position()
+  --lg.circle("line", mpos.x + x, mpos.y + y, state.point_radius * (1-state.polygonizer_threshold))
+    lg.setColor(255, 255, 255, 50)
+    if not state.level.level_map.bbox:contains(state.primitive_bbox) then
+      lg.setColor(255, 0, 0, 50)
+    end
+  --lg.circle("line", mpos.x + x, mpos.y + y, state.point_radius)
+  
+  --state.draw_field_vector()
+  
   
   --state.draw_field_vector()
   state.level.camera:unset()
@@ -1023,14 +1036,14 @@ function food_demo_state.draw()
   love.graphics.draw(fastforward, actionX+200, 30)
   
   if escape then
-	love.graphics.draw(menuFond, width/2-width/4,height/2-height/4)
-	love.graphics.draw(button, width/2-width/4+200,height/2-height/4+200)
-	love.graphics.draw(fullscreen, width/2-width/4+200,height/2-height/4+200)
+	love.graphics.draw(menuFond, actionX,actionY-600)
+	love.graphics.draw(button, actionX+200,actionY-500)
+	love.graphics.draw(fullscreen, actionX+200,actionY-500)
   end
   
   if state.selectItem ~=0 then
-	local cmx = math.floor(mx/32)
-	local cmy = math.floor(my/32)
+	local cmx = math.floor(mx/64)
+	local cmy = math.floor(my/64)
 	if state.level:canILandHere(cmx,cmy,10) then
 		mouse:setColor(0)
 	else

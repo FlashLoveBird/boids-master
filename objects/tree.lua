@@ -43,9 +43,11 @@ tree.emitWoodTime = 1
 tree.xWood = 0
 tree.yWood = 0
 tree.emitWood = false
+tree.wood_source = nil
+tree.woodPrim = nil
 
 local tree_mt = { __index = tree }
-function tree:new(level,i, animationTreeInspire,animationTreeExpire,animationTreeBirth,animationBigTreeInspiree,animationBigTreeExpiree,animationOmbree,animationOmbreBirthe)
+function tree:new(level,i,flock, animationTreeInspire,animationTreeExpire,animationTreeBirth,animationBigTreeInspiree,animationBigTreeExpiree,animationOmbree,animationOmbreBirthe)
   local tree = setmetatable({}, tree_mt)
   tree.level_map = level:get_level_map()
   tree.level = level
@@ -53,12 +55,15 @@ function tree:new(level,i, animationTreeInspire,animationTreeExpire,animationTre
   --treeGraphic = love.graphics.newImage("images/env/tree.png")
   
   tree:initGraphics(animationTreeInspire,animationTreeExpire,animationTreeBirth,animationBigTreeInspiree,animationBigTreeExpiree,animationOmbree,animationOmbreBirthe)
-  
+  --tree.wood_source = boid_wood_source:new(level, flock, self, 1)
   treeGraphicSelect = love.graphics.newImage("images/env/treeSelect.png")
   bg = love.graphics.newImage("images/Jungle/settings/bg.png")
   tableImg = love.graphics.newImage("images/Jungle/settings/table.png")
   foodIcon = love.graphics.newImage("images/ui/food.png")
-  tree.name = i
+  birdSleep = love.graphics.newImage("images/home/bird-sleep.png")
+  tree.name = "Arbre"..i
+  print('Arbe ajoute')
+  print(tree.name)
   return tree
 end
 
@@ -91,6 +96,16 @@ function tree:initGraphics(animationTreeInspire,animationTreeExpire,animationTre
   self.animationBigTreeExpire = animationBigTreeExpiree
   self.animationOmbre = animationOmbree
   self.animationOmbreBirth = animationOmbreBirthe
+  
+  --self.timeBigInspire = true
+  --self.timeInspire = false
+  --self.tronc = 300
+end
+
+function tree:getTableVersion()
+	 local tree = {}
+	 tree = {x=self.x, y = self.y}	 
+	 return tree
 end
 
 ------------------------------------------------------------------------------
@@ -173,88 +188,92 @@ local emitWoodTime = self.emitWoodTime
 if self.emitWoodTime~=0 then
 	self.emitWoodTime = emitWoodTime + dt * math.random(0,2)
 	if emitWoodTime>10 then
-		self.emitWoodTime=-200
+		self.emitWoodTime=0
 		self:emiterWood()
 	end
+end
+
+if self.wood_source~=nil then
+	self.wood_source:update(dt) --le probleme est avec la flock
 end
 
 end
 
 function tree:setFlock(flock)
+	local level = self.level
 	self.flock = flock
+	if self.wood_source==nil then
+		self.wood_source = boid_wood_source:new(level, flock, self, 1)
+		print('crer woodsource')
+		print(self.wood_source)
+	end
+	self.emitWood = true
+	self.wood_source:setFlock(flock)
 end
 
 function tree:emiterWood()
 	local x, y = self.x , self.y
 	local rand = math.random(1,4)
-	local xFood = 0
-	local yFood = 0
+	local xWood = 0
+	local yWood = 0
 	local level = self.level
 	local flock = self.flock
-	local emit = false
-	local caseX = 0
-	local caseY = 0
-	if emit==false then
-		xWood = math.random(-35,-20)
-		yWood = math.random(-35,-20)
-		caseX = xWood + x
-		caseY = yWood + y
-		if level:canILandHere(caseX,caseY,10)==true then
-			self.xWood = xWood*32
-			self.yWood = yWood*32
-			emit = true
-		end
-	end
-	if emit==false then
-		xWood = math.random(-35,-20)
-		yWood = math.random(20,35)
-		caseX = xWood + x
-		caseY = yWood + y
-		if level:canILandHere(caseX,caseY,10)==true then
-			self.xWood = xWood*32
-			self.yWood = yWood*32
-			emit = true
-		end
-	end
-	if emit==false then
-		xWood = math.random(20,35)
-		yWood = math.random(-35,-20)
-		caseX = xWood + x
-		caseY = yWood + y
-		if level:canILandHere(caseX,caseY,10)==true then
-			self.xWood = xWood*32
-			self.yWood = yWood*32
-			emit = true
-		end
-	end
-	if emit==false then
-		xWood = math.random(20,35)
-		yWood = math.random(20,35)
-		caseX = xWood + x
-		caseY = yWood + y
-		if level:canILandHere(caseX,caseY,10)==true then
-			self.xWood = xWood*32
-			self.yWood = yWood*32
-		end
+	if rand==1 then
+		xWood = math.random(-75,-50)
+		yWood = math.random(-75,-50)
+		self.xWood = xWood
+		self.yWood = yWood
+	elseif rand==2 then
+		xWood = math.random(-75,-50)
+		yWood = math.random(50,75)
+		self.xWood = xWood
+		self.yWood = yWood
+	elseif rand==3 then
+		xWood = math.random(50,75)
+		yWood = math.random(-75,-50)
+		self.xWood = xWood
+		self.yWood = yWood
+	else
+		xWood = math.random(50,75)
+		yWood = math.random(50,75)
+		self.xWood = xWood
+		self.yWood = yWood
 	end
 	--self.food_source = boid_food_source:new(level, flock, self)
-	--local p = self.wood_source:add_wood(caseX*32, caseY*32, 200)
-    --self.wood_source:force_polygonizer_update()
-	self.emitWood = true
-	--local map = level:getTreeMap()
-	print('flock')
-	print(flock)
-	level:addWood(caseX,caseY,flock)
-	print("ajout de bois en")
-	print(caseX,caseY)
-	--level:setTreeMap(map)
-	
+	if level:canILandHere(x+xWood,y+yWood,20)==true then
+		local p, primtive = self.wood_source:add_wood(x*32+xWood*32, y*32+yWood*32, 100)
+		self.wood_source:force_polygonizer_update()
+		self.emitWood = false
+		local map = level:getTreeMap()
+		print("x+xWood,y+yWood1")
+		print(x+xWood,y+yWood)
+		map[x+xWood][y+yWood] = p
+		level:setTreeMap(map)
+		self.emitWoodTime=0
+		self.woodPrim = primtive
+	else
+		self:resetWood()
+	end
 end
 
 function tree:resetWood()
-	self.emitWood = false
+	local xWood = self.xWood
+	local yWood = self.yWood
+	local x, y = self.x , self.y
+	local level = self.level
+	self.emitWood = true
 	self:setGrow()
 	self.emitWoodTime = 1
+	--self.wood_source = nil
+	
+	if self.wood_source:get_wood() then
+		local map = level:getTreeMap()
+		map[x+xWood][y+yWood] = nil
+		level:setTreeMap(map)
+		print('supprime wooooood')
+		print(x+xWood, y+yWood)
+		self.wood_source:remove_wood_source(self.woodPrim)
+	end
 end
 
 function tree:setGrow()
@@ -356,7 +375,7 @@ end
 
 function tree:mousepressed(mx, my, button)
 	local x, y = self.x , self.y
-	if mx/32>x-1 and mx/32<x+1 and my/32>y-1 and my/32<y+1 then
+	if mx/32>x-5 and mx/32<x+5 and my/32>y-5 and my/32<y+5 then
 		self.drawInfo = true
 		self.level:set_select(self)
 	end
@@ -369,6 +388,10 @@ function tree:draw(mx,my)
 	--local mxx, myy = x + mpos.x, y + mpos.y
 	--local numBoids = self:getNumBoids()
 	local cam = self.level:get_camera()
+	
+	if drawInfo==true then
+		love.graphics.draw(treeGraphicSelect, mx-50, my-64)
+	end
 	
 	--[[if drawInfo==true then
 		lg.setColor(255, 255, 255, 255)
@@ -388,8 +411,8 @@ function tree:draw(mx,my)
 	--lg.setColor(255, 255, 255, 255)
 	--lg.draw(self.treeGraphic, mx-50, my-64)
 	lg.setColor(0, 0, 0, 255)
-	lg.print(self.numEmits, mx-50, my-64)
-	lg.print(self.name, mx-50, my-84)
+	--lg.print(self.numEmits, mx-50, my-64)
+	--lg.print(self.name, mx-50, my-84)
 	
 	lg.setColor(255, 255, 255, 1)
 	local animationBirth = self.animationBirth
@@ -409,9 +432,7 @@ function tree:draw(mx,my)
 	local yWood = self.yWood
 	
 	
-	
-	
-	lg.setColor(255, 255, 255, 255)
+	lg.setColor(255, 255, 255, 1)
 	if timeInspire==true then
 		local spriteNum = math.floor(animationInspire.currentTime / animationInspire.duration * #animationInspire.quads) + 1
 		love.graphics.draw(animationInspire.spriteSheet, animationInspire.quads[spriteNum], mx, my)
@@ -443,11 +464,11 @@ function tree:draw(mx,my)
 		end	
 		
 		local spriteNum = math.floor(animationBigTreeInspire.currentTime / animationBigTreeInspire.duration * #animationBigTreeInspire.quads) + 1
-		lg.print("Inspiration", mx+200, my-54)
+		--[[lg.print("Inspiration", mx+200, my-54)
 		lg.print(math.floor(animationBigTreeInspire.currentTime*100), mx+200, my-34)
 		lg.print(animationBigTreeInspire.duration*100, mx+200, my-14)
 		
-		lg.print(spriteNum, mx, my)
+		lg.print(spriteNum, mx, my)--]]
 		love.graphics.draw(animationBigTreeInspire.spriteSheet, animationBigTreeInspire.quads[spriteNum], mx, my-tronc/2)
 	elseif timeBigExpire == true then
 		local spriteNum = math.floor(animationOmbre.currentTime / animationOmbre.duration * #animationOmbre.quads) + 1
@@ -461,11 +482,19 @@ function tree:draw(mx,my)
 		end
 		
 		local spriteNum = math.floor(animationBigTreeExpire.currentTime / animationBigTreeExpire.duration * #animationBigTreeExpire.quads) + 1
-		lg.print("Expiration", mx+200, my-54)
+		--[[lg.print("Expiration", mx+200, my-54)
 		lg.print(math.floor(animationBigTreeExpire.currentTime*100), mx+200, my-34)
-		lg.print(animationBigTreeExpire.duration*100, mx+200, my-14)
+		lg.print(animationBigTreeExpire.duration*100, mx+200, my-14)--]]
 		love.graphics.draw(animationBigTreeExpire.spriteSheet, animationBigTreeExpire.quads[spriteNum], mx, my-tronc/2)
 	end
+	
+	if self.wood_source then
+		if self.wood_source:get_wood() then
+			self.wood_source:draw(mx+xWood*32,my+yWood*32)
+		end
+	end
+	
+	--love.graphics.draw(birdSleep, mx+50, my-100)
 	
 	
 end

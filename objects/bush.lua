@@ -26,7 +26,7 @@ bush.state = false
 bush.emmiter = nil
 bush.name = 1
 bush.graphic = nil
-bush.emitFood = true
+bush.emitFood = false
 bush.emitFoodTime = 1
 bush.flock = nil
 bush.food_source = nil
@@ -49,15 +49,18 @@ bush.timeBigInspire = false
 bush.timeBigExpire = false
 
 local bush_mt = { __index = bush }
-function bush:new(level, flock,animationBushInspire,animationBushExpire,animationBushBirth,animationBigBushInspire,animationBigBushExpire)
+function bush:new(level,i, flock,animationBushInspire,animationBushExpire,animationBushBirth,animationBigBushInspire,animationBigBushExpire)
   local bush = setmetatable({}, bush_mt)
   bush.level_map = level:get_level_map()
   bush.level = level
   bush.flock = flock
-  bush.emitFood = true
   print("creation bush")
+  print(flock)
   bush:initGraphics(animationBushInspire,animationBushExpire,animationBushBirth,animationBigBushInspire,animationBigBushExpire)
   bush.food_source = boid_food_source:new(level, flock, self, 1)
+  bush.name=i
+  print('MON NOM EST')
+  print(i)
   return bush
 end
 
@@ -155,17 +158,14 @@ if timeBigExpire == true then
 end
 
 
-
 local emitFoodTime = self.emitFoodTime
-local emitFood = self:getGrow()
-if emitFood then
-	self.emitFoodTime = emitFoodTime + dt * math.random(-1,2)
-	print('emitFoodTime')
-	print(self.emitFoodTime)
-	if emitFoodTime>10 then
-		self:emiterFood()
+if self.emitFood == true or self.food_source:get_food()==false then
+	--print(self.emitFoodTime)
+	self.emitFoodTime = emitFoodTime + dt * math.random(0,2)
+	if self.emitFoodTime>10 then
 		self.emitFoodTime=0
-		print('envoi de la bouffe')
+		self:emiterFood()
+		
 	end
 end
 
@@ -204,16 +204,17 @@ function bush:emiterFood()
 		self.yFood = yFood
 	end
 	--self.food_source = boid_food_source:new(level, flock, self)
-	local p = self.food_source:add_food(x*32+xFood, y*32+yFood, 200)
+	local p = self.food_source:add_food(x*32, y*32, 200)
     self.food_source:force_polygonizer_update()
 	self.emitFood = false
+	self.emitFoodTime=0
 end
 
 function bush:setFlock(flock)
 	local level = self.level
 	self.flock = flock
 	if self.food_source==nil then
-		self.food_source = boid_food_source:new(level, flock, self)
+		self.food_source = boid_food_source:new(level, flock, self, i)
 	end
 	self.emitFood = true
 	self.food_source:setFlock(flock)
@@ -223,13 +224,13 @@ function bush:setNumEmits(num)
 end
 
 function bush:resetFood()
+	print('tt mangeé')
 	self.emitFood = true
 	self:setGrow()
-	self.emitFoodTime = 1
 end
 
 function bush:getFood()
-	if self.food_source then
+	if self.food_source:get_food() then
 		return 1
 	else
 		return 0
@@ -242,6 +243,9 @@ end
 
 function bush:setGrow()
 	self.emitFoodTime = 1
+	print('----------------------REGARDE ICI')
+	print(self.emitFoodTime)
+	print(self.name)
 end
 
 function bush:getGrow()
@@ -311,9 +315,12 @@ function bush:draw(mx,my)
 	local timeBigExpire = self.timeBigExpire
 	local timeBigInspire = self.timeBigInspire
 	local timeBirth = self.timeBirth
-	
+	local emitFood = self.emitFood
+	local emitFoodTime = self.emitFoodTime
 	
 	lg.setColor(255, 255, 255, 255)
+	--lg.print(self.name, mx-50, my-84)
+	
 	--[[if self.graphic==3 then
 		love.graphics.draw(plantGraphic1, mx-50, my-64)
 	elseif self.graphic==2 then
@@ -352,10 +359,20 @@ function bush:draw(mx,my)
 		love.graphics.draw(animationBigTreeExpire.spriteSheet, animationBigTreeExpire.quads[spriteNum], mx*4, my*4)
 	end
 	if self.food_source then
-		self.food_source:draw(mx*4+xFood,my*4+yFood)
+		if self.food_source:get_food() then
+			self.food_source:draw(mx*4+xFood,my*4+yFood)
+		end
 	end
 	
 	love.graphics.pop()
+	
+	if self.food_source then
+		if self.food_source:get_food() then
+			--lg.print("OK", mx-50, my-44)
+		else
+			--lg.print("Pousse", mx-50, my-44)
+		end
+	end
 	
 end
 

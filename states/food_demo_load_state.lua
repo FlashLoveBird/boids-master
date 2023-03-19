@@ -3,6 +3,7 @@ food_demo_load.label = 'food_demo_load'
 
 local state = food_demo_load
 state:set_as_loading_state()
+local bitser = require "bitser"
 
 --##########################################################################--
 --[[----------------------------------------------------------------------]]--
@@ -83,16 +84,23 @@ function food_demo_load.construct_level_map(level)
   	local slice_data = map_data[i]
   	local offx, offy = slice_data[back].x + 1, slice_data[back].y + 1
   	local w, h = slice_data[back].width, slice_data[back].height
-    
 	
-  	local tmap = tile_map:new(level, w, h)
+	if love.filesystem.getInfo('save.dat') then
+		mapSave = bitser.loadLoveFile('save.dat')
+		print('chargement reussi')
+	end
+  	local tmap = tile_map:new(level, w, h, 16, 16, mapSave)
   	if slice_data[back] then
   	  local layer_data = slice_data[back]
   	  local x, y = layer_data.x, layer_data.y
   	  local w, h = layer_data.width, layer_data.height
+	  	  
   	  local layer = tile_layer:new(imgdata_layers[back], x, y, w, h, 
   	                               palette:get_gradient("allwhite"), 0, T_WALK)
-      tmap:add_tile_layer(layer)
+	  tmap:add_tile_layer(layer)
+	  
+	  layer:initialize_preview()
+	  
   	end
   	level_map:add_tile_map(tmap, offx, offy)
   end

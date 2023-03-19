@@ -58,11 +58,12 @@ end
 function egg:initAnim(level,boidType)
   self.animationEclose = self:newAnimation(love.graphics.newImage("images/egg.png"), 105, 70, 10)
   self.animationBird = self:newAnimation(love.graphics.newImage("images/bird.png"), 120, 70, 10)
-  self.level = level
   self.eggImg = love.graphics.newImage("images/origami/rock-sheet0.png")
   
-  self.crack = love.audio.newSource("sound/egg-crack.wav", "stream")
-  self.crack:setVolume(0.3)
+  self.level = level
+  
+  --self.crack = love.audio.newSource("sound/egg-crack.wav", "stream")
+  --self.crack:setVolume(0.3)
   
 end
 
@@ -72,6 +73,12 @@ end
 
 function egg:getI()
   return self.index
+end
+
+function egg:distance ( x1, y1, x2, y2 )
+  local dx = x1 - x2
+  local dy = y1 - y2
+  return math.sqrt ( dx * dx + dy * dy )
 end
 
 function egg:update(dt)
@@ -94,8 +101,16 @@ function egg:update(dt)
 
 	if hour_birth>100 and eclose==false and (timeLoc<70 or timeLoc>100) then --hour_birth>math.random(3000,10000) and eclose==false then
 		if self.crackSound == false then
-			love.audio.play(self.crack)
-			self.crackSound = true
+			local hero = self.level:get_player()
+			local pos = hero:get_position()
+			local volume = self:distance(pos.x, pos.y, x, y)
+			if volume > 100 then
+				--self.crack:setVolume(0)
+			else
+				--self.crack:setVolume((100-volume)/100)
+			end
+			--love.audio.play(self.crack)
+			--self.crackSound = true
 		end
 		if boidEmit then
 			boidEmit:_emit_boid(boidType,index,needHome,free)

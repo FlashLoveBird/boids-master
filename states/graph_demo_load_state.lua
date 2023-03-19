@@ -67,7 +67,7 @@ function rules_demo_load.construct_level_map(level)
   
   -- load map
   local map_directory = "images/menu"
-  local back = "background.png"
+  local back = "background2.png"
   local wall = "wall1.png"
   local map_data = require(map_directory.."/menu_map_data")
   

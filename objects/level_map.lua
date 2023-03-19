@@ -80,6 +80,8 @@ level_map.init = false
 level_map.map = {}
 level_map.gridMap = {}
 
+level_map.tile_map = nil
+
 local level_map_mt = { __index = level_map }
 function level_map:new(level)
   local map = setmetatable({}, level_map_mt)
@@ -115,6 +117,8 @@ function level_map:add_tile_map(tile_map, tile_offset_x, tile_offset_y)
     print("ERROR in level_map:add_tile_map() - nil offset for tile_map")
     return
   end
+  
+  self.tile_map = tile_map
   
   if     #self.tile_maps == 0 then
     self.tile_width = tile_map.tile_width
@@ -162,6 +166,10 @@ function level_map:add_tile_map(tile_map, tile_offset_x, tile_offset_y)
   
   -- update level collider
   self.collider:add_tile_map(tile_map)
+end
+
+function level_map:get_tile_map()
+	return self.tile_map
 end
 
 --#############################################################################

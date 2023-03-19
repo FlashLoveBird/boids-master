@@ -9,7 +9,7 @@ fk.table = 'fk'
 fk.debug = false
 fk.level = nil
 fk.bbox = nil
-fk.temp_collision_bbox = nil
+fk.temp_collision_bbox = bbox:new(0, 0, 0, 0)
 fk.free_boids = nil
 fk.active_boids = nil
 fk.collider_cell_width = 150
@@ -28,7 +28,6 @@ function fk:new(level, boidType, x, y, width, height, depth)
   local fk = setmetatable({}, fk_mt)
   fk.level = level
   fk.boidType = boidType
-  
   fk:_init_bbox(x, y, width, height, depth)
   fk:_init_boids()
   fk:_init_collider()
@@ -71,6 +70,8 @@ function fk:_init_bbox(x, y, width, height, depth)
   self.bbox = bbox:new(x, y, width, height)
   self.bbox.depth = depth
   self.temp_collision_bbox = bbox:new(0, 0, 0, 0)
+  print('INIT BBOX FLOCKKKKKKK')
+  print(self.temp_collision_bbox)
 end
 
 function fk:_init_collider()
@@ -110,8 +111,10 @@ function fk:add_boid(x, y, z, dirx, diry, dirz, free, gradient)
   if #self.free_boids > 0 then
     new_boid = self.free_boids[#self.free_boids]
     self.free_boids[#self.free_boids] = nil
+	self.level:setBoids(1)
   else
     new_boid = boid:new(self.level)
+	self.level:setBoids(1)
   end
   new_boid:init(self.level, self, x, y, z, dirx, diry, dirz, free)
   if gradient then
@@ -176,6 +179,7 @@ function fk:remove_boid(unBoid)
     if active[i] == unBoid then
       table.remove(self.active_boids, i)
 	  --self.active_boids[i] = nil
+	  self.level:setBoids(-1)
       unBoid:destroy()
       break
     end
@@ -208,10 +212,10 @@ function fk:get_flock()
 end
 
 function fk:get_boids_in_radius(x, y, r, storage)
+	
   local bbox = self.temp_collision_bbox
   bbox.x, bbox.y = x - r, y - r
   bbox.width, bbox.height = 2 * r, 2 * r
-  
   self.collider:get_objects_at_bbox(bbox, storage)
   for i=#storage,1,-1 do
     local boid = storage[i]
@@ -221,7 +225,6 @@ function fk:get_boids_in_radius(x, y, r, storage)
       table.remove(storage, i)
     end
   end
-  
 end
 
 function fk:get_boids_in_sphere(x, y, z, r, storage)
@@ -279,11 +282,17 @@ function fk:_update_boids(dt)
 end
 
 function fk:update(dt)
-  if #self.active_boids>0 then
+  --if #self.active_boids>0 then
 	self.user_interface:update(dt)
 	self:_update_boids(dt)
 	self.collider:update(dt)
-  end
+ --end
+end
+
+function fk:get_temp_collision_bbox()
+	print('tu renvoi qque chose ???')
+	print(self.temp_collision_bbox)
+  return self.temp_collision_bbox
 end
 
 ------------------------------------------------------------------------------

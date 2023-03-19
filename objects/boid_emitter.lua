@@ -320,37 +320,23 @@ function dump(o)
    end
 end
 
-function be:_feed_boids()
+function be:try_egg()
 local objects = self.collision_table
 local minFood = 0
 local nbFood = self.food
 local active = self.active_boids
 local flock = self.flock
 flock:get_boids_in_radius(self.position.x, self.position.y, 70, objects)
-    local count = 0
-    for i=1,#objects do
-		if nbFood >1 then
-			if active[i] then
-				local haveHunger = active[i]:feed(10)
-				if haveHunger==true then
-					minFood = minFood + 1
-					nbFood = nbFood - 1
-					self:add_food(-1)
-				end
-			end
-		end
-    end
 	if self.level:getBoids()<200 then
 		for i=1,#objects do	
 			if objects[i]:haveKid() == true then
 				for j=1,math.random(1,5) do
-					if nbFood >1 then
+					if nbFood > 1 then
 						self.nbEgg = self.nbEgg + 1
 						nbFood = nbFood - 1
 						minFood = minFood + 1
 						local nbEggs = self.nbEgg
 						if #active > 19 then
-							print('freeEgg !')
 							self.eggs[nbEggs] = egg:new(self,nbEggs,flock,true,true, self.position.x, self.position.y, 20, self.level)
 						else
 							self.eggs[nbEggs] = egg:new(self, nbEggs, flock, false, true, self.position.x, self.position.y, 20, self.level)

@@ -60,6 +60,7 @@ function fi:new(level, parent_flock)
 end
 
 function fi:keypressed(key)
+print(key)
 if fi.hero == nil then 
 	fi.hero = self.level:get_player()
 end
@@ -67,6 +68,8 @@ if key =="space" and fi.hero.boidsIn==false then
 	fi.hero:breathe()
 elseif key =="space" and fi.hero.boidsIn==true then
 	fi.hero:unbreathe()
+elseif key =="lshift" and fi.hero.boidsIn==true then
+	fi.hero:release(self.flock)
 end
 end
 function fi:keyreleased(key)
@@ -76,10 +79,11 @@ elseif fi.hero ~= nil and key =="space" and fi.hero.boidsIn==false then
 	fi.hero:expire(self.flock)
 elseif fi.hero ~= nil and key =="space" and fi.hero.boidsIn==true then
 	fi.hero:release(self.flock)
+elseif fi.hero ~= nil and key =="f" then
+	fi.hero:wakeUp(self.flock)
 end
 end
 function fi:mousepressed(x, y, button)
-  --print(x, y)
   local x, y = self.level:get_mouse():get_coordinates()
   local cx, cy = self.level:get_camera():get_viewport()
   local x, y = x + cx, y + cy
@@ -305,8 +309,6 @@ function fi:update(dt)
   
   self:_update_selected_boids(dt) 
   
-  
-  
 end
 
 ------------------------------------------------------------------------------
@@ -475,7 +477,7 @@ function fi:draw()
     fogAlpha = 0.6 - local_time*2/100
   end
   
-  self:_draw_add_boid_preview()
+  --self:_draw_add_boid_preview()
   self:_draw_select_boid_preview()
   self:_draw_selected_boids()
   

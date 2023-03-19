@@ -28,8 +28,8 @@ tile_layer.preview_xoff = 0
 tile_layer.preview_yoff = 0
 tile_layer.preview_t_width = 32
 tile_layer.preview_t_height = 32
-tile_layer.preview_width = 870
-tile_layer.preview_height = 800
+tile_layer.preview_width = 40
+tile_layer.preview_height = 40
 tile_layer.transparent_image = nil
 tile_layer.transparent_quad = nil
 
@@ -236,7 +236,7 @@ function tile_layer:draw_preview(highlight)
   end_j = math.min(end_j, self.height)
   
   lg.setColor(255, 255, 255, 255)
-  lg.setStencil(function() lg.rectangle('fill', x, y, width, height)  end)
+  --lg.stencil(function() lg.rectangle('fill', x, y, width, height)  end)
   local tx, ty = x, y
   local scale = self.preview_t_width / self.t_width 
   for j=start_j,end_j do
@@ -244,9 +244,9 @@ function tile_layer:draw_preview(highlight)
       lg.setColor(255, 255, 255, 255)
       local quad = grid[j][i]
       if quad == self.transparent_quad then
-        lg.drawq(t_img, quad, tx + draw_xoff, ty + draw_yoff, 0, scale, scale)
+        lg.draw(t_img, quad, tx + draw_xoff, ty + draw_yoff, 0, scale, scale)
       else
-        lg.drawq(img, quad, tx + draw_xoff, ty + draw_yoff, 0, scale, scale)
+        lg.draw(img, quad, tx + draw_xoff, ty + draw_yoff, 0, scale, scale)
       end
       
       if highlight and quad ~= self.transparent_quad then
@@ -263,7 +263,7 @@ function tile_layer:draw_preview(highlight)
     tx = self.preview_x
     ty = ty + th
   end
-  lg.setStencil()
+  --lg.stencil()
   
   -- draw border around pane
   local bdr = 5

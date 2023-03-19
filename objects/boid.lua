@@ -22,15 +22,15 @@ bd.map = nil
 
 
 local rand = math.random(-2,2)
-bd.graphic_width = 6 + rand
-bd.graphic_height = 8 + rand
+bd.graphic_width = 24 + rand
+bd.graphic_height = 32 + rand
 bd.min_roll_angle = 0
 bd.max_roll_angle = math.pi / 2.4
-bd.min_roll_speed = 0
+bd.min_roll_speed = 1
 bd.max_roll_speed = 10
 bd.min_scale = 0.5
 bd.max_scale = 1.3
-bd.field_of_view = 1.5 * math.pi
+bd.field_of_view = 1.3 * math.pi
 bd.sight_radius = 200
 bd.separation_radius = 0.2 * bd.sight_radius
 bd.separation_predator_radius = 0.2 * bd.sight_radius
@@ -68,7 +68,7 @@ bd.lastTimePush = nil
 bd.nextTimePush = nil 
 bd.waypointTime = 0
 bd.newMap = true
-bd.needHome = false
+bd.needHome = true
 bd.treeFound = nil
 bd.foodFound = nil
 bd.woodFound = nil
@@ -128,7 +128,7 @@ bd.start = Vector( 1, 1 )
 bd.finish = Vector( 50, 50 )
 bd.clickedTile = nil
 bd.mapSize = 100
-
+bd.inPause = false
 bd.sing_sound = nil
 
 local bd_mt = { __index = bd }
@@ -171,6 +171,7 @@ function bd:_init_waypoint()
   waypoint._min_power = 0.5
   waypoint._max_power = 1
   self.waypoint = waypoint
+  self.waypointPoint = love.graphics.newImage("images/ui/cible.png")
 end
 
 function bd:_init_rule_vectors()
@@ -184,13 +185,13 @@ function bd:_init_rule_vectors()
   self:_clear_rule_vectors()
   
   local weights = {}
-  weights[self.alignment_vector]  = 0.5
-  weights[self.cohesion_vector]   = 0.2
-  weights[self.separation_vector] = 5
+  weights[self.alignment_vector]  = 0.8
+  weights[self.cohesion_vector]   = 0.1
+  weights[self.separation_vector] = 4
   weights[self.separation_predator_vector] = 3000000
-  weights[self.boundary_vector]   = 300
-  weights[self.waypoint_vector]   = 1
-  weights[self.obstacle_vector]   = 3000
+  weights[self.boundary_vector]   = 20
+  weights[self.waypoint_vector]   = 5
+  weights[self.obstacle_vector]   = 10
   self.rule_weights = weights
 end
 
@@ -264,11 +265,11 @@ function bd:init(level, parent_flock, x, y, z, dirx, diry, dirz, free)
   print("free")
   print(free)
 	
-  if firstBoids < 1 then
+  if firstBoids < 3 then
 	self.sex = oneSex
 	oneSex = not(oneSex)
 	firstBoids = firstBoids + 1
-	self.needHome = false
+	--self.needHome = true
 	self.age = 4
   end
   
@@ -316,6 +317,28 @@ function bd:init(level, parent_flock, x, y, z, dirx, diry, dirz, free)
 	self.needHome = true
   end
   
+  
+  if self.sex == true then
+	  local rand = math.random(1,4)
+	  if rand == 1 then
+		self.illuFloor = love.graphics.newImage("images/home/bird-sleep.png")
+	  elseif rand == 2 then
+		self.illuFloor = love.graphics.newImage("images/home/bird-sleep2.png")
+	  elseif rand == 3 then
+		self.illuFloor = love.graphics.newImage("images/home/bird-sleep3.png")
+	  elseif rand == 4 then
+		self.illuFloor = love.graphics.newImage("images/home/bird-sleep4.png")
+      end
+  else
+	local rand = math.random(1,3)
+	  if rand == 1 then
+		self.illuFloor = love.graphics.newImage("images/home/bird-sleep5.png")
+	  elseif rand == 2 then
+		self.illuFloor = love.graphics.newImage("images/home/bird-sleep6.png")
+	  elseif rand == 3 then
+		self.illuFloor = love.graphics.newImage("images/home/bird-sleep7.png")
+	  end
+  end
 end
 
 function bd:set_position(x, y, z)
@@ -403,8 +426,17 @@ function bd:confuseMe()
 end
 
 function bd:unconfuse()
-   self.rule_weights[self.cohesion_vector] = 0.2
-   self.rule_weights[self.separation_vector] = 3
+   self.rule_weights[self.cohesion_vector] = 0.1
+   self.rule_weights[self.separation_vector] = 4
+end
+
+function bd:unObstacleMe()
+   self.obstacle = true
+   self.rule_weights[self.obstacle_vector] = 0
+end
+
+function bd:obstacle()
+   self.rule_weights[self.obstacle_vector] = 3000
 end
 
 function bd:set_direction(dx, dy, dz)
@@ -853,8 +885,10 @@ function bd:_update_waypoint_rule()
 			self.emit:remove_boid(self)
 		end
 		self:set_emit_parent(self.seekTree:getEmit())
-		self.emit:add_boid(self)
-		self.myIdTable = self.emit:get_boids()
+		if self.emit then
+			self.emit:add_boid(self)
+			self.myIdTable = self.emit:get_boids()
+		end
 		self.path=nil
 		self.free=false
 	elseif objectiv == "constructNewHome" then 
@@ -889,6 +923,7 @@ function bd:_update_waypoint_rule()
 		else
 			self:setObjectiv("fly")
 		end
+		self.emit:try_egg();
 		
 	elseif objectiv == "seekHome" then 
 		--self:seekHome()
@@ -902,10 +937,14 @@ function bd:_update_waypoint_rule()
 		self:goHero()
 	elseif objectiv == "goHero" then 
 		self.objectiv = "fly"
+	elseif objectiv == "goFloor" then 
+		self:deactivate()
+		self.inHome = false
+		--self.objectiv = "fly"
 	elseif objectiv == "goOnHome" then 
 		self:goHome()
 	elseif objectiv == "goOnSeekTree" then 
-		self:seekTreeFroSleep()
+		self:seekTreeFroSleep(searchObjRad)
 	elseif objectiv == "goOnHomeWith" then
 		self:goOnHomeWith()
 	elseif objectiv == "goConstructHomeWith" then
@@ -937,24 +976,21 @@ function bd:_update_waypoint_rule()
 		self.path = nil
 	elseif objectiv == "goSleep" then
 		local timeLoc = self.level.master_timer:get_time()
-		if timeLoc>41 and timeLoc<101 then
-			self.countPath = 1
-			self:setHome(true)
-			self:deactivate()
-			self:set_position(self.originX,self.originY,self.originZ)
-			self:setObjectiv("sleep")
-			self.path=nil
-		else
-			self:setObjectiv("fly")
-		end
+		self.countPath = 1
+		self:setHome(true)
+		self:deactivate()
+		self:set_position(self.originX,self.originY,self.originZ)
+		self:setObjectiv("sleep")
+		self.path=nil
 		if self.emit then
 			self.emit:add_food(foodGrab)
 			self.emit:add_wood(woodGrab)
 			self.emit:add_water(waterGrab)
+			self:minusFood(foodGrab)
+			self:minusWood(woodGrab)
+			self:minusWater(waterGrab)
+			self.emit:try_egg();
 		end
-		self:minusFood(foodGrab)
-		self:minusWood(woodGrab)
-		self:minusWater(waterGrab)
 		seeker:set_velocity({x = 0, y = 0, z = 0})
 		self.path = nil
 	end
@@ -981,12 +1017,16 @@ function bd:_update_waypoint_rule()
   wv.x, wv.y, wv.z = dx * factor * power, dy * factor * power, dz * factor * power
 end
 
-function bd:grabFood()
+function bd:grabFood(food)
 	local foodGrab = self.foodGrab
 	local active = self.waypoint.is_active
-	self.foodGrab = foodGrab + 1
-	self:set_emote('food')
-	if foodGrab > 3 then 
+	if foodGrab < 5 then
+		self.foodGrab = foodGrab + math.floor(food/10000)
+		self:set_emote('food')
+		print("self.foodGrab")
+		print(self.foodGrab)
+	end
+	if self.foodGrab > 3 and self.emit then 
 		--self:set_waypoint(self.originX,self.originY,self.originZ)
 		self:goOnHomeWith()
 		self:setObjectiv("goOnHomeWith")
@@ -1012,13 +1052,13 @@ function bd:minusWater(water)
 	self.waterGrab = self.waterGrab - water
 end
 
-function bd:grabWood()
+function bd:grabWood(wood)
 	local woodGrab = self.woodGrab
 	local seekingHome = self.seekingHome
 	local seekingWood = self.seekingWood
-	self.woodGrab = self.woodGrab + 1
+	self.woodGrab = self.woodGrab + math.floor(wood/10000)
 	local active = self.waypoint.is_active
-	if woodGrab > 3 and self.needHome == true and seekingHome == true and seekingWood == true then
+	if self.woodGrab > 10 and self.needHome == true and seekingHome == true and seekingWood == true then
 		local x = math.floor(self.caseNewTreeX*32)
 		local y =  math.floor(self.caseNewTreeY*32)
 		self:clear_waypoint()
@@ -1026,14 +1066,10 @@ function bd:grabWood()
 		self.countPath = 1
 		self.originX = math.floor(self.caseNewTreeX*32)
 		self.originY = math.floor(self.caseNewTreeY*32)
-		print('ma nouvelle X est')
-		print(self.caseNewTreeX)
 		self:goConstructHomeWith()
 		self:setObjectiv("goConstructHomeWith")
 		--self:set_waypoint(x,y,100)
 		--self:setObjectiv("goHomeToConstruct")
-		print('GO MAISON')
-		print(x,y)
 		self.seekingWood = false
 		--self.body_graphic:set_color1(0)
 	end
@@ -1105,7 +1141,7 @@ function bd:_update_rules(dt)
   self:_update_separation_predator_rule(dt)
   self:_update_boundary_rule(dt)
   self:_update_waypoint_rule(dt/10)
-  --self:_update_obstacle_rule(dt)
+  self:_update_obstacle_rule(dt)
   --self:draw_debug()
   
  --generates a report every 100 frames
@@ -1175,48 +1211,39 @@ function bd:_update_boid_life(dt)
 			self.tired = tired + dt
 		end
 		local randomNum = 1 --math.random(1,5000)
-		if tired > 50 and objectiv == "sleep" and myTime<19 and myTime>6 and randomNum == 1 then
+		if tired > 50 and objectiv == "sleep" and myTime<19 and myTime>3.9 and randomNum == 1 then
 			self:activate()
 			self.path=nil
-			if self.emit then
-				local wood = self.emit:get_wood()
-				if wood>10 and needHome and age>0 then
-					self:setObjectiv("seekHome")
-					self:setHome(false)
-					--self.body_graphic:set_color1(255)
-					self.emit:add_wood(-10)
-					self:seekHome(5)
-					--self.rule_weights[self.separation_vector] = 3
-				elseif needHome then
-					
-				else
-					self.seeker:set_position(self.position.x+math.random(-10,10), self.position.y+math.random(-10,10), self.position.z+math.random(-10,10))
-					self:setObjectiv("fly")
-					self:setHome(false)
-					--self.body_graphic:set_color1(255)
-					--self.rule_weights[self.separation_vector] = 3
-					self.treeFound=nil
-				end
-			end
+			self.seeker:set_position(self.position.x+math.random(-10,10), self.position.y+math.random(-10,10), self.position.z+math.random(-10,10))
+			self:setObjectiv("fly")
+			self:setHome(false)
+			--self.body_graphic:set_color1(255)
+			--self.rule_weights[self.separation_vector] = 3
+			self.treeFound=nil
 		end
 	else
 		if needHome and active==false then
 			self:seekHome(10)
 			print("continue de chrcher maison")
 		end
-		self.tired = tired - dt
-		self.hunger = hunger - dt*10
-		if hunger < 50 and foodGrab > 0 then 
+		if self.objectiv~="goFloor" then
+			self.tired = tired - dt*30
+			self.hunger = hunger - dt*20
+		else
+			self.tired = tired + dt/3
+			self.hunger = hunger + dt/2
+		end
+		if hunger < 55 and foodGrab > 0 then 
 			self:feed(50)
 			self:minusFood(1)
-		elseif hunger < 60 and self.emit and active==false then
+		elseif hunger < 50 and self.emit and active==false then
 			if self.emit:get_food() > 0 then
 				self:goHome()
 			else
 				self:seekFood(searchObjRad)
 				self:set_emote('hungry')
 			end
-		elseif hunger < 60 and foodGrab == 0 and active==false then 
+		elseif hunger < 50 and foodGrab == 0 and active==false then 
 			self:seekFood(searchObjRad)
 		end
 		if hunger < 0 then 
@@ -1230,9 +1257,14 @@ function bd:_update_boid_life(dt)
 			end
 			flock:remove_boid(self)
 		end
-		if tired < 30 and objectiv == "fly" then 
-			--self:seekTreeFroSleep()
-			--self:set_emote("sleep")
+		if tired < 50 and active==false then 
+			if tired > 20 and math.random(1,3) == 3 and self.objectiv~="goFloor" then
+				self:set_waypoint(self.position.x+math.random(-200,200), self.position.y+math.random(-200,200),50 ,20 ,50)
+				self:setObjectiv("goFloor")
+			elseif tired < 20 then 
+				self:seekTreeFroSleep(searchObjRad)
+				--self:set_emote("sleep")
+			end
 		end
 		if tired < 0 and objectiv == "fly" then 
 			--self.dead = true
@@ -1282,7 +1314,7 @@ function bd:_update_boid_life(dt)
 			end
 		end
 	end
-	if searchObjRad > 200 then
+	if searchObjRad > 800 then
 		self.searchObjRad = 1
 	end
 end
@@ -1303,21 +1335,13 @@ local woodGrab = self.woodGrab
 local waterGrab = self.waterGrab
 local countPath = self.countPath
 local nbStepPath = self.nbStepPath
+local needHome = self.needHome
 
-if inHome == false and active==false then
+
+if inHome == false and active==false and needHome == false then
 	if self.path==nil then
 		self:updatePath(Vector(caseX,caseY),Vector(originCaseX,originCaseY))
-		if self.path then
-			if math.floor(#self.path) > 3 then 
-				nbStepPath = math.floor(#self.path / 5)
-			else
-				nbStepPath = 1
-			end
-		else
-			--self:goHome()
-		return end
-		self.nbStepPath = nbStepPath
-		self:clear_waypoint()
+		self.nbStepPath = #self.path
 		local step = 1
 		if countPath < nbStepPath then
 			self:set_emote("sleep")
@@ -1334,9 +1358,11 @@ if inHome == false and active==false then
 			self:setObjectiv("goOnHome")
 			self.countPath = countPath + 1
 		else
-			if self.hunger < 60 and self.emit:get_food()>0 then
-				self.emit:min_food(1)
-				self:feed(50)
+			if self.emit then
+				if self.hunger < 60 and self.emit:get_food()>0 then
+					self.emit:min_food(1)
+					self:feed(50)
+				end
 			end
 			self:setObjectiv("goSleep")
 			local posX = math.floor( self.path[#self.path].x * h ) + 1
@@ -1345,7 +1371,6 @@ if inHome == false and active==false then
 			self.countPath =  1
 		end
 	else
-		self:clear_waypoint()
 		local step = 1
 		if countPath < nbStepPath then
 			self:set_emote("sleep")
@@ -1362,9 +1387,11 @@ if inHome == false and active==false then
 			self:setObjectiv("goOnHome")
 			self.countPath = countPath + 1
 		else
-			if self.hunger < 60 and self.emit:get_food()>0 then
-				self.emit:min_food(1)
-				self.hunger = self.hunger + 10
+			if self.emit then
+				if self.hunger < 60 and self.emit:get_food()>0 then
+					self.emit:min_food(1)
+					self:feed(50)
+				end
 			end
 			self:setObjectiv("goSleep")
 			local posX = math.floor( self.path[#self.path].x * h ) + 1
@@ -1482,7 +1509,22 @@ end
 end
 
 function bd:sing()
-	love.audio.play(self.sing_sound)
+	local x, y = self.position.x, self.position.y
+	local hero = self.level:get_player()
+	local pos = hero:get_position()
+	local volume = self:distance(pos.x, pos.y, x, y)
+	if volume > 500 then
+		self.sing_sound:setVolume(0)
+	else
+		self.sing_sound:setVolume((500-volume)/500)
+	end
+	--love.audio.play(self.sing_sound)
+end
+
+function bd:distance ( x1, y1, x2, y2 )
+  local dx = x1 - x2
+  local dy = y1 - y2
+  return math.sqrt ( dx * dx + dy * dy )
 end
 
 function bd:seekHome(radius)
@@ -1545,22 +1587,21 @@ if self.treeFound==nil then
 				if mapTrees[stepX][stepY] then
 					if mapTrees[stepX][stepY] ~= nil then
 						if mapTrees[stepX][stepY]:getType() == 1 then
-							if mapTrees[stepX][stepY]:getNumEmits()<1 then
+							if mapTrees[stepX][stepY]:getNumEmits()<1 and self.level:get_nb_home()<1 then
 								if mapTrees[stepX][stepY]:getState() == true then
-									self.seekTree = mapTrees[stepX][stepY]:getTree()
+									--[[self.seekTree = mapTrees[stepX][stepY]:getTree() -- NON CEST ICI QUIL FAUT RECUP LES COORD DE WOOD VIA TREE
 									self:seekWood(searchObjRad)
 									self.caseNewTreeX = stepX
 									self.caseNewTreeY = stepY
 									print("XXX ICI")
 									print(self.caseNewTreeX)
-									self.treeFound="wood"
-									--[[local x, y = mapTrees[stepX][stepY].wood_source:getPos()
-									tree = self.treeFound
+									self.treeFound="wood"--]]
+									self.treeFound = "freeTree"
 									self.caseNewTreeX = stepX
 									self.caseNewTreeY = stepY
-									destinationX = math.floor(x/32)
-									destinationY = math.floor(y/32)
-									self.seekTree = mapTrees[stepX][stepY]:getTree()--]]
+									destinationX = math.floor(stepX/32)
+									destinationY = math.floor(stepY/32)
+									self.seekTree = mapTrees[stepX][stepY]:getTree()
 								end
 							elseif mapTrees[stepX][stepY]:getNumEmits()>0 then
 								if mapTrees[stepX][stepY]:getState() == true and mapTrees[stepX][stepY]:getNumBoids()<20 then
@@ -1586,13 +1627,13 @@ if self.treeFound ==nil and active==false then
 	local randX = math.random(-300,300)
 	local randY = math.random(-300,300)
 	if x+randX > 500 and x+randX < 12800 and y+randY > 500 and y+randY < 12800 then
-		self:set_waypoint(x+randX, y+randY,z+math.random(50,100),50,100)
+		self:set_waypoint(x+randX, y+randY,math.random(50,100),50,100)
 		self:setObjectiv("goOnSeek")
 		self.searchObjRad = self.searchObjRad + 10
 	else
 		local randX = math.random(-10,10)
 		local randY = math.random(-10,10)
-		self:set_waypoint(x+randX, y+randY,z+math.random(50,100),50,100)
+		self:set_waypoint(x+randX, y+randY,math.random(50,100),50,100)
 		self:setObjectiv("goOnSeek")
 		self.searchObjRad = self.searchObjRad + 10
 	end
@@ -1602,25 +1643,21 @@ if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 	if self.path==nil then
 		self:updatePath(Vector(caseX,caseY),Vector(destinationX,destinationY))
 		if self.path then
-			if math.floor(#self.path) > 10 then 
-				self.nbStepPath = math.floor(#self.path / 10)
-			else
-				self.nbStepPath = 1
-			end
+			self.nbStepPath = #self.path
 			--selfBody:set_color1(0)
 			self.step = self.nbStepPath
 		else
 			local randX = math.random(-300,300)
 			local randY = math.random(-300,300)
 			if x+randX > 500 and x+randX < 12800 and y+randY > 500 and y+randY < 12800 then
-				self:set_waypoint(x+randX, y+randY,z+math.random(50,100),50,100)
+				self:set_waypoint(x+randX, y+randY,math.random(50,100),50,100)
 				self:setObjectiv("goOnSeek")
 				self.searchObjRad = self.searchObjRad + 10
 				self.treeFound = nil
 			else
 				local randX = math.random(-10,10)
 				local randY = math.random(-10,10)
-				self:set_waypoint(x+randX, y+randY,z+math.random(50,100),50,100)
+				self:set_waypoint(x+randX, y+randY,math.random(50,100),50,100)
 				self:setObjectiv("goOnSeek")
 				self.searchObjRad = self.searchObjRad + 10
 				self.treeFound = nil
@@ -1630,8 +1667,8 @@ if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 	self:clear_waypoint()
 	if countPath < self.nbStepPath then
 		self:setObjectiv("goOnSeek")
-		local posX = math.floor( self.path[10*countPath].x * h ) + 1
-		local posY = math.floor( self.path[10*countPath].y * w ) + 1
+		local posX = math.floor( self.path[countPath].x * h ) + 1
+		local posY = math.floor( self.path[countPath].y * w ) + 1
 		self:set_waypoint(posX, posY,500,50,100)
 		--self.step = self.step + self.step
 		self.countPath = countPath + 1
@@ -1639,16 +1676,17 @@ if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 		self.step = #self.path
 		if tree=="freeTree" then
 			if self.seekTree then
-				self:setObjectiv("constructNewHome")
+				self:setObjectiv("setNewHome")
 				self.free = false
 				self.countPath = 1
-				self.seekTree:setNumEmits(1)
+				--self.seekTree:setNumEmits(1)
 				self.seekingHome = false
+				self.treeFound = nil
 			else
 				self:setObjectiv("seekHome")
 			end
 		else
-			if self.seekTree:getEmit() and self.seekTree:getNumBoids()<20 then
+			if self.seekTree:getNumBoids()<20 then
 				self:setObjectiv("setNewHome")
 				self.searchObjRad = 10
 				self.free = false
@@ -1679,71 +1717,189 @@ if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 end
 end
 
-function bd:seekTreeFroSleep()
+function bd:seekTreeFroSleep(radius)
 local inHome = self.inHome
 local active = self.waypoint.is_active
 local selfBody = self.body_graphic
 local level_map = self.level:get_level_map()
 local Poly = level_map.polygonizer
 local w, h = Poly.cell_width, Poly.cell_height
-local x, y = self.position.x, self.position.y
-local caseX = math.floor( x / h ) + 1
-local caseY = math.floor( y / w ) + 1
-local stepX = 0
-local stepY = 0
+local x, y, z = self.position.x, self.position.y, self.position.z
+local caseX = math.floor( x / h ) 
+local caseY = math.floor( y / w )
+local startX = caseX
+local startY = caseY
+local maxX = 0
+local maxY= 0
+
+self.seekingHome = true
+
+if caseX-radius>5 then
+	startX = caseX-radius
+elseif caseX-20>5 then
+	startX = caseX-20
+else
+	startX = caseX-5
+end
+if caseY-radius>5 then
+	startY = caseY-radius
+elseif caseY-20>5 then
+	startY = caseY-20
+else
+	startY = caseY-5
+end
+if caseX+radius<Poly.cols-5 then
+	maxX = caseX+radius
+elseif caseX+20<Poly.cols-5 then
+	maxX = caseX+20
+else
+	maxX = caseX+5
+end
+if caseY+radius<Poly.rows-5 then
+	maxY = caseY+radius
+elseif caseY+20<Poly.rows-5 then
+	maxY = caseY+20
+else
+	maxY = caseY+5
+end
+
 local mapTrees = self.level:getTreeMap()
 local destinationX = self.caseNewTreeX
 local destinationY = self.caseNewTreeY
 local tree = self.treeFound
+local searchObjRad = self.searchObjRad
+local countPath = self.countPath
 
-while self.treeFound==nil and stepX<200 do
-	stepX = stepX + 1
-	for stepY = 1, 200 do
-		if mapTrees[stepX][stepY] then
-			if mapTrees[stepX][stepY]:getState() == true then
-				if stepX-caseX>-20 and stepX-caseX<20 then
-					self.treeFound="Tree"
-					print('go sleep')
-					self.caseNewTreeX = stepX
-					self.caseNewTreeY = stepY
-					destinationX = stepX
-					destinationY = stepY
-					mapTrees[stepX][stepY]:setNumEmits(1)
-					self.seekTree = mapTrees[stepX][stepY]:getTree()
+if self.treeFound==nil then
+	for stepX = startX, maxX do
+		for stepY = startY, maxY do
+			if mapTrees[stepX] and self.treeFound==nil then
+				if mapTrees[stepX][stepY] then
+					if mapTrees[stepX][stepY] ~= nil then
+						if mapTrees[stepX][stepY]:getType() == 1 then
+							if mapTrees[stepX][stepY]:getNumEmits()<1 and self.level:get_nb_home()<1 then
+								if mapTrees[stepX][stepY]:getState() == true then
+									--[[self.seekTree = mapTrees[stepX][stepY]:getTree() -- NON CEST ICI QUIL FAUT RECUP LES COORD DE WOOD VIA TREE
+									self:seekWood(searchObjRad)
+									self.caseNewTreeX = stepX
+									self.caseNewTreeY = stepY
+									print("XXX ICI")
+									print(self.caseNewTreeX)
+									self.treeFound="wood"--]]
+									self.treeFound = "freeTree"
+									self.caseNewTreeX = stepX
+									self.caseNewTreeY = stepY
+									destinationX = math.floor(stepX/32)
+									destinationY = math.floor(stepY/32)
+									self.seekTree = mapTrees[stepX][stepY]:getTree()
+								end
+							elseif mapTrees[stepX][stepY]:getNumEmits()>0 then
+								if mapTrees[stepX][stepY]:getState() == true and mapTrees[stepX][stepY]:getNumBoids()<20 then
+									self.treeFound="Tree"
+									tree = self.treeFound
+									self.caseNewTreeX = stepX
+									self.caseNewTreeY = stepY
+									destinationX = stepX
+									destinationY = stepY
+									self.seekTree = mapTrees[stepX][stepY]:getTree()
+									print("VVV ICI")
+								end
+							end
+						end
+					end
 				end
 			end
 		end
 	end
 end	
 
-local tree = self.treeFound
+if self.treeFound ==nil and active==false then
+	local randX = math.random(-300,300)
+	local randY = math.random(-300,300)
+	if x+randX > 500 and x+randX < 12800 and y+randY > 500 and y+randY < 12800 then
+		self:set_waypoint(x+randX, y+randY,math.random(50,100),50,100)
+		self:setObjectiv("goOnSeekTree")
+		self.searchObjRad = self.searchObjRad + 10
+	else
+		local randX = math.random(-10,10)
+		local randY = math.random(-10,10)
+		self:set_waypoint(x+randX, y+randY,math.random(50,100),50,100)
+		self:setObjectiv("goOnSeekTree")
+		self.searchObjRad = self.searchObjRad + 10
+	end
+end
 
-if inHome == false and (tree=="Tree" or tree=="freeTree") then	
-	self:updatePath(Vector(caseX,caseY),Vector(destinationX,destinationY))
-	--selfBody:set_color1(0)
-	if self.path then
-		self:clear_waypoint()
-		local step = 1
-		if #self.path>3 then
-			step = 4 -- math.ceil(#self.path/(#self.path))
-			self:setObjectiv("goOnSeekTree")
-			local posX = math.floor( self.path[step].x * h ) + 1
-			local posY = math.floor( self.path[step].y * w ) + 1
-			self:set_waypoint(posX, posY,100,50,100)
+if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
+	if self.path==nil then
+		self:updatePath(Vector(caseX,caseY),Vector(destinationX,destinationY))
+		if self.path then
+			self.nbStepPath = #self.path
+			--selfBody:set_color1(0)
+			self.step = self.nbStepPath
 		else
-			step = 1
-			if self.seekTree then
-				self:setHome(true)
-				self:deactivate()
-				self:setObjectiv("sleep")
-				seeker:set_velocity({x = 0, y = 0, z = 0})
-				self:set_position(destinationX*32,destinationY*32,10)
-				self.path = nil
+			local randX = math.random(-300,300)
+			local randY = math.random(-300,300)
+			if x+randX > 500 and x+randX < 12800 and y+randY > 500 and y+randY < 12800 then
+				self:set_waypoint(x+randX, y+randY,math.random(50,100),50,100)
+				self:setObjectiv("goOnSeekTree")
+				self.searchObjRad = self.searchObjRad + 10
+				self.treeFound = nil
 			else
-			
-			end	
+				local randX = math.random(-10,10)
+				local randY = math.random(-10,10)
+				self:set_waypoint(x+randX, y+randY,math.random(50,100),50,100)
+				self:setObjectiv("goOnSeekTree")
+				self.searchObjRad = self.searchObjRad + 10
+				self.treeFound = nil
+			end
 		end
 	end
+	self:clear_waypoint()
+	if countPath < self.nbStepPath then
+		self:setObjectiv("goOnSeekTree")
+		local posX = math.floor( self.path[countPath].x * h ) + 1
+		local posY = math.floor( self.path[countPath].y * w ) + 1
+		self:set_waypoint(posX, posY,500,50,100)
+		--self.step = self.step + self.step
+		self.countPath = countPath + 1
+	else
+		self.step = #self.path
+		if tree=="freeTree" then
+			if self.seekTree then
+				self:setObjectiv("goSleep")
+				self.countPath = 1
+				--self.seekTree:setNumEmits(1)
+				self.treeFound = nil
+			else
+				self:setObjectiv("seekHome")
+			end
+		else
+			if self.seekTree:getNumBoids()<20 then
+				self:setObjectiv("goSleep")
+				self.searchObjRad = 10
+				self.countPath = 1
+			else
+				local randX = math.random(-300,300)
+				local randY = math.random(-300,300)
+				if x+randX > 500 and x+randX < 12800 and y+randY > 500 and y+randY < 12800 then
+					self.treeFound = nil
+					self:set_waypoint(x+randX, y+randY,z+math.random(50,100),50,100)
+					self:setObjectiv("goOnSeekTree")
+					self.searchObjRad = self.searchObjRad + 10
+				else
+					self.treeFound = nil
+					local randX = math.random(-10,10)
+					local randY = math.random(-10,10)
+					self:set_waypoint(x+randX, y+randY,z+math.random(50,100),50,100)
+					self:setObjectiv("goOnSeekTree")
+					self.searchObjRad = self.searchObjRad + 10
+				end
+			end
+		end
+		local posX = math.floor( self.path[self.step].x * h ) + 1
+		local posY = math.floor( self.path[self.step].y * w ) + 1
+		self:set_waypoint(posX, posY,500,50,100)
+	end		
 end
 end
 
@@ -1789,56 +1945,72 @@ local destinationY = self.caseNewTreeY
 local searchObjRad = self.searchObjRad
 local countPath = self.countPath
 
-
-for stepX = startX, maxX do
-	for stepY = startY, maxY do
-		if mapTrees[stepX] then
-			if mapTrees[stepX][stepY] then
-				if mapTrees[stepX][stepY] ~= nil then
-					if mapTrees[stepX][stepY]:getType() == 3 then
-						if mapTrees[stepX][stepY]:getFood() > 0 then
-							if mapTrees[stepX][stepY]:getState() == true then
-								self.foodFound = 1
-								print('nourritre trouve')
-								self.caseNewTreeX = stepX
-								self.caseNewTreeY = stepY
-								destinationX = stepX
-								destinationY = stepY
-								mapTrees[stepX][stepY]:setNumEmits(1)
-								self.treeFound="bush"
-								tree = self.treeFound
-								self.path=nil
+if self.treeFound==nil then
+	for stepX = startX, maxX do
+		for stepY = startY, maxY do
+			if mapTrees[stepX] then
+				if mapTrees[stepX][stepY] then
+					if mapTrees[stepX][stepY] ~= nil then
+						if mapTrees[stepX][stepY]:getType() == 3 then
+							if mapTrees[stepX][stepY]:getFood() > 0 then
+								if mapTrees[stepX][stepY]:getState() == true then
+									self.foodFound = 1
+									self.caseNewTreeX = stepX
+									self.caseNewTreeY = stepY
+									destinationX = stepX
+									destinationY = stepY
+									mapTrees[stepX][stepY]:setNumEmits(1)
+									self.treeFound="bush"
+									tree = self.treeFound
+									self.path=nil
+									print("j'ai trouve un bush en")
+									print(stepX,stepY)
+								end
 							end
 						end
 					end
 				end
 			end
 		end
-	end
-end	
+	end	
+end
 
 if active==false then
-	local randX = math.random(-100,100)
-	local randY = math.random(-100,100)
+	local randX = nil
+	local randY = nil
+	local rand = math.random(1,4)
+	if rand==1 then
+		randX = math.random(-200,-100)
+		randY = math.random(-200,-100)
+	elseif rand==2 then
+		randX = math.random(100,200)
+		randY = math.random(100,200)
+	elseif rand==3 then
+		randX = math.random(100,200)
+		randY = math.random(-100,-200)
+	elseif rand==4 then
+		randX = math.random(-100,-200)
+		randY = math.random(100,200)
+	end
 	if x+randX > 50 and x+randX < 12800 and y+randY > 50 and y+randY < 12800 then
-		self:set_waypoint(x+randX, y+randY,150,20,50)
+		self:set_waypoint(x+randX, y+randY,math.random(100,300),20,50)
 		self:setObjectiv("goOnSeekFood")
 		self.searchObjRad = self.searchObjRad + 5
+		self.path=nil
 	else
-		self:set_waypoint(x+50, y+50,100,20,50)
+		self:set_waypoint(x+50, y+50,math.random(100,300),20,50)
 		self:setObjectiv("goOnSeekFood")
 		self.searchObjRad = self.searchObjRad + 5
+		self.path=nil
 	end
 end
+
+
 if tree=="bush" and active==false then
 	if self.path==nil then
 		self:updatePath(Vector(caseX,caseY),Vector(destinationX,destinationY))
 		if self.path then
-			if math.floor(#self.path) > 10 then 
-				self.nbStepPath = math.floor(#self.path / 10)
-			else
-				self.nbStepPath = 1
-			end
+			self.nbStepPath = #self.path
 		else
 		return end
 		--selfBody:set_color1(0)
@@ -1847,8 +2019,8 @@ if tree=="bush" and active==false then
 	self:clear_waypoint()
 	if countPath < self.nbStepPath then
 		self:setObjectiv("goOnSeekFood")
-		local posX = math.floor( self.path[10*countPath].x * h ) + 1 -------- A REVOIRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR 
-		local posY = math.floor( self.path[10*countPath].y * w ) + 1
+		local posX = math.floor( self.path[countPath].x * h ) + 1 -------- A REVOIRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR 
+		local posY = math.floor( self.path[countPath].y * w ) + 1
 		self:set_waypoint(posX, posY,500,50,100)
 		--self.step = self.step + self.step
 		self.countPath = countPath + 1
@@ -1856,9 +2028,13 @@ if tree=="bush" and active==false then
 		self.step = #self.path
 		self:setObjectiv("fly")
 		self.searchObjRad = 10
-		local posX = math.floor( self.path[self.step].x * h ) + 1
-		local posY = math.floor( self.path[self.step].y * w ) + 1
-		self:set_waypoint(posX, posY,500,50,100)
+		--local posX = math.floor( self.path[self.step].x * h ) + 1
+		--local posY = math.floor( self.path[self.step].y * w ) + 1
+		self:clear_waypoint()
+		self.path=nil
+		self.treeFound = nil
+		self.countPath = 1
+		--self:set_waypoint(posX, posY,500,50,100)
 	end		
 end
 end
@@ -1878,10 +2054,9 @@ local maxX = 0
 local maxY= 0
 local tree = self.treeFound
 
-self.seekingWood = true
 
-print('je cherche du bois')
-print(self.woodFound)
+
+self.seekingWood = true
 
 if caseX-radius>5 then
 	startX = caseX-radius
@@ -1917,8 +2092,11 @@ if self.woodFound == nil then
 			if mapTrees[stepX] then
 				if mapTrees[stepX][stepY] then
 					if mapTrees[stepX][stepY] ~= nil then
-						if mapTrees[stepX][stepY]:getType() == 2 then
+						if mapTrees[stepX][stepY]:getType() == 2 then --ici faut chercher sur tree puis wood
 							self.woodFound = 1
+							print('quel wooooood ?')
+							print(stepX, stepY)
+							print(mapTrees[stepX][stepY]:getType())
 							print('bois trouve')
 							destinationX = stepX
 							destinationY = stepY
@@ -1934,9 +2112,7 @@ end
 local woodFound = self.woodFound
 
 if woodFound==1 and active==false then
-	print('go chercher du bois')
 	if self.path==nil then
-		print('calcul chemin  bois')
 		self:updatePath(Vector(caseX,caseY),Vector(destinationX,destinationY))
 		if self.path then
 			if math.floor(#self.path) > 10 then 
@@ -1967,20 +2143,20 @@ if woodFound==1 and active==false then
 		self.treeFound = nil
 		self.countPath = 1
 		self:setObjectiv("fly")
+		self.woodFound = nil
 	end		
 end
 
 if active==false and woodFound==nil then
 	local randX = math.random(-100,100)
 	local randY = math.random(-100,100)
-	print('continue de chercher')
 
 	if x+randX > 50 and x+randX < 12800 and y+randY > 50 and y+randY < 12800 then
-		self:set_waypoint(x+randX, y+randY,150,20,50)
+		self:set_waypoint(x+randX, y+randY,150+randX,20,50)
 		self:setObjectiv("goOnSeekWood")
 		self.searchObjRad = self.searchObjRad + 5
 	else
-		self:set_waypoint(x+50, y+50,150,20,50)
+		self:set_waypoint(x+50, y+50,150+randX,20,50)
 		self:setObjectiv("goOnSeekWood")
 		self.searchObjRad = self.searchObjRad + 5
 	end
@@ -2030,11 +2206,18 @@ end
 
 function bd:feed(nb)
 local myHunger = self.hunger
-	if myHunger < 50 then
-		self.hunger = myHunger + nb
-		self.body_graphic:set_color4(255)
-		self.age = self.age + 1
-		return true
+	if myHunger < 100 then
+		if myHunger + nb > 100 then
+			self.hunger = 100
+			self.body_graphic:set_color4(255)
+			--self.age = self.age + 1
+			return true
+		else
+			self.hunger = myHunger + nb
+			self.body_graphic:set_color4(255)
+			--self.age = self.age + 1
+			return true
+		end
 	else
 		return false
 	end
@@ -2109,7 +2292,7 @@ function bd:draw_debug()
   
   -- selection circle
   local r = 3
-  lg.circle("fill", self.position.x, self.position.y, r)
+  --lg.circle("fill", self.position.x, self.position.y, r)
   --lg.point(self.position.x, self.position.y)
   
   local len = 30
@@ -2147,18 +2330,18 @@ function bd:draw_debug()
   end
   
   -- field of view
-  --local angle = self.seeker:get_rotation_angle() + math.pi / 2
+  --[[local angle = self.seeker:get_rotation_angle() + math.pi / 2
   local fov_angle = 0.5 * self.field_of_view
-  --local min_angle = angle - fov_angle
-  --local max_angle = angle + fov_angle
-  --local dirx1, diry1 = math.sin(min_angle), -math.cos(min_angle)
-  --local dirx2, diry2 = math.sin(max_angle), -math.cos(max_angle)
+  local min_angle = angle - fov_angle
+  local max_angle = angle + fov_angle
+  local dirx1, diry1 = math.sin(min_angle), -math.cos(min_angle)
+  local dirx2, diry2 = math.sin(max_angle), -math.cos(max_angle)
   local len = self.sight_radius
-  --local p1x, p1y = x1 + len * dirx1, y1 + len * diry1
-  --local p2x, p2y = x1 + len * dirx2, y1 + len * diry2
+  local p1x, p1y = x1 + len * dirx1, y1 + len * diry1
+  local p2x, p2y = x1 + len * dirx2, y1 + len * diry2
   lg.setColor(0, 0, 0, 255)
-  --lg.line(x1, y1, p1x, p1y)
-  --lg.line(x1, y1, p2x, p2y)
+  lg.line(x1, y1, p1x, p1y)
+  lg.line(x1, y1, p2x, p2y)--]]
   
   
   --self:_draw_debug_rule_vector(self.alignment_vector, "Align")
@@ -2169,7 +2352,7 @@ function bd:draw_debug()
   --self:_draw_debug_rule_vector(self.obstacle_vector, "Obstacle")
   
   -- target
-  local t = self.target
+  --[[local t = self.target
   local p = self.position
   local dx, dy, dz = t.x - p.x, t.y - p.y, t.z - p.z
   local len = math.sqrt(dx*dx + dy*dy + dz*dz)
@@ -2181,7 +2364,7 @@ function bd:draw_debug()
     lg.setLineWidth(3)
     lg.line(x1, y1, x2, y2)
     lg.print("Target", x2, y2)
-  end
+  end--]]
   
   -- waypoint sphere
   if self.waypoint.is_active then
@@ -2192,26 +2375,30 @@ function bd:draw_debug()
     local p = self.position
     local dx, dy, dz = x - p.x, y - p.y, z - p.z
     local lensqr = dx*dx + dy*dy + dz*dz
-    if lensqr < r1 then
-      lg.setColor(0, 0, 255, 50)
-    else
-      lg.setColor(255, 0, 0, 50)
-    end
-    lg.circle("fill", x, y, r1)
-    
+	lg.setColor(255, 255, 255, 255)
+    --lg.circle("fill", x, y, r1)
+    lg.draw(self.waypointPoint, x-45, y-100)
     lg.setColor(255, 0, 0, 255)
-    lg.circle("line", x, y, r1)
-    lg.circle("line", x, y, r2)
+    --lg.circle("line", x, y, r1)
+    --lg.circle("line", x, y, r2)
   end
   
   
-  self.seeker:draw()
+  --self.seeker:draw()
 end
 
 function bd:draw()
-  if not self.is_initialized then return end
+  if not self.is_initialized then
+	local inHome = self.inHome
+	if inHome == false then
+		local x, y, z = self:get_position()
+		lg.setColor(255, 255, 255, 1)
+		lg.draw(self.illuFloor, x-25, y-25)
+	end
+  return end
   debugText = self.rule_weights[self.separation_vector]
   local x, y, z = self:get_position()
+  
   self.body_graphic:draw(x, y)
   
   lg.setColor(0, 100, 255, 255)
