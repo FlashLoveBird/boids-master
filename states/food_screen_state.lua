@@ -58,16 +58,9 @@ function food_screen_state.draw()
   local x = 0.5 * SCR_WIDTH - 0.5 * width + xpad
   local y = 0.5 * SCR_HEIGHT - 0.5 * height + ypad
 
-  lg.setFont(FONTS.bebas_header)
-  lg.setColor(251, 121, 0, 255)
-  lg.print("[Bird Game]", x, y)
-  
-  local y = y + 200
-  local x = x + 20
-  local ystep = 100
-  lg.setFont(FONTS.verdana_text)
+  lg.setFont(FONTS.muli)
   lg.setColor(255, 255, 255, 255)
-  lg.print("Dylan Thomas", x, y)
+  lg.print("Paper life", x, y)
   
 end
 

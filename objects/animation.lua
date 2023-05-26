@@ -156,11 +156,11 @@ function animation:update(dt)
 end
 
 ------------------------------------------------------------------------------
-function animation:draw()
+function animation:draw(x, y)
   if not self.is_active then
     return
   end
-  lg.draw(self.spritesheet, self.current_quad, self.x, self.y, 
+  lg.draw(self.spritesheet, self.current_quad, x, y, 
           self.angle, self.scale, self.scale, 
           0.5 * self.width, 0.5 * self.height)
 end

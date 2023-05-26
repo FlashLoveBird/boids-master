@@ -75,6 +75,11 @@ loader.load_objects = function()
   
   -- Egg objects
   egg = require("objects/egg")
+  
+   -- Nuage objects
+  nouage = require("objects/nuage")
+  nuage_seeker = require("objects/nuage_seeker")
+  
 end
 
 return loader

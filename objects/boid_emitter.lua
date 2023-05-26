@@ -394,7 +394,7 @@ end
 ------------------------------------------------------------------------------
 function be:draw()
   if not self.is_active then return end
-  local x, y = self.position.x, self.position.y
+  local x, y = self.position.x, self.position.y-50
   --[[lg.setColor(255, 0, 0, 255)
   lg.setPointSize(5)
   lg.points(x, y)

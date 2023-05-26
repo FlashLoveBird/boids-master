@@ -70,6 +70,12 @@ function state_manager:escape()
 self.current_state.escape()
 end
 
+function state_manager:resize(w, h)
+	if self.current_state.label == "food_demo_state" then
+		self.current_state.resize(w, h)
+	end
+end
+
 
 function state_manager:load_previous_state(...)
   local current_state = self.current_state

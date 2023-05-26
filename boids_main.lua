@@ -51,6 +51,9 @@ end
 
 function love.resize(w, h)
   print(("Fenêtre redimensionnée à la largeur : %d et la hauteur : %d."):format(w, h))
+  SCR_WIDTH  = w
+  SCR_HEIGHT = h
+  BOIDS:resize(w, h)
 end
 
 function love.load(args)
@@ -61,6 +64,10 @@ function love.load(args)
   lk = love.keyboard
   li = love.image
   
+   print('args[1]')
+  print(args[1])
+   print('args[2]')
+  print(args[2])
   print('args[3]')
   print(args[3])
   ARGS = args
@@ -99,7 +106,7 @@ function love.load(args)
   local states = require('state_loader')
   STATES = states
   BOIDS = state_manager:new()
-  BOIDS:add_state(states.main_screen_load_state, "main_screen_load_state")
+  --[[BOIDS:add_state(states.main_screen_load_state, "main_screen_load_state")
   BOIDS:add_state(states.main_screen_state, "main_screen_state")
   BOIDS:add_state(states.overview_screen_state, "overview_screen_state")
   
@@ -121,13 +128,13 @@ function love.load(args)
   BOIDS:add_state(states.obstacle_screen_state, "obstacle_screen_state")
   BOIDS:add_state(states.obstacle_demo_load_state, "obstacle_demo_load_state")
   BOIDS:add_state(states.obstacle_demo_state, "obstacle_demo_state")
-  
+  --]]
   BOIDS:add_state(states.food_screen_state, "food_screen_state")
   BOIDS:add_state(states.food_menu_state, "food_menu_state")
   BOIDS:add_state(states.food_config_state, "food_config_state")
   BOIDS:add_state(states.food_demo_load_state, "food_demo_load_state")
   BOIDS:add_state(states.food_demo_state, "food_demo_state")
-  
+  --[[
   BOIDS:add_state(states.emitter_screen_state, "emitter_screen_state")
   BOIDS:add_state(states.emitter_demo_load_state, "emitter_demo_load_state")
   BOIDS:add_state(states.emitter_demo_state, "emitter_demo_state")
@@ -141,12 +148,14 @@ function love.load(args)
   BOIDS:add_state(states.animation_demo_state, "animation_demo_state")
   
   BOIDS:add_state(states.exit_screen_state, "exit_screen_state")
-  
+  --]]
   BOIDS:load_state("food_screen_state")
   
   love.mouse.setVisible(false)
   
   click = love.audio.newSource("sound/click1.ogg", "static")
+  
+  --lw.setFullscreen(true, "desktop")
   
   --[[lg.setFont(FONTS.bebas_smallest)
   local text = "Press [ enter ] to continue"
@@ -170,8 +179,8 @@ function love.update(dt)
     return
   end
   
-  if love.keyboard.isDown('z') then dt = dt / 16 end
-  if love.keyboard.isDown('x') then dt = dt * 3 end
+  --if love.keyboard.isDown('z') then dt = dt / 16 end
+  --if love.keyboard.isDown('x') then dt = dt * 3 end
   
   dt = math.min(dt, 1/20)
 
@@ -195,7 +204,7 @@ function love.update(dt)
 end
 
 function love.draw()
-  TLfres.beginRendering(1920, 1080)
+  --TLfres.beginRendering(1920, 1080)
   --lg.setPointStyle("rough")
 
   BOIDS:draw()
@@ -211,7 +220,8 @@ function love.draw()
   lg.setFont(b.font)
   lg.setColor(b.color)
   lg.print(b.text, b.bbox.x, b.bbox.y)--]]
-  TLfres.endRendering()
+  --TLfres.endRendering()
+  --print(TLfres.getScale(800, 600))
 end
 
 

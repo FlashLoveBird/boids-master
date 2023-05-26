@@ -215,6 +215,15 @@ function level_map:add_point_to_polygonizer(x, y, radius)
   end
   
   local p = self.polygonizer:add_point(x, y, radius)
+  local map = self.map
+  local caseX = math.floor( x / 32 )
+  local caseY = math.floor( y / 32 )
+  if map then
+	map[caseX][caseY]=false
+	self.map = map
+	print('jajoute bien un mur en ')
+	print(caseX,caseY)
+  end
   return p
 end
 
@@ -357,6 +366,7 @@ function level_map:update_polygonizer()
   self:_reset_edited_tiles(self.polygonizer_edited_tiles)
   self:_update_polygonizer_field_values()
   self:_update_polygonizer_surface_tiles()
+  print('tes appelé tt le temps ?')
 end
 
 --#############################################################################
@@ -550,8 +560,8 @@ function level_map:setWallMap()
 	for idx=1,#Mymap do
 		local i, j = Mymap[idx].i, Mymap[idx].j
 		local x, y = Poly:_get_cell_position(i, j)
-		local caseX = math.floor( x / h ) + 1
-		local caseY = math.floor( y / w ) + 1
+		local caseX = math.floor( x / h )
+		local caseY = math.floor( y / w )
 		map[caseX][caseY]=false
 	end
 	self.init=true

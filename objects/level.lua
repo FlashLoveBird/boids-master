@@ -28,6 +28,7 @@ level.nbEggs = 1
 level.treeSelect = nil
 level.trees = {}
 level.bushs = {}
+level.nuages = {}
 
 
 -- cube explosions
@@ -70,24 +71,28 @@ level.wood_source = {}
 level.initMap=false
 
 level.nbTree = 0
+level.nbNuage = 0
 
-imageAnimationBushInspire = nil
-imageAnimationBushExpire = nil
-imageAnimationBushBirth = nil
-imageAnimationBigBushInspire = nil
-imageAnimationBigBushExpire = nil
+level.imageAnimationBushInspire = nil
+level.imageAnimationBushExpire = nil
+level.imageAnimationBushBirth = nil
+level.imageAnimationBigBushInspire = nil
+level.imageAnimationBigBushExpire = nil
 
-imageAnimationTreeInspire = nil
-imageAnimationTreeExpire = nil
-imageAnimationTreeBirth = nil
-imageAnimationBigTreeInspire = nil
-imageAnimationBigTreeExpire = nil
-imageAnimationOmbre = nil
-imageAnimationOmbreBirth = nil
+level.imageAnimationTreeInspire = nil
+level.imageAnimationTreeExpire = nil
+level.imageAnimationTreeBirth = nil
+level.imageAnimationBigTreeInspire = nil
+level.imageAnimationBigTreeExpire = nil
+level.imageAnimationOmbre = nil
+level.imageAnimationOmbreBirth = nil
+
+level.imageAnimationnuage = nil
 
 level.boids = 0
 level.boidPrey = 0
 level.boidPred = 0
+
 
 local level_mt = { __index = level }
 function level:new()
@@ -111,19 +116,21 @@ function level:new()
   
   level.screen_canvas = lg.newCanvas(SCR_WIDTH, SCR_HEIGHT)
   
-  imageAnimationBushInspire = love.graphics.newImage("images/bushInspire.png")
-  imageAnimationBushExpire = love.graphics.newImage("images/bushExpire.png")
-  imageAnimationBushBirth = love.graphics.newImage("images/birthBush.png")
-  imageAnimationBigBushInspire = love.graphics.newImage("images/bigBushInspire.png")
-  imageAnimationBigBushExpire = love.graphics.newImage("images/bigBushExpire.png")
+  level.imageAnimationBushInspire = love.graphics.newImage("images/bushInspire.png")
+  level.imageAnimationBushExpire = love.graphics.newImage("images/bushExpire.png")
+  level.imageAnimationBushBirth = love.graphics.newImage("images/birthBush.png")
+  level.imageAnimationBigBushInspire = love.graphics.newImage("images/bigBushInspire.png")
+  level.imageAnimationBigBushExpire = love.graphics.newImage("images/bigBushExpire.png")
   
-  imageAnimationTreeInspire = love.graphics.newImage("images/treeInspire.png")
-  imageAnimationTreeExpire = love.graphics.newImage("images/treeExpire.png")
-  imageAnimationTreeBirth = love.graphics.newImage("images/birthTree.png")
-  imageAnimationBigTreeInspire = love.graphics.newImage("images/bigTreeInspire.png")
-  imageAnimationBigTreeExpire = love.graphics.newImage("images/bigTreeExpire.png")
-  imageAnimationOmbre = love.graphics.newImage("images/ombreTree.png")
-  imageAnimationOmbreBirth = love.graphics.newImage("images/ombreTreeBirth.png")
+  level.imageAnimationTreeInspire = love.graphics.newImage("images/treeInspire.png")
+  level.imageAnimationTreeExpire = love.graphics.newImage("images/treeExpire.png")
+  level.imageAnimationTreeBirth = love.graphics.newImage("images/birthTree.png")
+  level.imageAnimationBigTreeInspire = love.graphics.newImage("images/bigTreeInspire.png")
+  level.imageAnimationBigTreeExpire = love.graphics.newImage("images/bigTreeExpire.png")
+  level.imageAnimationOmbre = love.graphics.newImage("images/ombreTree.png")
+  level.imageAnimationOmbreBirth = love.graphics.newImage("images/ombreTreeBirth.png")
+  
+  level.imageAnimationNuage = love.graphics.newImage("images/nuage.png")
   
   level:init()
   
@@ -529,7 +536,6 @@ end
 
 function level:setTreeMap(treeMap)
 self.treeMap = treeMap
-print('level set map')
 end
 
 function level:getTreeMap()
@@ -542,14 +548,21 @@ end
 
 function level:addTree(x,y,flock)
 self.nbTree = self.nbTree + 1
+local imageAnimationTreeInspire = self.imageAnimationTreeInspire
+local imageAnimationTreeExpire = self.imageAnimationTreeExpire
+local imageAnimationTreeBirth = self.imageAnimationTreeBirth
+local imageAnimationBigTreeInspire = self.imageAnimationBigTreeInspire
+local imageAnimationBigTreeExpire = self.imageAnimationBigTreeExpire
+local imageAnimationOmbre = self.imageAnimationOmbre
+local imageAnimationOmbreBirth = self.imageAnimationOmbreBirth
 
-local animationTreeInspire = self:newAnimation(imageAnimationTreeInspire, 189, 147, 5)
+local animationTreeInspire = self:newAnimation(imageAnimationTreeInspire, 243, 182, 5)
 local animationTreeExpire = self:newAnimation(imageAnimationTreeExpire, 189, 147, 5)
-local animationTreeBirth = self:newAnimation(imageAnimationTreeBirth, 189, 147, 5)
-local animationBigTreeInspire = self:newAnimation(imageAnimationBigTreeInspire, 189, 147, 2)
-local animationBigTreeExpire = self:newAnimation(imageAnimationBigTreeExpire, 189, 147, 2)
-local animationOmbre = self:newAnimation(imageAnimationOmbre, 326, 282, 2)
-local animationOmbreBirth = self:newAnimation(imageAnimationOmbreBirth, 326, 293, 8)
+local animationTreeBirth = self:newAnimation(imageAnimationTreeBirth, 378, 376, 5)
+local animationBigTreeInspire = self:newAnimation(imageAnimationBigTreeInspire, 378, 376, 2)
+local animationBigTreeExpire = self:newAnimation(imageAnimationBigTreeExpire, 378, 376, 2)
+local animationOmbre = self:newAnimation(imageAnimationOmbre, 361, 376, 2)
+local animationOmbreBirth = self:newAnimation(imageAnimationOmbreBirth, 189, 376, 8)
 
 local te = tree:new(self,self.nbTree,flock,animationTreeInspire,animationTreeExpire,animationTreeBirth,animationBigTreeInspire,animationBigTreeExpire,animationOmbre,animationOmbreBirth)
 --self.treeMap[x][y]=te
@@ -564,15 +577,21 @@ end
 
 function level:addRock(x,y)
 local rock = 1
-self.treeMap[x][y]=rock
+--self.treeMap[x][y]=rock
 end
 
 function level:addBush(x,y,flock)
 
+local imageAnimationBushInspire = self.imageAnimationBushInspire
+local imageAnimationBushExpire = self.imageAnimationBushExpire
+local imageAnimationBushBirth = self.imageAnimationBushBirth
+local imageAnimationBigBushInspire = self.imageAnimationBigBushInspire
+local imageAnimationBigBushExpire = self.imageAnimationBigBushExpire
 
-local animationBushInspire = self:newAnimation(imageAnimationBushInspire, 529, 373, 1)
-local animationBushExpire = self:newAnimation(imageAnimationBushExpire, 529, 373, 1)
-local animationBushBirth = self:newAnimation(imageAnimationBushBirth, 529, 373, 1)
+
+local animationBushInspire = self:newAnimation(imageAnimationBushInspire, 529, 373, 5)
+local animationBushExpire = self:newAnimation(imageAnimationBushExpire, 529, 373, 5)
+local animationBushBirth = self:newAnimation(imageAnimationBushBirth, 529, 373, 5)
 local animationBigBushInspire = self:newAnimation(imageAnimationBigBushInspire, 529, 373, 2)
 local animationBigBushExpire = self:newAnimation(imageAnimationBigBushExpire, 529, 373, 2)
 
@@ -582,6 +601,23 @@ self.treeMap[x][y]=bu
 self.pollution = self.pollution - 1
 self.bushs[#self.bushs + 1] = bu
 return bu
+end
+
+function level:addNuage(x, y, z, flock)
+self.nbNuage = self.nbNuage + 1
+local imageAnimationNuage = self.imageAnimationNuage
+
+
+local animationNuage = self:newAnimation(imageAnimationNuage, 427, 292, 1)
+
+local nua = nouage:new(self,self.nbNuage,flock,animationNuage, x*32, y*32, z)
+--nua:init(flock, x*32, y*32, 500)
+--self.treeMap[x][y]=te
+
+self.nuages[#self.nuages + 1] = nua
+
+--self.treeMap[x][y]= nua
+self.pollution = self.pollution - 1
 end
 
 function level:removeWood(i)
@@ -648,14 +684,10 @@ end
 ------------------------------------------------------------------------------
 function level:update(dt)
   self.master_timer:update(dt)
-  
   if self.hero then
     self.hero:update(dt)
     if self.camera then
-      --self.camera:set_target(self.hero:get_position())
 	  
-	  
-    
 	if track_x ~= nil then
 		local target = vector2:new(track_x, track_y)
 		local cam = self.camera
@@ -714,6 +746,16 @@ function level:update(dt)
 			end
 		end
 	end
+  
+  local nuages = self.nuages
+  
+  if #nuages>0 then
+		for i=#nuages,1,-1 do
+			if self.nuages[i] ~= nil then
+				self.nuages[i]:update(dt)
+			end
+		end
+	end
 	
   local bushs = self.bushs
 
@@ -739,7 +781,7 @@ end
 
 ------------------------------------------------------------------------------
 function level:draw()
-
+  
   if self.level_map then self.level_map:draw() end
   
   self.camera:set()
@@ -773,8 +815,7 @@ function level:draw()
   
   for i=1,#self.bushs do
     if self.bushs[i] ~= nil then
-		local mx, my = self.bushs[i].x*32-cx, self.bushs[i].y*32-cy
-		self.bushs[i]:draw(mx-16, my-16)
+		self.bushs[i]:draw()
 	end
   end
   
@@ -788,14 +829,19 @@ function level:draw()
   
   for i=1,#self.trees do
     if self.trees[i] ~= nil then
-		local mx, my = self.trees[i].x*32-cx, self.trees[i].y*32-cy
-		self.trees[i]:draw(mx-16, my-16)
+		self.trees[i]:draw()
 	end
   end
   
   for i=1,#self.emitters do
     if self.emitters[i] ~= nil then
 		self.emitters[i]:draw()
+	end
+  end
+  
+  for i=1,#self.nuages do
+    if self.nuages[i] ~= nil then
+		--self.nuages[i]:draw()
 	end
   end
   
@@ -811,7 +857,7 @@ function level:draw()
 			lg.print(nbBoids, 1600, 320)
 		end
   end
-  
+  self.camera:draw()
   --[[if self.nbEggs>0 then
 		for i=1,self.nbEggs do
 			if self.eggs[i] ~= nil and self.eggs[i].eclose==false then
@@ -819,7 +865,6 @@ function level:draw()
 			end
 		end
 	end--]]
-  
 end
 
 return level

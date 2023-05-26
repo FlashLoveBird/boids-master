@@ -95,7 +95,7 @@ tile_map.countTree=0
 tile_map.mapSave = nil
 
 local nbTree = 10
-local nbBush = 5
+local nbBush = 10
 
 local tile_map_mt = { __index = tile_map }
 function tile_map:new(level, columns, rows, tile_width, tile_height, mapSave)
@@ -635,7 +635,7 @@ function tile_map:update_chunks_in_view()
   
   mini = math.max(mini, 1)
   minj = math.max(minj, 1)
-  maxi = math.min(maxi, self.chunk_cols)
+  maxi = math.min(maxi, self.chunk_cols) 
   maxj = math.min(maxj, self.chunk_rows)
   
   local visible = true
@@ -651,6 +651,9 @@ function tile_map:update_chunks_in_view()
   local chunks_in_view_by_id = self.chunks_in_view_by_id
   table.clear(chunks_in_view)
   table.clear_hash(chunks_in_view_by_id)
+  if minj > 1 then
+	minj = minj - 1
+  end
   if self.map_isvisible then
     for j=minj,maxj do
       for i=mini,maxi do
@@ -929,7 +932,7 @@ function tile_map:_generate_chunk(i, j)
 		  
 			local newX = x
 			local newY = y
-			if x > 40 and x<280 and y > 40 and y<280 and countTree<nbTree and element==false and self.level:canILandHere(newX,newY,100)==true and math.random(1,10)==1 then
+			if x > 40 and x<280 and y > 40 and y<280 and countTree<nbTree and element==false and self.level:canILandHere(newX,newY,20)==true and math.random(1,5500)==1 then
 				map[newX][newY] = self.level:addTree(newX,newY)
 				map[newX][newY]:add(nil)
 				map[newX][newY]:setNumEmits(0)
@@ -941,6 +944,7 @@ function tile_map:_generate_chunk(i, j)
 				element = true
 				print("newX, newY")
 				print(newX, newY)
+				print("ajout dun arbrre en")
 				self.map = map
 				self.level:setTreeMap(map)
 			elseif x > 40 and x<280 and y > 40 and y<280 and count<nbBush and element==false and self.level:canILandHere(newX,newY,20)==true and math.random(1,5500)==1 then

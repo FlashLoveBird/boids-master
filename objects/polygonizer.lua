@@ -60,6 +60,9 @@ pgr._init_marching_square_draw_cases = nil
 
 pgr.graphic = nil
 pgr.rock=nil
+pgr.graph1=nil
+pgr.graph2=nil
+pgr.graph3=nil
 
 do
   local cases = pgr.marching_square_draw_cases
@@ -570,23 +573,13 @@ function pgr:new(level, x, y, width, height, tile_width, tile_height)
   pgr:_init_textures()
   pgr:initGraphics()
   
-  rock = love.graphics.newImage("images/3D/rockA.png")
-  plant = love.graphics.newImage("images/3D/rockA.png")
-  rock2 = love.graphics.newImage("images/3D/rockA.png")
-  
   return pgr
 end
 
 function pgr:initGraphics()
-  self.graphic = math.random(1,3)
-  if self.graphic==1 then
-	self.rock = love.graphics.newImage("images/env/tree1.png")
-  elseif self.graphic==2 then
-	self.rock = love.graphics.newImage("images/env/tree2.png")
-  else
-	self.rock = love.graphics.newImage("images/env/tree3.png")
-  end
-
+	self.graph1 = lg.newImage("images/3D/rockA.png")
+	self.graph2 = lg.newImage("images/3D/rockB.png")
+	self.graph3 = lg.newImage("images/3D/rockC.png")
 end
 
 function pgr:set_surface_threshold(thresh)
@@ -852,7 +845,7 @@ function pgr:_new_cell_table(i, j, case)
   else
     cell = {i=i, j=j, case=case}
   end
-  cell.x, cell.y = self:_get_cell_position(cell.i, cell.j)
+  cell.x, cell.y = self:_get_cell_position(cell.i, cell.j)  
   return cell
 end
 
@@ -947,8 +940,20 @@ function pgr:_flood_fill_surface()
             end
           end
         end
-        
+        local graphic = math.random(1,5)
+		  if graphic==1 then
+			cell.rock = self.graph1
+		  elseif graphic==2 then
+			cell.rock = self.graph2
+		  elseif graphic==3 then
+			cell.rock = self.graph3
+		  elseif graphic==4 then
+			cell.rock = self.graph1
+		  else 
+			cell.rock = self.graph1
+		  end
         flood_cells[#flood_cells + 1] = cell
+		
       end
     end
   end
@@ -1138,7 +1143,11 @@ function pgr:draw()
   for idx=1,#floodscells do
     local i, j = floodscells[idx].i, floodscells[idx].j
     local x, y = self:_get_cell_position(i, j)
-	love.graphics.draw(plant, x, y)
+	if i%2 == 1 and j%2 == 1 then
+		lg.draw(floodscells[idx].rock, x, y)
+	else
+		--love.graphics.draw(plant, x, y)
+	end
   end
   
 end

@@ -66,9 +66,6 @@ function bws:add_wood(x, y, radius)
   local p = self.level_map:add_point_to_source_polygonizer(x, y, radius)
   self.sources[#self.sources + 1] = self:_new_wood_source(x, y, radius, p)
   self:_calculate_total_area()
-  print("-----------------------------------------------------------------#sources")
-  print(#self.sources)
-  print(x, y, radius, p)
   self.wood = true
   return self, p
 end
@@ -193,6 +190,11 @@ function bws:_update_area(dt)
 				bhash[objects[i]] = true
 				objects[i]:grabWood(self.depletion_rate * dt)
 				objects[i]:set_emote("question")
+			  elseif objects[i]:getObjectiv()~="goOut" and objects[i]:getObjectiv()~="goOnHomeWith" then
+				local x, y, z = objects[i]:get_position()
+				objects[i]:set_waypoint(x+math.random(-200,200), y+math.random(-200,200), math.random(50,1000),50,100)
+				objects[i]:unObstacleMe()
+				objects[i]:setObjectiv("goOut")
 			  end
 			end
 		end

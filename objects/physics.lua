@@ -151,9 +151,9 @@ steer.table = PHYS_STEER
 steer.dscale = DSCALE
 steer.point = nil
 steer.target = nil
-steer.max_force = 10
+steer.max_force = 1
 steer.max_vel = 30         -- meters/s
-steer.slow_radius = 400     -- in pixels
+steer.slow_radius = 40     -- in pixels
 steer.approach_factor = 1
 steer.temp_vector = nil
 steer.force_vector = nil
@@ -253,12 +253,12 @@ end
 ------------------------------------------------------------------------------
 function steer:draw()
   lg.setColor(255,0,0,255)
-  lg.setPoint(4, "smooth")
-  lg.point(self.point.pos:get_vals())
+  --lg.setPoint(4, "smooth")
+  --lg.point(self.point.pos:get_vals())
   
   if self.target then
     lg.setColor(0,255,0,150)
-    lg.point(self.target:get_vals())
+    --lg.point(self.target:get_vals())
     lg.circle("line", self.target.x, self.target.y, self.slow_radius)
   end
 end

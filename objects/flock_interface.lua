@@ -67,7 +67,8 @@ end
 if key =="space" and fi.hero.boidsIn==false then
 	fi.hero:breathe()
 elseif key =="space" and fi.hero.boidsIn==true then
-	fi.hero:unbreathe()
+	fi.hero:breathe()
+	--fi.hero:unbreathe()
 elseif key =="lshift" and fi.hero.boidsIn==true then
 	fi.hero:release(self.flock)
 end
@@ -140,7 +141,6 @@ function fi:mousepressed(x, y, button)
 	  for mx = x-5, x+5 do
 		for my = y-5, y+5 do
 			if treeMap[mx][my]~=nil then
-				print("nouvele maison trouve")
 				for _,b in pairs(self.selected_boids) do
 					local tree = treeMap[mx][my]:getTree()
 					b:set_newHome(tree, mx, my)
@@ -195,7 +195,7 @@ function fi:mousereleased(x, y, button)
           selected[boid] = nil
         else
           selected[boid] = boid
-		  boid:sing()
+		  boid:sing(1)
 		  self.nb_boids_selected = self.nb_boids_selected + 1
         end
       end
@@ -204,7 +204,7 @@ function fi:mousereleased(x, y, button)
       self.flock:get_boids_in_bbox(bbox, storage)
       for i=1,#storage do
         selected[storage[i]] = storage[i]
-		storage[i]:sing()
+		storage[i]:sing(1)
 		self.nb_boids_selected = self.nb_boids_selected + 1
       end
     end
@@ -420,11 +420,11 @@ function fi:_draw_selected_boids()
 		lg.print(tired, tableX+50, tableY+60)
 		lg.print(b.age, tableX+50, tableY+110)
 		if b.sex == true then
-			lg.print("Male", tableX+170, tableY+10)
+			lg.print("Mâle", tableX+170, tableY+10)
 		else
-			lg.print("Female", tableX+170, tableY+10)
+			lg.print("Femelle", tableX+170, tableY+10)
 		end
-		lg.print("Goal :", tableX+120, tableY+50)
+		lg.print("Objectif :", tableX+120, tableY+50)
 		lg.print(b.objectiv, tableX+120, tableY+70)
 		
 		--love.graphics.draw(homeIcon, tableX+170, tableY+100)
@@ -441,10 +441,10 @@ function fi:_draw_selected_boids()
 		lg.setColor(0, 0, 0, 255)
 		--lg.circle("line", x, y, r)
 		if b.lover then
-			lg.print("My lover :", tableX, tableY)
+			lg.print("En couple avec :", tableX, tableY)
 			lg.print(b.lover.name, tableX, tableY+20)
 		else
-			lg.print("No friend", tableX, tableY)
+			lg.print("Pas de relation", tableX, tableY)
 		end
 		lg.print("is_initialized ?", tableX, tableY+60)
 		lg.print(tostring(b.is_initialized), tableX, tableY+80)
@@ -500,10 +500,10 @@ function fi:draw()
     local b = self.buttons[i]
     if b.toggle then
 	  lg.setColor(50, 100, 255, 255)
-      lg.rectangle("fill", tableX, tableY, 100,100)
+      --lg.rectangle("fill", tableX, tableY, 100,100)
     else
 	  lg.setColor(100, 20, 100, 255)
-      lg.rectangle("fill", tableX, tableY, 100,100)
+      --lg.rectangle("fill", tableX, tableY, 100,100)
     end
   end
   

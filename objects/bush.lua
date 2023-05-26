@@ -159,13 +159,14 @@ end
 
 
 local emitFoodTime = self.emitFoodTime
-if self.emitFood == true or self.food_source:get_food()==false then
-	--print(self.emitFoodTime)
-	self.emitFoodTime = emitFoodTime + dt * math.random(0,2)
-	if self.emitFoodTime>10 then
-		self.emitFoodTime=0
-		self:emiterFood()
-		
+if not self.food_source:get_food() then
+	if self.emitFood == true and timeBirth>100 then
+		--print(self.emitFoodTime)
+		self.emitFoodTime = emitFoodTime + dt * math.random(0,2)
+		if self.emitFoodTime>10 then
+			self.emitFoodTime=0
+			self:emiterFood()
+		end
 	end
 end
 
@@ -300,7 +301,10 @@ function bush:mousepressed(mx, my, button)
 end
 
 ------------------------------------------------------------------------------
-function bush:draw(mx,my)
+function bush:draw()
+	local mx, my = self.x , self.y
+	local cx, cy = self.level:get_camera():get_viewport()
+	mx, my = mx*32-cx, my*32-cy
 	local xFood = self.xFood
 	local yFood = self.yFood
 	local animationBirth = self.animationBirth
@@ -331,48 +335,49 @@ function bush:draw(mx,my)
 	--love.graphics.rectangle("fill", mx,my, 32,32)
 	
 	love.graphics.push()
-	love.graphics.scale(0.25, 0.25)   -- reduce everything by 50% in both X and Y coordinates
+	love.graphics.scale(0.5, 0.5)   -- reduce everything by 50% in both X and Y coordinates
 	
 	lg.setColor(255, 255, 255, 255)
 	if timeInspire==true then
 		local spriteNum = math.floor(animationInspire.currentTime / animationInspire.duration * #animationInspire.quads) + 1
-		love.graphics.draw(animationInspire.spriteSheet, animationInspire.quads[spriteNum], mx*4, my*4)
+		love.graphics.draw(animationInspire.spriteSheet, animationInspire.quads[spriteNum], mx*2-100, my*2-100)
 	elseif timeExpire==true then
 		local spriteNum = math.floor(animationExpire.currentTime / animationExpire.duration * #animationExpire.quads) + 1
-		love.graphics.draw(animationExpire.spriteSheet, animationExpire.quads[spriteNum], mx*4, my*4)
+		love.graphics.draw(animationExpire.spriteSheet, animationExpire.quads[spriteNum], mx*2-100, my*2-100)
 	elseif timeBirth > 100 and timeBigExpire==false and timeBigInspire==false then
 		
 		local spriteNum = math.floor(animationBirth.currentTime / animationBirth.duration * #animationBirth.quads) + 1
-		love.graphics.draw(animationBirth.spriteSheet, animationBirth.quads[spriteNum], mx*4, my*4)
+		love.graphics.draw(animationBirth.spriteSheet, animationBirth.quads[spriteNum], mx*2-100, my*2-100)
 	elseif timeBigInspire == true then
 		--local spriteNum = math.floor(animationOmbre.currentTime / animationOmbre.duration * #animationOmbre.quads) + 1
 		--love.graphics.draw(animationOmbre.spriteSheet, animationOmbre.quads[spriteNum], mx-225, my-tronc/2-35)
 		
 		local spriteNum = math.floor(animationBigTreeInspire.currentTime / animationBigTreeInspire.duration * #animationBigTreeInspire.quads) + 1
-		love.graphics.draw(animationBigTreeInspire.spriteSheet, animationBigTreeInspire.quads[spriteNum], mx*4, my*4)
+		love.graphics.draw(animationBigTreeInspire.spriteSheet, animationBigTreeInspire.quads[spriteNum], mx*2-100, my*2-100)
 	elseif timeBigExpire == true then
 		--local spriteNum = math.floor(animationOmbre.currentTime / animationOmbre.duration * #animationOmbre.quads) + 1
 		--love.graphics.draw(animationOmbre.spriteSheet, animationOmbre.quads[spriteNum], mx-225, my-tronc/2-35)
 		
 		
 		local spriteNum = math.floor(animationBigTreeExpire.currentTime / animationBigTreeExpire.duration * #animationBigTreeExpire.quads) + 1
-		love.graphics.draw(animationBigTreeExpire.spriteSheet, animationBigTreeExpire.quads[spriteNum], mx*4, my*4)
+		love.graphics.draw(animationBigTreeExpire.spriteSheet, animationBigTreeExpire.quads[spriteNum], mx*2-100, my*2-100)
 	end
+
 	if self.food_source then
 		if self.food_source:get_food() then
-			self.food_source:draw(mx*4+xFood,my*4+yFood)
+			self.food_source:draw(mx*2+50,my*2)
 		end
 	end
 	
 	love.graphics.pop()
 	
-	if self.food_source then
+	--[[if self.food_source then
 		if self.food_source:get_food() then
-			--lg.print("OK", mx-50, my-44)
+			lg.print("OK", mx, my)
 		else
-			--lg.print("Pousse", mx-50, my-44)
+			lg.print("Pousse", mx, my)
 		end
-	end
+	end--]]
 	
 end
 

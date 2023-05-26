@@ -77,9 +77,6 @@ function bfs:add_food(x, y, radius)
   local p = self.level_map:add_point_to_source_polygonizer(x, y, radius)
   self.sources[#self.sources + 1] = self:_new_food_source(x, y, radius, p)
   self:_calculate_total_area()
-  print("-----------------------------------------------------------------#sources__food")
-  print(#self.sources)
-  print(x, y, radius, p)
   self.food = true
   return p
 end
@@ -102,7 +99,6 @@ end
 
 function bfs:remove_food_source(primitive)
   self.level_map.source_polygonizer:remove_primitive(primitive)
-  print("-----------------------------------------------------------------#REMOVE")
   for i=#self.sources,1,-1 do
     if self.sources[i].primitive == primitive then
       table.remove(self.sources, i)
@@ -169,6 +165,11 @@ function bfs:_update_area(dt)
 				count = count + 1
 				bhash[objects[i]] = true
 				objects[i]:grabFood(self.depletion_rate * 10 * dt)
+			  elseif objects[i]:getObjectiv()~="goOut" and objects[i]:getObjectiv()~="goOnHomeWith" then
+				local x, y, z = objects[i]:get_position()
+				objects[i]:set_waypoint(x+math.random(-200,200), y+math.random(-200,200), math.random(50,1000),50,100)
+				objects[i]:unObstacleMe()
+				objects[i]:setObjectiv("goOut")
 			  end
 			end
 		end
@@ -243,8 +244,8 @@ function bfs:draw(x, y)
     local pct = math.floor(((r * r) / (sr * sr)) * 100)
 	lg.setColor(255, 255, 255, 255)
 	love.graphics.draw(foodGraphic, x, y)
-    lg.circle("line", x, y, s.radius)
-	lg.print(pct.."%", x, y)
+    --lg.circle("line", x, y, s.radius)
+	--lg.print(pct.."%", x, y)
   end
   
 end

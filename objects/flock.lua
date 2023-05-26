@@ -23,6 +23,18 @@ fk.num_initial_boids = 1000
 fk.gradient = require("gradients/named/greenyellow")
 fk.collision_table = nil
 
+fk.sing1 = nil
+fk.sing2 = nil
+fk.sing3 = nil
+fk.sing4 = nil
+fk.sing5 = nil
+
+fk.singS1 = nil
+fk.singS2 = nil
+fk.singS3 = nil
+fk.singS4 = nil
+fk.singS5 = nil
+
 local fk_mt = { __index = fk }
 function fk:new(level, boidType, x, y, width, height, depth)
   local fk = setmetatable({}, fk_mt)
@@ -37,6 +49,26 @@ function fk:new(level, boidType, x, y, width, height, depth)
   source = love.audio.newSource("sound/feu.mp3", "stream")
   
   fk.collision_table = {}
+  
+  fk.sing1 = love.audio.newSource("sound/sing-1.mp3", "stream")
+  fk.sing2 = love.audio.newSource("sound/sing-2.mp3", "stream")
+  fk.sing3 = love.audio.newSource("sound/sing-3.mp3", "stream")
+  fk.sing4 = love.audio.newSource("sound/sing-4.mp3", "stream")
+  fk.sing5 = love.audio.newSource("sound/sing-5.mp3", "stream")
+  
+  fk.singS1 = love.audio.newSource("sound/sing-short-1.mp3", "stream")
+  fk.singS2 = love.audio.newSource("sound/sing-short-2.mp3", "stream")
+  fk.singS3 = love.audio.newSource("sound/sing-short-3.mp3", "stream")
+  fk.singS4 = love.audio.newSource("sound/sing-short-4.mp3", "stream")
+  fk.singS5 = love.audio.newSource("sound/sing-short-5.mp3", "stream")
+  
+  fk.illuFloor1 = lg.newImage("images/home/bird-sleep.png")
+  fk.illuFloor2 = lg.newImage("images/home/bird-sleep2.png")
+  fk.illuFloor3 = lg.newImage("images/home/bird-sleep3.png")
+  fk.illuFloor4 = lg.newImage("images/home/bird-sleep4.png")
+  fk.illuFloor5 = lg.newImage("images/home/bird-sleep5.png")
+  fk.illuFloor6 = lg.newImage("images/home/bird-sleep6.png")
+  fk.illuFloor7 = lg.newImage("images/home/bird-sleep7.png")
   
   return fk
 end
@@ -116,7 +148,7 @@ function fk:add_boid(x, y, z, dirx, diry, dirz, free, gradient)
     new_boid = boid:new(self.level)
 	self.level:setBoids(1)
   end
-  new_boid:init(self.level, self, x, y, z, dirx, diry, dirz, free)
+  new_boid:init(self.level, self, x, y, z, dirx, diry, dirz, free, self.sing1, self.sing2, self.sing3, self.sing4, self.sing5, self.singS1, self.singS2, self.singS3, self.singS4, self.singS5, self.illuFloor1, self.illuFloor2, self.illuFloor3, self.illuFloor4, self.illuFloor5, self.illuFloor6, self.illuFloor7)
   if gradient then
     new_boid:set_gradient(gradient)
   else
@@ -148,6 +180,32 @@ function fk:add_predator(x, y, z, dirx, diry, dirz, free, gradient)
   end
   self.active_boids[#self.active_boids + 1] = new_boid
   
+  return new_boid
+end
+
+function fk:add_ep(x, y, z, dirx, diry, dirz, free, gradient)
+  z = z or 0
+  if not x or not y then
+    print("ERROR in flock:add_boid - no position specified")
+    return
+  end
+  
+  local new_boid = nil
+  if #self.free_boids > 0 then
+    new_boid = self.free_boids[#self.free_boids]
+    self.free_boids[#self.free_boids] = nil
+	self.level:setBoids(1)
+  else
+    new_boid = epouvantail:new(self.level)
+	self.level:setBoids(1)
+  end
+  new_boid:init(self.level, self, x, y, z, dirx, diry, dirz, free)
+  if gradient then
+    new_boid:set_gradient(gradient)
+  else
+    new_boid:set_gradient(self.gradient)
+  end
+  self.active_boids[#self.active_boids + 1] = new_boid
   return new_boid
 end
 
@@ -290,8 +348,6 @@ function fk:update(dt)
 end
 
 function fk:get_temp_collision_bbox()
-	print('tu renvoi qque chose ???')
-	print(self.temp_collision_bbox)
   return self.temp_collision_bbox
 end
 

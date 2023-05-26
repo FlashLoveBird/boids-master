@@ -662,8 +662,8 @@ function map_point:update(dt)
 	self.collided = false
 	local change_tile = offset.x >= TILE_WIDTH or offset.y >= TILE_HEIGHT or
 	                    offset.x < 0 or offset.y < 0
-	                   
-	if change_tile and next_pos.x<8000 and next_pos.y<8000 then --TODO : 8000 ? Rendre dynamique
+	
+	if change_tile and next_pos.x<32000 and next_pos.y<32000 then --TODO : 8000 ? Rendre dynamique
 		local old_tile = self.tile
 		local new_tile = self:_get_tile(next_pos)
 		local c, n, p, off = self:_check_collision(old_tile, new_tile, self.pos, next_pos)

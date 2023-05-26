@@ -72,6 +72,48 @@ function bg:init_graphics()
   self.emote_hungry = lg.newImage("images/emote/style_6/emote_hungry.png")
   self.emote_home = lg.newImage("images/emote/style_6/emote_home.png")  
   self.pause = lg.newImage("images/home/bird-sleep.png")
+  
+  self.aile = lg.newImage("images/home/aile-bird.png")
+  
+  self.face = lg.newImage("images/home/face-bird.png")
+end
+
+function bg:set_sex(sex)
+if sex==false then
+	local rand = math.random(1,5)
+	if rand==1 then
+		self.aile = lg.newImage("images/home/aile-bird.png")
+	elseif rand==2 then
+		self.aile = lg.newImage("images/home/aile-bird.png")
+	else
+		self.aile = lg.newImage("images/home/aile-bird-2.png")
+	end
+	local rand = math.random(1,5)
+	if rand==1 then
+		self.corp = lg.newImage("images/home/corp-bird.png")
+	elseif rand==2 then
+		self.corp = lg.newImage("images/home/corp-bird.png")
+	else
+		self.corp = lg.newImage("images/home/corp-bird-2.png")
+	end
+else
+	local rand = math.random(1,5)
+	if rand==1 then
+		self.aile = lg.newImage("images/home/aile-bird-3.png")
+	elseif rand==2 then
+		self.aile = lg.newImage("images/home/aile-bird-3.png")
+	else
+		self.aile = lg.newImage("images/home/aile-bird-3.png")
+	end
+	local rand = math.random(1,5)
+	if rand==1 then
+		self.corp = lg.newImage("images/home/corp-bird-3.png")
+	elseif rand==2 then
+		self.corp = lg.newImage("images/home/corp-bird-3.png")
+	else
+		self.corp = lg.newImage("images/home/corp-bird-3.png")
+	end
+end
 end
 
 function bg:_init_geometry()
@@ -108,12 +150,16 @@ local p18 = {x = 0.7* h, y =-0.100095 * w , z = 0.729303}
 local p2 = {x = 0.7* h, y =0.122117 * w , z = 0.731674}
 local p1 = {x = 0.9* h, y =0.014461 * w , z = 0.516338}
 local p10 = {x = -1.818270* h, y =0.017264 * w , z = 0.325106}
-  self.points = {p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19, p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30}
+
+local p31 = {x = -1.818270* h, y =0.017264 * w , z = 0.325106}
+
+
+  self.points = {p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19, p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31}
   
   -- find centroid and subtract offset to centre at origin
-  local cx = (p1.x + p2.x + p3.x + p4.x + p5.x + p6.x + p7.x + p8.x + p9.x + p10.x + p11.x + p12.x + p13.x + p14.x + p15.x + p16.x + p17.x + p18.x + p19.x + p20.x + p21.x + p22.x + p23.x + p24.x + p25.x + p26.x + p27.x + p28.x + p29.x + p30.x) / 30
-  local cy = (p1.y + p2.y + p3.y + p4.y + p5.y + p6.y + p7.y + p8.y + p9.y + p10.y + p11.y + p12.y + p13.y + p14.y + p15.y + p16.y + p17.y + p18.y + p19.y + p20.y + p21.y + p22.y + p23.y + p24.y + p25.y + p26.y + p27.y + p28.y + p29.y + p30.y) / 30
-  local cz = (p1.z + p2.z + p3.z + p4.z + p5.z + p6.z + p7.z + p8.z + p9.z + p10.z + p11.z + p12.z + p13.z + p14.z + p15.z + p16.z + p17.z + p18.z + p19.z + p20.z + p21.z + p22.z + p23.z + p24.z + p25.z + p26.z + p27.z + p28.z + p29.z + p30.z) / 30
+  local cx = (p1.x + p2.x + p3.x + p4.x + p5.x + p6.x + p7.x + p8.x + p9.x + p10.x + p11.x + p12.x + p13.x + p14.x + p15.x + p16.x + p17.x + p18.x + p19.x + p20.x + p21.x + p22.x + p23.x + p24.x + p25.x + p26.x + p27.x + p28.x + p29.x + p30.x + p31.x) / 31
+  local cy = (p1.y + p2.y + p3.y + p4.y + p5.y + p6.y + p7.y + p8.y + p9.y + p10.y + p11.y + p12.y + p13.y + p14.y + p15.y + p16.y + p17.y + p18.y + p19.y + p20.y + p21.y + p22.y + p23.y + p24.y + p25.y + p26.y + p27.y + p28.y + p29.y + p30.y + p31.y) / 31
+  local cz = (p1.z + p2.z + p3.z + p4.z + p5.z + p6.z + p7.z + p8.z + p9.z + p10.z + p11.z + p12.z + p13.z + p14.z + p15.z + p16.z + p17.z + p18.z + p19.z + p20.z + p21.z + p22.z + p23.z + p24.z + p25.z + p26.z + p27.z + p28.z + p29.z + p30.z + p31.z) / 31
   vector3.add(p1, -cx, -cy, -cz)
   vector3.add(p2, -cx, -cy, -cz)
   vector3.add(p3, -cx, -cy, -cz)
@@ -144,6 +190,7 @@ local p10 = {x = -1.818270* h, y =0.017264 * w , z = 0.325106}
   vector3.add(p28, -cx, -cy, -cz)
   vector3.add(p29, -cx, -cy, -cz)
   vector3.add(p30, -cx, -cy, -cz)
+  vector3.add(p31, -cx, -cy, -cz)
   
   p1.z = 0.516338
   p2.z = 0.731674
@@ -248,7 +295,7 @@ function bg:_update_rotation()
   if self.rotation_angle == 0 then return end
 
   local angle = self.rotation_angle
-  local p1, p2, p3,p4, p5, p6,p7, p8, p9,p10, p11, p12,p13, p14, p15,p16, p17, p18, p19, p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30  = self.draw_points[1], self.draw_points[2], self.draw_points[3], self.draw_points[4], self.draw_points[5], self.draw_points[6],self.draw_points[7], self.draw_points[8], self.draw_points[9],self.draw_points[10], self.draw_points[11], self.draw_points[12],self.draw_points[13], self.draw_points[14], self.draw_points[15],self.draw_points[16], self.draw_points[17], self.draw_points[18],self.draw_points[19],self.draw_points[20],self.draw_points[21],self.draw_points[22],self.draw_points[23],self.draw_points[24],self.draw_points[25],self.draw_points[26],self.draw_points[27],self.draw_points[28],self.draw_points[29],self.draw_points[30]
+  local p1, p2, p3,p4, p5, p6,p7, p8, p9,p10, p11, p12,p13, p14, p15,p16, p17, p18, p19, p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30 , p31  = self.draw_points[1], self.draw_points[2], self.draw_points[3], self.draw_points[4], self.draw_points[5], self.draw_points[6],self.draw_points[7], self.draw_points[8], self.draw_points[9],self.draw_points[10], self.draw_points[11], self.draw_points[12],self.draw_points[13], self.draw_points[14], self.draw_points[15],self.draw_points[16], self.draw_points[17], self.draw_points[18],self.draw_points[19],self.draw_points[20],self.draw_points[21],self.draw_points[22],self.draw_points[23],self.draw_points[24],self.draw_points[25],self.draw_points[26],self.draw_points[27],self.draw_points[28],self.draw_points[29],self.draw_points[30],self.draw_points[31]
   local cosval, sinval = math.cos(angle), math.sin(angle)
   p1.x, p1.y = p1.x*cosval - p1.y*sinval, p1.x*sinval + p1.y*cosval
   p2.x, p2.y = p2.x*cosval - p2.y*sinval, p2.x*sinval + p2.y*cosval
@@ -280,32 +327,34 @@ function bg:_update_rotation()
   p28.x, p28.y = p28.x*cosval - p28.y*sinval, p28.x*sinval + p28.y*cosval
   p29.x, p29.y = p29.x*cosval - p29.y*sinval, p29.x*sinval + p29.y*cosval
   p30.x, p30.y = p30.x*cosval - p30.y*sinval, p30.x*sinval + p30.y*cosval
-  
+  p31.x, p31.y = p31.x*cosval - p31.y*sinval, p31.x*sinval + p31.y*cosval
   
   if wing<100 and wingWay==true then
-	p4.z = p4.z + 10
-    p8.z = p8.z + 10
-	p5.z =  p5.z + 10
-	p7.z = p7.z + 10
-	p6.z = p6.z + 30
-	p16.z = p16.z + 10
-	p12.z = p12.z + 10
-	p15.z =  p15.z + 10
-	p13.z = p13.z + 10
-	p14.z = p14.z + 30
+	p4.z = p4.z + 5
+    p8.z = p8.z + 5
+	p5.z =  p5.z + 5
+	p7.z = p7.z + 5
+	p6.z = p6.z + 15
+	p16.z = p16.z + 5
+	p12.z = p12.z + 5
+	p15.z =  p15.z + 5
+	p13.z = p13.z + 5
+	p14.z = p14.z + 15
+	p31.z = p31.z + 5
 	self.wing = self.wing + 20
   elseif wing>=-100 then
 	self.wingWay = false
-	p4.z = p4.z - 10
-    p8.z = p8.z - 10
-	p5.z =  p5.z - 10
-	p7.z = p7.z - 10
-	p6.z = p6.z - 30
-	p16.z = p16.z - 10
-	p12.z = p12.z - 10
-	p15.z =  p15.z - 10
-	p13.z = p13.z - 10
-	p14.z = p14.z - 30
+	p4.z = p4.z - 5
+    p8.z = p8.z - 5
+	p5.z =  p5.z - 5
+	p7.z = p7.z - 5
+	p6.z = p6.z - 15
+	p16.z = p16.z - 5
+	p12.z = p12.z - 5
+	p15.z =  p15.z - 5
+	p13.z = p13.z - 5
+	p14.z = p14.z - 15
+	p31.z = p31.z - 5
 	self.wing = self.wing - 20
   elseif self.wing<-100 then
 	self.wingWay = true
@@ -346,7 +395,7 @@ function bg:_update_roll()
   
   local th = self.roll_angle
   
-  local p1, p2, p3,p4, p5, p6,p7, p8, p9,p10, p11, p12,p13, p14, p15,p16, p17, p18, p19, p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30 = self.draw_points[1], self.draw_points[2], self.draw_points[3], self.draw_points[4], self.draw_points[5], self.draw_points[6],self.draw_points[7], self.draw_points[8], self.draw_points[9],self.draw_points[10], self.draw_points[11], self.draw_points[12],self.draw_points[13], self.draw_points[14], self.draw_points[15],self.draw_points[16], self.draw_points[17], self.draw_points[18],self.draw_points[19],self.draw_points[20],self.draw_points[21],self.draw_points[22],self.draw_points[23],self.draw_points[24],self.draw_points[25],self.draw_points[26],self.draw_points[27],self.draw_points[28],self.draw_points[29],self.draw_points[30]
+  local p1, p2, p3,p4, p5, p6,p7, p8, p9,p10, p11, p12,p13, p14, p15,p16, p17, p18, p19, p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31 = self.draw_points[1], self.draw_points[2], self.draw_points[3], self.draw_points[4], self.draw_points[5], self.draw_points[6],self.draw_points[7], self.draw_points[8], self.draw_points[9],self.draw_points[10], self.draw_points[11], self.draw_points[12],self.draw_points[13], self.draw_points[14], self.draw_points[15],self.draw_points[16], self.draw_points[17], self.draw_points[18],self.draw_points[19],self.draw_points[20],self.draw_points[21],self.draw_points[22],self.draw_points[23],self.draw_points[24],self.draw_points[25],self.draw_points[26],self.draw_points[27],self.draw_points[28],self.draw_points[29],self.draw_points[30],self.draw_points[31]
   
   local midx, midy, midz = p6.x + 0.5 * (p14.x - p6.x),
                            p6.y + 0.5 * (p14.y - p6.y),
@@ -380,7 +429,7 @@ function bg:_update_scale()
   if self.scale == 1 then return end
 
   local s = self.scale
-  local p1, p2, p3,p4, p5, p6,p7, p8, p9,p10, p11, p12,p13, p14, p15,p16, p17, p18, p19, p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30 = self.draw_points[1], self.draw_points[2], self.draw_points[3], self.draw_points[4], self.draw_points[5], self.draw_points[6],self.draw_points[7], self.draw_points[8], self.draw_points[9],self.draw_points[10], self.draw_points[11], self.draw_points[12],self.draw_points[13], self.draw_points[14], self.draw_points[15],self.draw_points[16], self.draw_points[17], self.draw_points[18],self.draw_points[19],self.draw_points[20],self.draw_points[21],self.draw_points[22],self.draw_points[23],self.draw_points[24],self.draw_points[25],self.draw_points[26],self.draw_points[27],self.draw_points[28],self.draw_points[29],self.draw_points[30]
+  local p1, p2, p3,p4, p5, p6,p7, p8, p9,p10, p11, p12,p13, p14, p15,p16, p17, p18, p19, p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31 = self.draw_points[1], self.draw_points[2], self.draw_points[3], self.draw_points[4], self.draw_points[5], self.draw_points[6],self.draw_points[7], self.draw_points[8], self.draw_points[9],self.draw_points[10], self.draw_points[11], self.draw_points[12],self.draw_points[13], self.draw_points[14], self.draw_points[15],self.draw_points[16], self.draw_points[17], self.draw_points[18],self.draw_points[19],self.draw_points[20],self.draw_points[21],self.draw_points[22],self.draw_points[23],self.draw_points[24],self.draw_points[25],self.draw_points[26],self.draw_points[27],self.draw_points[28],self.draw_points[29],self.draw_points[30],self.draw_points[31]
   
   p1.x, p1.y, p1.z = p1.x * s, p1.y * s, p1.z * s
   p2.x, p2.y, p2.z = p2.x * s, p2.y * s, p2.z * s
@@ -412,6 +461,7 @@ function bg:_update_scale()
   p28.x, p28.y, p28.z = p28.x * s, p28.y * s, p28.z * s
   p29.x, p29.y, p29.z = p29.x * s, p29.y * s, p29.z * s
   p30.x, p30.y, p30.z = p30.x * s, p30.y * s, p30.z * s
+  p31.x, p31.y, p31.z = p31.x * s, p31.y * s, p31.z * s
 end
 
 function bg:_update_shadow()
@@ -477,7 +527,7 @@ end
 function bg:_update_intensity()
 	local wing = self.wing
   -- find normal
-  local p1, p2, p3,p4, p5, p6,p7, p8, p9,p10, p11, p12,p13, p14, p15,p16, p17, p18, p19, p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30 = self.draw_points[1], self.draw_points[2], self.draw_points[3], self.draw_points[4], self.draw_points[5], self.draw_points[6],self.draw_points[7], self.draw_points[8], self.draw_points[9],self.draw_points[10], self.draw_points[11], self.draw_points[12],self.draw_points[13], self.draw_points[14], self.draw_points[15],self.draw_points[16], self.draw_points[17], self.draw_points[18],self.draw_points[19],self.draw_points[20],self.draw_points[21],self.draw_points[22],self.draw_points[23],self.draw_points[24],self.draw_points[25],self.draw_points[26],self.draw_points[27],self.draw_points[28],self.draw_points[29],self.draw_points[30]
+  local p1, p2, p3,p4, p5, p6,p7, p8, p9,p10, p11, p12,p13, p14, p15,p16, p17, p18, p19, p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31 = self.draw_points[1], self.draw_points[2], self.draw_points[3], self.draw_points[4], self.draw_points[5], self.draw_points[6],self.draw_points[7], self.draw_points[8], self.draw_points[9],self.draw_points[10], self.draw_points[11], self.draw_points[12],self.draw_points[13], self.draw_points[14], self.draw_points[15],self.draw_points[16], self.draw_points[17], self.draw_points[18],self.draw_points[19],self.draw_points[20],self.draw_points[21],self.draw_points[22],self.draw_points[23],self.draw_points[24],self.draw_points[25],self.draw_points[26],self.draw_points[27],self.draw_points[28],self.draw_points[29],self.draw_points[30],self.draw_points[31]
   local v1x, v1y, v1z = p3.x - p1.x, p3.y - p1.y, p3.z - p1.z
   local v2x, v2y, v2z = p2.x - p1.x, p2.y - p1.y, p2.z - p1.z
   
@@ -508,15 +558,18 @@ end
 function bg:draw(x, y)
   local pause = self.pause 
   local inPause = self.inPause
+  local corp = self.corp
+  local aile = self.aile
+  local face = self.face
   
-  local p1, p2, p3,p4, p5, p6,p7, p8, p9,p10, p11, p12,p13, p14, p15, p16, p17, p18, p19, p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30 = self.draw_points[1], self.draw_points[2], self.draw_points[3], self.draw_points[4], self.draw_points[5], self.draw_points[6],self.draw_points[7], self.draw_points[8], self.draw_points[9],self.draw_points[10], self.draw_points[11], self.draw_points[12],self.draw_points[13], self.draw_points[14], self.draw_points[15],self.draw_points[16], self.draw_points[17], self.draw_points[18],self.draw_points[19],self.draw_points[20],self.draw_points[21],self.draw_points[22],self.draw_points[23],self.draw_points[24],self.draw_points[25],self.draw_points[26],self.draw_points[27],self.draw_points[28],self.draw_points[29],self.draw_points[30]
+  local p1, p2, p3,p4, p5, p6,p7, p8, p9,p10, p11, p12,p13, p14, p15, p16, p17, p18, p19, p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31 = self.draw_points[1], self.draw_points[2], self.draw_points[3], self.draw_points[4], self.draw_points[5], self.draw_points[6],self.draw_points[7], self.draw_points[8], self.draw_points[9],self.draw_points[10], self.draw_points[11], self.draw_points[12],self.draw_points[13], self.draw_points[14], self.draw_points[15],self.draw_points[16], self.draw_points[17], self.draw_points[18],self.draw_points[19],self.draw_points[20],self.draw_points[21],self.draw_points[22],self.draw_points[23],self.draw_points[24],self.draw_points[25],self.draw_points[26],self.draw_points[27],self.draw_points[28],self.draw_points[29],self.draw_points[30],self.draw_points[31]
   if inPause then
 	lg.setColor(255, 255, 255, 1)
 	lg.draw(self.pause, p1.x + x, p1.y + y)
   return end
   
   lg.setColor(0, 0, 0, 1)
-lg.line(p1.x + x, p1 .y + y, p2.x + x, p2.y + y)
+--[[lg.line(p1.x + x, p1 .y + y, p2.x + x, p2.y + y)
 lg.line(p2.x + x, p2 .y + y, p3.x + x, p3.y + y)
 lg.line(p3.x + x, p3 .y + y, p4.x + x, p4.y + y)
 lg.line(p4.x + x, p4 .y + y, p5.x + x, p5.y + y)
@@ -537,25 +590,37 @@ lg.line(p18.x + x, p18 .y + y, p19.x + x, p19.y + y)
 lg.line(p18.x + x, p18 .y + y, p1.x + x, p1.y + y)
 --lg.line(p19.x + x, p19 .y + y, p20.x + x, p20.y + y)
 --lg.line(p20.x + x, p20 .y + y, p21.x + x, p21.y + y)
---lg.line(p21.x + x, p21 .y + y, p22.x + x, p22.y + y)
+--lg.line(p21.x + x, p21 .y + y, p22.x + x, p22.y + y)--]]
   
   lg.setColor(255, 255, 255, 1)
   
-  local dx1 = p8.x - p10.x
-  local dy1 = p8.y - p10.y
-  local dx2 = p8.x - p12.x
-  local dy2 = p8.y - p12.y
+  local dx1 = p5.x - p13.x
+  local dy1 = p5.y - p13.y
+  local dx2 = p1.x - p10.x
+  local dy2 = p1.y - p10.y
+  
+  local dx1a = p1.x - p10.x
+  local dy1a = p1.y - p10.y
+  local dx2a = p6.x - p14.x
+  local dy2a = p6.y - p14.y
   
   local vertex1 = {p8.x+x,p8.y+y}
   local vertex2 = {p10.x+x,p10.y+y}
   local vertex3 = {p12.x+x,p12.y+y}
   local vertex4 = {p12.x+x,p12.y+y}
   
-  local scaleX = math.sqrt ( dx2 * dx2 + dy2 * dy2 ) / 20
-  local scaleY = math.sqrt ( dx1 * dx1 + dy1 * dy1 ) / 20 
+  local scaleX = math.sqrt ( dx2 * dx2 + dy2 * dy2 ) / 76
+  local scaleY = math.sqrt ( dx1 * dx1 + dy1 * dy1 ) / 31
+  local scaleXA = math.sqrt ( dx2a * dx2a + dy2a * dy2a )
+  local scaleYA = math.sqrt ( dx1a * dx1a + dy1a * dy1a)
   local a = math.atan2(p10.y, p10.x) - math.atan2(p8.y, p8.x)
   --local rotation =  (a + math.pi)%(math.pi*2) - math.pi
   local rotation =  math.atan2(p1.y, p1.x) --- math.atan2(p8.y, p8.x)
+  
+  --print("scaleX")
+  --print(scaleX)
+  --print("scaleY")
+  --print(scaleY)
 
   local i = self.intensity
   local idx = math.floor(1 + i * (#self.gradient - 1)) + self.grad_offset
@@ -571,7 +636,7 @@ lg.line(p18.x + x, p18 .y + y, p1.x + x, p1.y + y)
   --lg.polygon("fill", p1.x + x, p1.y + y, p2.x + x, p2.y + y, p3.x + x, p3.y + y)
   lg.setColor(0, 0, 0, 1)
   
-  lg.polygon("fill", p1.x + x, p1.y + y, p2.x + x, p2.y + y, p3.x + x, p3.y + y, p4.x + x, p4.y + y, p5.x + x, p5.y + y, p6.x + x, p6.y + y, p7.x + x, p7.y + y, p8.x + x, p8.y + y, p9.x + x, p9.y + y, p10.x + x, p10.y + y, p11.x + x, p11.y + y, p12.x + x, p12.y + y, p13.x + x, p13.y + y, p14.x + x, p14.y + y, p15.x + x, p15.y + y, p16.x + x, p16.y + y, p17.x + x, p17.y + y, p18.x + x, p18.y + y)
+  lg.polygon("fill", p4.x + x, p4.y + y, p5.x + x, p5.y + y, p6.x + x, p6.y + y, p7.x + x, p7.y + y, p8.x + x, p8.y + y, p9.x + x, p9.y + y, p10.x + x, p10.y + y, p11.x + x, p11.y + y, p12.x + x, p12.y + y, p13.x + x, p13.y + y, p14.x + x, p14.y + y, p15.x + x, p15.y + y, p16.x + x, p16.y + y, p17.x + x, p17.y + y, p18.x + x, p18.y + y)
   lg.setColor(255, 255, 255, 1)
   if self.emoteType~=nil then 
 	local cx = (p1.x + p2.x + p3.x) / 3
@@ -580,8 +645,15 @@ lg.line(p18.x + x, p18 .y + y, p1.x + x, p1.y + y)
 	lg.draw(self.emote, cx+x-16, cy+y-38)
   end
   
- 
-  --lg.draw(self.aile, p8.x + x - 58, p8.y + y - 35, rotation, scaleX, scaleY)
+  --lg.draw(aile, p10.x + x, p10.y + y, rotation, scaleX, scaleY, 50, 100)
+  --lg.draw(face, p10.x + x, p10.y + y, rotation, scaleX, scaleY, 0, 20)
+  --lg.draw(corp, p10.x + x, p10.y + y, rotation, scaleX, scaleY, 0, 20)
+  --lg.draw(aile, p31.x + x, p31.y + y, rotation, scaleX, scaleY, 0, 20)
+  
+  --lg.print("p1", p1.x + x, p1.y + y)
+  --lg.print("p10", p10.x + x, p10.y + y)
+  --lg.print("p6", p6.x + x, p6.y + y)
+  --lg.print("p14", p14.x + x, p14.y + y)
   
   if not self.debug then return end
   

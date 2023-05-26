@@ -123,7 +123,12 @@ function tw:_update_area(dt)
 		  local randomNb = math.random(1,1000)
 		  if not bhash[objects[i]] and randomNb == 1 then
 			local dead = math.random(1,#objects)
-			flock:pan(objects[i],s.x,s.y)
+			--flock:pan(objects[i],s.x,s.y)
+		  else
+			if objects[i].waypoint.is_active then
+				local x, y , z = self.sources[1].x + math.random(-200,200), self.sources[1].y+ math.random(-200,200), 200
+				objects[i]:set_waypoint(x, y, z, 50, 80)
+			end
 		  end
 		end
 	end

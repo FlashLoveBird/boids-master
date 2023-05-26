@@ -32,19 +32,21 @@ function food_menu_state.toggle_button(b)
   --local boids = state.flock.active_boids
   myText = b.text
   local width, height = 1024, 768
-  local xpad = 100
+  local xpad = 0
   local ypad = 60
-  local xX = 0.5 * SCR_WIDTH - 0.5 * width + xpad
-  local yY = 0.5 * SCR_HEIGHT - 0.5 * height + ypad + 200
+  local xX = 0.5 * SCR_WIDTH - 0.25 * SCR_WIDTH
+  local yY = 0.5 * SCR_HEIGHT - 0.25 * SCR_HEIGHT
   --for i=1,#boids do
 	myText = b.text
     --local boid = boids[i]
     --if     b.toggle == false then
 			print(b.text)
       if b.text == "-bush" then
-        nbBush = nbBush - 1
+        print("change menu")
+		lw.setFullscreen(false)
       elseif b.text == "+bush" then
-        nbBush = nbBush + 1
+        SCR_WIDTH = width
+		SCR_HEIGHT = height
       elseif b.text == "-nid" then
         nbNids = nbNids - 1
       elseif b.text == "+nid" then
@@ -78,12 +80,9 @@ end
 --##########################################################################--
 function food_menu_state.load(level)
   lg.setBackgroundColor(225, 125, 214, 255)
-  local width, height = 1024, 768
-  local xpad = 100
-  local ypad = 60
   
-  local xX = 0.5 * SCR_WIDTH - 0.5 * width + xpad - 100
-  local yY = 0.5 * SCR_HEIGHT - 0.5 * height + ypad + 400
+  local xX = 0.5 * SCR_WIDTH - 0.25 * SCR_WIDTH
+  local yY = 0.5 * SCR_HEIGHT - 0.25 * SCR_HEIGHT 
   
   
   state.buttons = {}
@@ -124,14 +123,11 @@ end
 --[[----------------------------------------------------------------------]]--
 --##########################################################################--
 function food_menu_state.draw()
-  local width, height = 1024, 768
-  local xpad = 100
-  local ypad = 60
 
-  local x = 0.5 * SCR_WIDTH - 0.5 * width + xpad
-  local y = 0.5 * SCR_HEIGHT - 0.5 * height + ypad
+  local x = 0.5 * SCR_WIDTH - 0.25 * SCR_WIDTH
+  local y = 0.5 * SCR_HEIGHT - 0.25 * SCR_HEIGHT
 
-  lg.setFont(FONTS.bebas_header)
+  lg.setFont(FONTS.muli)
   lg.setColor(251, 121, 0, 255)
   lg.print("Menu", x, y)
   
@@ -145,12 +141,10 @@ function food_menu_state.draw()
   lg.print("Nb de nids de predateurs", x+800, y+300)
   lg.print(tostring(nbNidsPred), x+965, y+500)
   
-  local y = y + 400
-  local x = x - 100
   local ystep = 200
   
   -- draw buttons
-  lg.setFont(FONTS.bebas_text)
+  lg.setFont(FONTS.muli)
   for i=1,#state.buttons do
     local b = state.buttons[i]
 	lg.setColor(255, 255, 255, 255)

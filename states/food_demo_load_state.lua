@@ -111,7 +111,7 @@ function food_demo_load.pre_level_load(level)
   state.initialize_camera(level)
   state.initialize_audio(level)
   state.construct_level_map(level)
-  loaderImg = love.graphics.newImage("images/Jungle/menu/bg.png")
+  loaderImg = love.graphics.newImage("images/Jungle/menu/bg.jpeg")
 end
 
 -- POST LEVEL LOAD FUNCTIONS
@@ -169,9 +169,13 @@ end
 --[[----------------------------------------------------------------------]]--
 --##########################################################################--
 function food_demo_load.draw()
+  local width, height = loaderImg:getDimensions( )
+  local sx = SCR_WIDTH / width
+  local sy = SCR_HEIGHT / height
+  
   love.graphics.setBackgroundColor(255, 255, 255, 255)
   love.graphics.setColor(255, 255, 255, 255)
-  love.graphics.draw(loaderImg, 50, -300)
+  love.graphics.draw(loaderImg, SCR_WIDTH/2-width/2, 0, 0, math.min(sx,sy))
   love.graphics.print("Chargement...", 500, 200)
 end
 

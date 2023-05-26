@@ -131,6 +131,7 @@ end
 
 ------------------------------------------------------------------------------
 function animation_set:draw()
+
 end
 
 return animation_set

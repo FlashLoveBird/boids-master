@@ -90,6 +90,10 @@ function sk:get_rotation_angle()
   return self.rotation_angle
 end
 
+function sk:set_rotation_angle(angle)
+  self.rotation_angle = angle
+end
+
 function sk:get_roll_speed()
   return self.angle_speed
 end

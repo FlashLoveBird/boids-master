@@ -45,6 +45,7 @@ tree.yWood = 0
 tree.emitWood = false
 tree.wood_source = nil
 tree.woodPrim = nil
+tree.food = 0
 
 local tree_mt = { __index = tree }
 function tree:new(level,i,flock, animationTreeInspire,animationTreeExpire,animationTreeBirth,animationBigTreeInspiree,animationBigTreeExpiree,animationOmbree,animationOmbreBirthe)
@@ -61,9 +62,12 @@ function tree:new(level,i,flock, animationTreeInspire,animationTreeExpire,animat
   tableImg = love.graphics.newImage("images/Jungle/settings/table.png")
   foodIcon = love.graphics.newImage("images/ui/food.png")
   birdSleep = love.graphics.newImage("images/home/bird-sleep.png")
+  troncImg = love.graphics.newImage("images/home/tronc.png")
+  troncImg = love.graphics.newImage("images/home/tronc.png")
   tree.name = "Arbre"..i
   print('Arbe ajoute')
   print(tree.name)
+  treeGroSound = love.audio.newSource("sound/tree_gro.wav", "stream")
   return tree
 end
 
@@ -133,8 +137,8 @@ if timeInspire == true and timeBirth <= 100 then
 	if animationInspire.currentTime >= animationInspire.duration then
 		self.animationInspire.currentTime = 0
 		self.timeInspire = false
-		self.timeExpire = true
-		self.timeBirth = timeBirth + 100
+		self.timeExpire = false
+		self.timeBirth = timeBirth + 101
 	end
 end
 if timeExpire == true and timeBirth <= 100 then
@@ -158,6 +162,11 @@ if timeBirth > 100 and timeBigInspire == false and timeBigExpire == false then
 		--self.animationOmbreBirth.currentTime = animationOmbreBirth.currentTime - animationOmbreBirth.duration
 		self.timeBigInspire = true
 		self.timeBigExpire = false
+		
+		if self.tronc > 20 and self.tronc < 25 then
+			love.audio.play(treeGroSound)
+			print(self.tronc)
+		end
 	end
 	if animationOmbreBirth.currentTime >= animationOmbreBirth.duration then
 		--self.animationBirth.currentTime = animationBirth.currentTime - animationBirth.duration
@@ -252,7 +261,7 @@ function tree:emiterWood()
 		self.emitWoodTime=0
 		self.woodPrim = primtive
 	else
-		self:resetWood()
+		--self:resetWood()
 	end
 end
 
@@ -340,7 +349,12 @@ function tree:setState(bol)
 end
 
 function tree:getFood()
-	return 0
+	local emmiter = self.emmiter
+	if emmiter~=nil then
+		return emmiter:get_food()
+	else
+		return 0
+	end
 end
 
 function tree:set_target(pos, immediate)
@@ -382,18 +396,21 @@ function tree:mousepressed(mx, my, button)
 end
 
 ------------------------------------------------------------------------------
-function tree:draw(mx,my)
+function tree:draw()
 	local drawInfo = self.drawInfo
+	local mx, my = self.x , self.y
+	local cx, cy = self.level:get_camera():get_viewport()
+	mx, my = mx*32-cx-100, my*32-cy
 	--local mpos = level:get_mouse():get_position()
 	--local mxx, myy = x + mpos.x, y + mpos.y
 	--local numBoids = self:getNumBoids()
-	local cam = self.level:get_camera()
+	--local cam = self.level:get_camera()
+	local food = self:getFood()
+	--if drawInfo==true then
+		--love.graphics.draw(treeGraphicSelect, mx-50, my-64)
+	--end
 	
 	if drawInfo==true then
-		love.graphics.draw(treeGraphicSelect, mx-50, my-64)
-	end
-	
-	--[[if drawInfo==true then
 		lg.setColor(255, 255, 255, 255)
 		love.graphics.draw(treeGraphicSelect, mx-50, my-64)
 		lg.setColor(255, 255, 255, 255)
@@ -401,12 +418,12 @@ function tree:draw(mx,my)
 		love.graphics.draw(tableImg, 1490, 220)
 		lg.setColor(0, 0, 0, 255)
 		lg.print(self.numEmits, 1600, 280)
-		lg.print(numBoids, 1600, 300)
-		self.level:
+		--lg.print(numBoids, 1600, 300)
+		lg.print(food, 1600, 300)
 		
 	else
 		
-	end--]]
+	end
 	
 	--lg.setColor(255, 255, 255, 255)
 	--lg.draw(self.treeGraphic, mx-50, my-64)
@@ -431,7 +448,6 @@ function tree:draw(mx,my)
 	local xWood = self.xWood
 	local yWood = self.yWood
 	
-	
 	lg.setColor(255, 255, 255, 1)
 	if timeInspire==true then
 		local spriteNum = math.floor(animationInspire.currentTime / animationInspire.duration * #animationInspire.quads) + 1
@@ -441,26 +457,27 @@ function tree:draw(mx,my)
 		love.graphics.draw(animationExpire.spriteSheet, animationExpire.quads[spriteNum], mx, my)
 	elseif timeBirth > 100 and timeBigExpire==false and timeBigInspire==false then
 		local spriteNum = math.floor(animationOmbreBirth.currentTime / animationOmbreBirth.duration * #animationOmbreBirth.quads) + 1
-		love.graphics.draw(animationOmbreBirth.spriteSheet, animationOmbreBirth.quads[spriteNum], mx-235, my-150-45)
+		--love.graphics.draw(animationOmbreBirth.spriteSheet, animationOmbreBirth.quads[spriteNum], mx, my-188)
 		
 		if tronc > 0 then
 			lg.setColor(255, 255, 255, 1)
-			lg.rectangle("fill", mx+80,my+100, 10,-tronc/2)
+			--lg.rectangle("fill", mx+80,my+100, 10,-tronc/2)
 			lg.setColor(102, 67, 5, 1)
-			lg.rectangle("fill", mx+80,my+100, 10,-tronc/2)
+			--lg.rectangle("fill", mx+80,my+100, 10,-tronc/2)
+			--lg.draw(troncImg, mx+80, my)
 		end
-		
 		local spriteNum = math.floor(animationBirth.currentTime / animationBirth.duration * #animationBirth.quads) + 1
-		love.graphics.draw(animationBirth.spriteSheet, animationBirth.quads[spriteNum], mx, my-tronc/2)
+		love.graphics.draw(animationBirth.spriteSheet, animationBirth.quads[spriteNum], mx-189, my-188)
 	elseif timeBigInspire == true then
 		local spriteNum = math.floor(animationOmbre.currentTime / animationOmbre.duration * #animationOmbre.quads) + 1
-		love.graphics.draw(animationOmbre.spriteSheet, animationOmbre.quads[spriteNum], mx-225, my-tronc/2-35)
+		--love.graphics.draw(animationOmbre.spriteSheet, animationOmbre.quads[spriteNum], mx, my-188)
 		
 		if tronc > 0 then
 			lg.setColor(255, 255, 255, 1)
-			lg.rectangle("fill", mx+80,my+100, 10,-tronc/2)
+			--lg.rectangle("fill", mx+80,my+100, 10,-tronc/2)
 			lg.setColor(102, 67, 5, 1)
-			lg.rectangle("fill", mx+80,my+100, 10,-tronc/2)
+			--lg.rectangle("fill", mx+80,my+100, 10,-tronc/2)
+			--lg.draw(troncImg, mx+80, my)
 		end	
 		
 		local spriteNum = math.floor(animationBigTreeInspire.currentTime / animationBigTreeInspire.duration * #animationBigTreeInspire.quads) + 1
@@ -469,23 +486,25 @@ function tree:draw(mx,my)
 		lg.print(animationBigTreeInspire.duration*100, mx+200, my-14)
 		
 		lg.print(spriteNum, mx, my)--]]
-		love.graphics.draw(animationBigTreeInspire.spriteSheet, animationBigTreeInspire.quads[spriteNum], mx, my-tronc/2)
+		love.graphics.draw(animationBigTreeInspire.spriteSheet, animationBigTreeInspire.quads[spriteNum], mx-189, my-188)
 	elseif timeBigExpire == true then
 		local spriteNum = math.floor(animationOmbre.currentTime / animationOmbre.duration * #animationOmbre.quads) + 1
-		love.graphics.draw(animationOmbre.spriteSheet, animationOmbre.quads[spriteNum], mx-225, my-tronc/2-35)
+		--love.graphics.draw(animationOmbre.spriteSheet, animationOmbre.quads[spriteNum], mx, my-188)
 		
 		if tronc > 0 then
 			lg.setColor(255, 255, 255, 1)
-			lg.rectangle("fill", mx+80,my+100, 10,-tronc/2)
+			--lg.rectangle("fill", mx+80,my+100, 10,-tronc/2)
 			lg.setColor(102, 67, 5, 1)
-			lg.rectangle("fill", mx+80,my+100, 10,-tronc/2)
+			--lg.rectangle("fill", mx+80,my+100, 10,-tronc/2)
+			
+			--lg.draw(troncImg, mx+80, my)
 		end
 		
 		local spriteNum = math.floor(animationBigTreeExpire.currentTime / animationBigTreeExpire.duration * #animationBigTreeExpire.quads) + 1
 		--[[lg.print("Expiration", mx+200, my-54)
 		lg.print(math.floor(animationBigTreeExpire.currentTime*100), mx+200, my-34)
 		lg.print(animationBigTreeExpire.duration*100, mx+200, my-14)--]]
-		love.graphics.draw(animationBigTreeExpire.spriteSheet, animationBigTreeExpire.quads[spriteNum], mx, my-tronc/2)
+		love.graphics.draw(animationBigTreeExpire.spriteSheet, animationBigTreeExpire.quads[spriteNum], mx-189, my-188)
 	end
 	
 	if self.wood_source then

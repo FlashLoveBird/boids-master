@@ -122,44 +122,46 @@ function egg:update(dt)
 			end
 		end
 		if animationEclose.currentTime > 9 then
-			self.ecloseAnim = true
-			animationBird.currentTime = animationBird.currentTime + dt
-			if animationBird.currentTime >= animationBird.duration then
-				self.animationBird.currentTime = animationBird.currentTime - animationBird.duration
-			end
-			if animationBird.currentTime > 9 then
-				if boidType == 0 then
-					local dx, dy, dz = random_direction3()
-					flock:add_boid(x, y, z, dx, dy, dz, free)
-					self.eclose = true
-				elseif boidType == 1 then
-					local dx, dy, dz = random_direction3()
-					flock:add_predator(x, y, z, dx, dy, dz, free)
-					self.eclose = true
-				elseif boidType == 2 then
-					local map = self.level:getTreeMap()
-					local newX = math.floor( x / 32 ) + 1
-					local newY = math.floor( y / 32 ) + 1
-					--map[newX][newY] = self.level:addTree(newX,newY)
-					map[newX][newY]:add(nil)
-					map[newX][newY]:setNumEmits(0)
-					map[newX][newY]:setState(true)
-					map[newX][newY]:set_position(newX,newY)
-					map[newX][newY]:setFlock(flock)
-					self.level:setTreeMap(map)
-					self.eclose = true
-				elseif boidType == 3 then
-					local map = self.level:getTreeMap()
-					local newX = math.floor( x / 32 ) + 1
-					local newY = math.floor( y / 32 ) + 1
-					--map[newX][newY] = self.level:addTree(newX,newY)
-					map[newX][newY]:add(nil)
-					map[newX][newY]:setState(true)
-					map[newX][newY]:set_position(newX,newY)
-					map[newX][newY]:setFlock(flock)
-					self.level:setTreeMap(map)
-					self.eclose = true
+			if boidType == 0 then
+				local dx, dy, dz = random_direction3()
+				flock:add_boid(x, y, z, dx, dy, dz, free)
+				self.eclose = true
+				self.ecloseAnim = true
+				animationBird.currentTime = animationBird.currentTime + dt
+				if animationBird.currentTime >= animationBird.duration then
+					self.animationBird.currentTime = animationBird.currentTime - animationBird.duration
 				end
+			elseif boidType == 1 then
+				local dx, dy, dz = random_direction3()
+				flock:add_predator(x, y, z, dx, dy, dz, free)
+				self.eclose = true
+			elseif boidType == 2 then
+				local map = self.level:getTreeMap()
+				local newX = math.floor( x / 32 ) + 1
+				local newY = math.floor( y / 32 ) + 1
+				--map[newX][newY] = self.level:addTree(newX,newY)
+				map[newX][newY]:add(nil)
+				map[newX][newY]:setNumEmits(0)
+				map[newX][newY]:setState(true)
+				map[newX][newY]:set_position(newX,newY)
+				map[newX][newY]:setFlock(flock)
+				self.level:setTreeMap(map)
+				self.eclose = true
+			elseif boidType == 3 then
+				local map = self.level:getTreeMap()
+				local newX = math.floor( x / 32 ) + 1
+				local newY = math.floor( y / 32 ) + 1
+				--map[newX][newY] = self.level:addTree(newX,newY)
+				map[newX][newY]:add(nil)
+				map[newX][newY]:setState(true)
+				map[newX][newY]:set_position(newX,newY)
+				map[newX][newY]:setFlock(flock)
+				self.level:setTreeMap(map)
+				self.eclose = true
+			elseif boidType == 4 then
+				local dx, dy, dz = random_direction3()
+				flock:add_ep(x, y, z, dx, dy, dz, free)
+				self.eclose = true
 			end
 		end
 	else

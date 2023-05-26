@@ -21,6 +21,7 @@ hero.map_point = nil
 hero.map_point_2 = nil
 hero.map_point_3 = nil
 hero.map_point_4 = nil
+hero.animations = {}
 hero.animation1 = {}
 hero.animation2 = {}
 hero.animation3 = {}
@@ -45,8 +46,10 @@ hero.animationBlast = {}
 hero.activeBlast = {}
 hero.activeBlastX = {}
 hero.activeBlastY = {}
+hero.run = false
+local walk = nil
 local running = nil
-
+hero.tired = 300
 
 local hero_mt = { __index = hero }
 function hero:new(level, flock, x, y)
@@ -84,8 +87,17 @@ function hero:new(level, flock, x, y)
   woosh = love.audio.newSource("sound/whoosh.wav", "stream")
   woosh:setVolume(0.3)
   
+  walk = love.audio.newSource("sound/steps-through-the-forest.mp3", "stream")
   running = love.audio.newSource("sound/running.mp3", "stream")
-  running:setVolume(0.1)
+  breath1 = love.audio.newSource("sound/breath-1.mp3", "stream")
+  breath2 = love.audio.newSource("sound/breath-2.mp3", "stream")
+  breath3 = love.audio.newSource("sound/breath-3.mp3", "stream")
+  
+  walk:setVolume(0.2)
+  running:setVolume(0.3)
+  breath1:setVolume(0.3)
+  breath2:setVolume(0.3)
+  breath3:setVolume(0.3)
   
   --level:set_player(hero)
   -- collider
@@ -97,7 +109,7 @@ function hero:new(level, flock, x, y)
   expiration = love.audio.newSource("sound/expiration.mp3", "stream")
   appeau = love.audio.newSource("sound/chouette.wav", "stream")
   vol = love.audio.newSource("sound/vol.wav", "stream")
-  fuite = love.audio.newSource("sound/sing-3.mp3", "stream")
+  fuite = love.audio.newSource("sound/sing-4.mp3", "stream")
   
   eggHeroImg = love.graphics.newImage("images/solo-egg.png")
   hero:init()
@@ -105,13 +117,36 @@ function hero:new(level, flock, x, y)
 end
 
 function hero:init()
-	hero.animation1 = hero:newAnimation(love.graphics.newImage("images/hero_images/walkUp.png"), 322, 282, 0.5)
-	hero.animation2 = hero:newAnimation(love.graphics.newImage("images/hero_images/walkLeft.png"), 322, 282, 0.5)
-	hero.animation3 = hero:newAnimation(love.graphics.newImage("images/hero_images/walkDown.png"), 322, 282, 0.5)
-	hero.animation4 = hero:newAnimation(love.graphics.newImage("images/hero_images/walkRight.png"), 322, 282, 0.5)
+	hero.animation1 = hero:newAnimation(love.graphics.newImage("images/hero_images/walkUp.png"), 322, 282, 3/2)
+	hero.animation2 = hero:newAnimation(love.graphics.newImage("images/hero_images/walkLeft.png"), 322, 282, 3/2)
+	hero.animation3 = hero:newAnimation(love.graphics.newImage("images/hero_images/walkDown.png"), 322, 282, 3/2)
+	hero.animation4 = hero:newAnimation(love.graphics.newImage("images/hero_images/walkRight.png"), 322, 282, 3/2)
 	hero.animation5 = hero:newAnimation(love.graphics.newImage("images/hero_images/noWalk.png"), 322, 282, 3)
 	hero.animation50 = hero:newAnimation(love.graphics.newImage("images/hero_images/noWalk-Night.png"), 322, 282, 3)
 	hero.animation6 = hero:newAnimation(love.graphics.newImage("images/hero_images/call.png"), 144, 200, 0.5)
+	hero.animation8 = hero:newAnimation(love.graphics.newImage("images/hero_images/runUp.png"), 322, 282, 0.5)
+	hero.animation9 = hero:newAnimation(love.graphics.newImage("images/hero_images/runLeft.png"), 322, 282, 0.5)
+	hero.animation10 = hero:newAnimation(love.graphics.newImage("images/hero_images/runDown.png"), 322, 282, 0.5)
+	hero.animation11 = hero:newAnimation(love.graphics.newImage("images/hero_images/runRight.png"), 322, 282, 0.5)
+	
+	table.insert(hero.animations, hero.animation1)
+	table.insert(hero.animations, hero.animation2)
+	table.insert(hero.animations, hero.animation3)
+	table.insert(hero.animations, hero.animation4)
+	table.insert(hero.animations, hero.animation5)
+	table.insert(hero.animations, hero.animation6)
+	table.insert(hero.animations, hero.animation8)
+	table.insert(hero.animations, hero.animation9)
+	table.insert(hero.animations, hero.animation10)
+	table.insert(hero.animations, hero.animation11)
+end
+
+function hero:set_run(param)
+	self.run = param
+end
+
+function hero:get_tired()
+	return self.tired
 end
 
 function hero:_update_map_point(dt)
@@ -128,7 +163,6 @@ function hero:_update_map_point(dt)
   local collided, normal, collision_point, collision_offset, collsion_tile = self.map_point:get_collision_data()
   if collided then
     self:_handle_tile_collision(normal, collision_point, collision_offset, collision_tile, 1)
-	print("collision")
   end
   
   self.map_point_2:set_position_coordinates(x+50, y)
@@ -137,7 +171,6 @@ function hero:_update_map_point(dt)
   
   local collided, normal, collision_point, collision_offset, collsion_tile = self.map_point_2:get_collision_data()
   if collided then
-	print("collision")
     self:_handle_tile_collision(normal, collision_point, collision_offset, collision_tile, 2)
   end
   
@@ -146,7 +179,6 @@ function hero:_update_map_point(dt)
   
   local collided, normal, collision_point, collision_offset, collsion_tile = self.map_point_3:get_collision_data()
   if collided then
-	print("collision")
     self:_handle_tile_collision(normal, collision_point, collision_offset, collision_tile, 3)
   end
   
@@ -155,7 +187,6 @@ function hero:_update_map_point(dt)
   
   local collided, normal, collision_point, collision_offset, collsion_tile = self.map_point_4:get_collision_data()
   if collided then
-	print("collision")
     self:_handle_tile_collision(normal, collision_point, collision_offset, collision_tile, 4)
   end
   
@@ -187,30 +218,13 @@ function hero:update(dt)
 	if self.pos then
 		dt = dt
 		self:_update_map_point(dt)
-		hero.animation1.currentTime = hero.animation1.currentTime + dt
-		if hero.animation1.currentTime >= hero.animation1.duration then
-			hero.animation1.currentTime = hero.animation1.currentTime - hero.animation1.duration
-		end
-		hero.animation2.currentTime = hero.animation2.currentTime + dt
-		if hero.animation2.currentTime >= hero.animation2.duration then
-			hero.animation2.currentTime = hero.animation2.currentTime - hero.animation2.duration
-		end
-		hero.animation3.currentTime = hero.animation3.currentTime + dt
-		if hero.animation3.currentTime >= hero.animation3.duration then
-			hero.animation3.currentTime = hero.animation3.currentTime - hero.animation3.duration
-		end
-		hero.animation4.currentTime = hero.animation4.currentTime + dt
-		if hero.animation4.currentTime >= hero.animation4.duration then
-			hero.animation4.currentTime = hero.animation4.currentTime - hero.animation4.duration
-		end
-		hero.animation5.currentTime = hero.animation5.currentTime + dt
-		if hero.animation5.currentTime >= hero.animation5.duration then
-			hero.animation5.currentTime = hero.animation5.currentTime - hero.animation5.duration
-			hero.animation50.currentTime = hero.animation50.currentTime - hero.animation50.duration
-		end
-		hero.animation6.currentTime = hero.animation6.currentTime + dt
-		if hero.animation6.currentTime >= hero.animation6.duration then
-			hero.animation6.currentTime = hero.animation6.currentTime - hero.animation6.duration
+		
+		
+		for i=1, #hero.animations do
+			hero.animations[i].currentTime = hero.animations[i].currentTime + dt
+			if hero.animations[i].currentTime >= hero.animations[i].duration then
+				hero.animations[i].currentTime = hero.animations[i].currentTime - hero.animations[i].duration
+			end
 		end
 		
 		--[[if self.level.master_timer then
@@ -236,6 +250,24 @@ function hero:update(dt)
 		end
 	end
 	
+	local run = self.run
+	local tired = self.tired
+	if run==true and tired>1 then
+		--self.tired = tired - 1
+	elseif run==false and tired<300 and tired>0 then
+		self.tired = tired + 1/2
+	elseif run==true and tired<30 then
+		self:set_run(false)
+		self.tired = 1
+		local rand = math.random(1,3)
+		if rand==1 then
+			love.audio.play(breath1)
+		elseif rand==2 then
+			love.audio.play(breath2)
+		elseif rand==3 then
+			love.audio.play(breath3)
+		end
+	end
 	local balls = self.balls
 	local activeBlast = self.activeBlast
 	
@@ -335,21 +367,47 @@ function hero:canIGoHere(pos)
 end
 
 function hero:goDirection(dir)
+  local run = self.run 
   if dir == 1 then
 	self.direction = 1
-	love.audio.play(running)
+		if run==true then
+			love.audio.play(running)
+			love.audio.stop(walk)
+		else
+			love.audio.play(walk)
+			love.audio.stop(running)
+		end
   elseif dir == 2 then
 	self.direction = 2
-	love.audio.play(running)
+	if run==true then
+			love.audio.play(running)
+			love.audio.stop(walk)
+	else
+			love.audio.play(walk)
+			love.audio.stop(running)
+	end
   elseif dir == 3 then
 	self.direction = 3
-	love.audio.play(running)
+	if run==true then
+		love.audio.play(running)
+		love.audio.stop(walk)
+	else
+		love.audio.play(walk)
+		love.audio.stop(running)
+	end
   elseif dir == 4 then
 	self.direction = 4
-	love.audio.play(running)
+	if run==true then
+		love.audio.play(running)
+		love.audio.stop(walk)
+	else
+		love.audio.play(walk)
+		love.audio.stop(running)
+	end
   elseif dir == 5 then
 	self.direction = 5
 	love.audio.stop(running)
+	love.audio.stop(walk)
   elseif dir == 6 then
 	self.direction = 6
   end
@@ -534,8 +592,8 @@ function hero:draw()
 		end
 	
 	
-	  local x = self.pos.x
-	  local y = self.pos.y
+	  local x = self.pos.x - 80
+	  local y = self.pos.y - 80
 	  local radius = self.startBreathe
 	  local current_time = self.level.master_timer:get_time()
 	  if self.breathing == true then
@@ -548,18 +606,40 @@ function hero:draw()
 	  love.graphics.push()
 	  love.graphics.scale(0.5, 0.5)   -- reduce everything by 50% in both X and Y coordinates
 	  
+	  local run = self.run
+	  
 	  if self.direction == 1 then
-		local spriteNum = math.floor( hero.animation1.currentTime /  hero.animation1.duration * #hero.animation1.quads) + 1
-		love.graphics.draw(hero.animation1.spriteSheet,  hero.animation1.quads[spriteNum], x*2, y*2)
+		if run == false then
+			local spriteNum = math.floor( hero.animation1.currentTime /  hero.animation1.duration * #hero.animation1.quads) + 1
+			love.graphics.draw(hero.animation1.spriteSheet,  hero.animation1.quads[spriteNum], x*2, y*2)
+		else
+			local spriteNum = math.floor( hero.animation8.currentTime /  hero.animation8.duration * #hero.animation8.quads) + 1
+			love.graphics.draw(hero.animation8.spriteSheet,  hero.animation8.quads[spriteNum], x*2, y*2)
+		end
 	  elseif self.direction == 2 then
-		local spriteNum = math.floor( hero.animation2.currentTime /  hero.animation2.duration * #hero.animation2.quads) + 1
-		love.graphics.draw(hero.animation2.spriteSheet,  hero.animation2.quads[spriteNum], x*2, y*2)
+		if run == false then
+			local spriteNum = math.floor( hero.animation2.currentTime /  hero.animation2.duration * #hero.animation2.quads) + 1
+			love.graphics.draw(hero.animation2.spriteSheet,  hero.animation2.quads[spriteNum], x*2, y*2)
+		else
+			local spriteNum = math.floor( hero.animation9.currentTime /  hero.animation9.duration * #hero.animation9.quads) + 1
+			love.graphics.draw(hero.animation9.spriteSheet,  hero.animation9.quads[spriteNum], x*2, y*2)
+		end
 	  elseif self.direction == 3 then
-		local spriteNum = math.floor( hero.animation3.currentTime /  hero.animation3.duration * #hero.animation3.quads) + 1
-		love.graphics.draw(hero.animation3.spriteSheet,  hero.animation3.quads[spriteNum], x*2, y*2)
+		if run == false then
+			local spriteNum = math.floor( hero.animation3.currentTime /  hero.animation3.duration * #hero.animation3.quads) + 1
+			love.graphics.draw(hero.animation3.spriteSheet,  hero.animation3.quads[spriteNum], x*2, y*2)
+		else
+			local spriteNum = math.floor( hero.animation10.currentTime /  hero.animation10.duration * #hero.animation10.quads) + 1
+			love.graphics.draw(hero.animation10.spriteSheet,  hero.animation10.quads[spriteNum], x*2, y*2)
+		end
 	  elseif self.direction == 4 then
-		local spriteNum = math.floor( hero.animation4.currentTime /  hero.animation4.duration * #hero.animation4.quads) + 1
-		love.graphics.draw(hero.animation4.spriteSheet,  hero.animation4.quads[spriteNum], x*2, y*2)
+		if run == false then
+			local spriteNum = math.floor( hero.animation4.currentTime /  hero.animation4.duration * #hero.animation4.quads) + 1
+			love.graphics.draw(hero.animation4.spriteSheet,  hero.animation4.quads[spriteNum], x*2, y*2)
+		else
+			local spriteNum = math.floor( hero.animation11.currentTime /  hero.animation11.duration * #hero.animation11.quads) + 1
+			love.graphics.draw(hero.animation11.spriteSheet,  hero.animation11.quads[spriteNum], x*2, y*2)
+		end
 	  elseif self.direction == 5 then
 		local spriteNum = math.floor( hero.animation5.currentTime /  hero.animation5.duration * #hero.animation5.quads) + 1
 		love.graphics.draw(hero.animation50.spriteSheet,  hero.animation50.quads[spriteNum], x*2, y*2)
@@ -574,24 +654,6 @@ function hero:draw()
 	  
 	  
 	--end
-	
-	--[[
-	local pos = self.map_point:get_position()
-	local x, y = pos.x, pos.y
-	lg.circle("fill", x, y, 10, 100)
-	
-	local pos = self.map_point_2:get_position()
-	local x, y = pos.x, pos.y
-	lg.circle("fill", x, y, 10, 100)
-	
-	local pos = self.map_point_3:get_position()
-	local x, y = pos.x, pos.y
-	lg.circle("fill", x, y, 10, 100)
-	
-	local pos = self.map_point_4:get_position()
-	local x, y = pos.x, pos.y
-	lg.circle("fill", x, y, 10, 100)
-	--]]
 	
 	
 	if #self.curves>0 then
@@ -624,6 +686,22 @@ function hero:draw()
 	end
 	
 	love.graphics.pop()
+	
+	--[[local pos = self.map_point:get_position()
+	local x, y = pos.x, pos.y
+	lg.circle("fill", x, y, 10, 100)
+	
+	local pos = self.map_point_2:get_position()
+	local x, y = pos.x, pos.y
+	lg.circle("fill", x, y, 10, 100)
+	
+	local pos = self.map_point_3:get_position()
+	local x, y = pos.x, pos.y
+	lg.circle("fill", x, y, 10, 100)
+	
+	local pos = self.map_point_4:get_position()
+	local x, y = pos.x, pos.y
+	lg.circle("fill", x, y, 10, 100)--]]
 	
 end
 

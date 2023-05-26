@@ -105,7 +105,7 @@ master_timer.table = MASTER_TIMER
 master_timer.start_time = 0
 master_timer.is_stopped = false
 master_timer.inactive_time = 0
-master_timer.current_time = 0
+master_timer.current_time = 26
 master_timer.time_scale = 7
 
 local master_timer_mt = { __index = master_timer }
@@ -131,10 +131,10 @@ end
 ------------------------------------------------------------------------------
 function master_timer:update(dt)
   if self.is_stopped == true then
-    self.inactive_time = self.inactive_time + dt/10 * self.time_scale
+    self.inactive_time = self.inactive_time + dt/50 * self.time_scale
   end
   
-  self.current_time = self.current_time + dt/10 * self.time_scale
+  self.current_time = self.current_time + dt/50 * self.time_scale
   
   if self.current_time > 100 then
     self.current_time = 0

@@ -82,8 +82,8 @@ function food_config_state.load(level)
   local xpad = 100
   local ypad = 60
   
-  local xX = 0.5 * SCR_WIDTH - 0.5 * width + xpad - 100
-  local yY = 0.5 * SCR_HEIGHT - 0.5 * height + ypad + 400
+  local xX = 0.5 * SCR_WIDTH - 0.25 * SCR_WIDTH
+  local yY = 0.5 * SCR_HEIGHT - 0.25 * SCR_HEIGHT
   
   
   state.buttons = {}
@@ -128,8 +128,8 @@ function food_config_state.draw()
   local xpad = 100
   local ypad = 60
 
-  local x = 0.5 * SCR_WIDTH - 0.5 * width + xpad
-  local y = 0.5 * SCR_HEIGHT - 0.5 * height + ypad
+  local x = 0.5 * SCR_WIDTH - 0.25 * SCR_WIDTH
+  local y = 0.5 * SCR_HEIGHT - 0.25 * SCR_HEIGHT
 
   lg.setFont(FONTS.bebas_header)
   lg.setColor(251, 121, 0, 255)
@@ -145,8 +145,6 @@ function food_config_state.draw()
   lg.print("Nb de nids de predateurs", x+800, y+300)
   lg.print(tostring(nbNidsPred), x+965, y+500)
   
-  local y = y + 400
-  local x = x - 100
   local ystep = 200
   
   -- draw buttons

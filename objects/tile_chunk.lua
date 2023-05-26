@@ -281,7 +281,8 @@ function tile_chunk:draw()
   lg.setColor(255, 255, 255, 255)
   local x, y = self.x, self.y
   local chunkGraphic = self.chunkGraphic
-  lg.draw(chunkGraphic, x, y)  
+  --lg.draw(chunkGraphic, x, y) 
+  lg.draw(chunkGraphic, x, y)
 end
 
 function tile_chunk:draw_debug()

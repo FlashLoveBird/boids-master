@@ -43,6 +43,8 @@ utils.load_graphics_settings = function()
     local width, height, flags = love.window.getMode()
     width = settings.window_width
     height = settings.window_height
+	print("width")
+	print(width)
     flags.fullscreen = settings.fullscreen
     
     love.window.setMode(width, height, flags)

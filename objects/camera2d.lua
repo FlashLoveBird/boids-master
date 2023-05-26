@@ -23,7 +23,7 @@ camera2d.scale = 1
 camera2d.scale_up_vel = 6
 camera2d.scale_down_vel = 3
 
-camera2d.mass = 0.4
+camera2d.mass = 0.2
 
 camera2d.shake_curves = nil
 camera2d.free_shake_data = nil
@@ -50,7 +50,7 @@ function camera2d:new(target_position)
   target:set_dscale(1)
   target:set_target(pos)
   target:set_mass(camera2d.mass)  
-  target:set_max_speed(500)
+  target:set_max_speed(1500)
   target:set_force(500)
   target:set_radius(300)
   
@@ -148,6 +148,9 @@ end
 function camera2d:set_size(view_w,view_h)
   self.view_w = view_w
   self.view_h = view_h
+  self.viewport_bbox:set(self.pos.x, self.pos.y, view_w, view_h)
+  self.center.x = view_w / 2
+  self.center.y = view_h / 2
 end
 
 function camera2d:get_viewport()
@@ -261,20 +264,15 @@ function camera2d:update(dt)
   local bbox = self.viewport_bbox
   bbox.x, bbox.y = self.pos.x, self.pos.y
   bbox.width, bbox.height = self.view_w, self.view_h
-  
-  
-  width, height = love.graphics.getDimensions()
-  self:set_size(width,height)
 end
 
 ------------------------------------------------------------------------------
 function camera2d:draw()
   --if self.debug then
-    --self.target:draw()
-	width, height = love.graphics.getDimensions()
-	print(width, height)
+    self.target:draw()
+	width, height = lg.getDimensions()
   --end
-    lg.rectangle( "fill", 0, 0, width, height)
+    lg.rectangle( "line", 0, 0, self.view_w, self.view_h)
 end
 
 return camera2d
