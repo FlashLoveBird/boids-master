@@ -94,8 +94,8 @@ tile_map.countTree=0
 
 tile_map.mapSave = nil
 
-local nbTree = 10
-local nbBush = 10
+local nbTree = 0
+local nbBush = 0
 
 local tile_map_mt = { __index = tile_map }
 function tile_map:new(level, columns, rows, tile_width, tile_height, mapSave)
@@ -854,11 +854,11 @@ function tile_map:_generate_chunk(i, j)
 					 
   local rand = math.random(1,9)
   if rand > 3 then
-	local rand2 = math.random(1,6)
+	local rand2 = math.random(1,50)
 	if rand2 == 1 then
-		rand = math.random(4,9)
+		rand = math.random(3,9)
 	else
-		rand = math.random(1,3)
+		rand = math.random(1,2)
 	end
   end
   chunk:init(rand)

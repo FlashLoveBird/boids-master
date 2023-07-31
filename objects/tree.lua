@@ -451,7 +451,7 @@ function tree:draw()
 	lg.setColor(255, 255, 255, 1)
 	if timeInspire==true then
 		local spriteNum = math.floor(animationInspire.currentTime / animationInspire.duration * #animationInspire.quads) + 1
-		love.graphics.draw(animationInspire.spriteSheet, animationInspire.quads[spriteNum], mx, my)
+		love.graphics.draw(animationInspire.spriteSheet, animationInspire.quads[spriteNum], mx+20, my)
 	elseif timeExpire==true then
 		local spriteNum = math.floor(animationExpire.currentTime / animationExpire.duration * #animationExpire.quads) + 1
 		love.graphics.draw(animationExpire.spriteSheet, animationExpire.quads[spriteNum], mx, my)

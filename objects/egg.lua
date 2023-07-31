@@ -56,8 +56,8 @@ function egg:new(boidEmit,index,flock,needHome,free,x,y,z,level,boidType)
 end
 
 function egg:initAnim(level,boidType)
-  self.animationEclose = self:newAnimation(love.graphics.newImage("images/egg.png"), 105, 70, 10)
-  self.animationBird = self:newAnimation(love.graphics.newImage("images/bird.png"), 120, 70, 10)
+  self.animationEclose = self:newAnimation(love.graphics.newImage("images/egg.png"), 192, 113, 10)
+  self.animationBird = self:newAnimation(love.graphics.newImage("images/bird.png"), 56.5, 121, 10)
   self.eggImg = love.graphics.newImage("images/origami/rock-sheet0.png")
   
   self.level = level
@@ -137,8 +137,8 @@ function egg:update(dt)
 				self.eclose = true
 			elseif boidType == 2 then
 				local map = self.level:getTreeMap()
-				local newX = math.floor( x / 32 ) + 1
-				local newY = math.floor( y / 32 ) + 1
+				local newX = math.floor( x /64  ) + 1
+				local newY = math.floor( y /64 ) + 1
 				--map[newX][newY] = self.level:addTree(newX,newY)
 				map[newX][newY]:add(nil)
 				map[newX][newY]:setNumEmits(0)
@@ -149,8 +149,8 @@ function egg:update(dt)
 				self.eclose = true
 			elseif boidType == 3 then
 				local map = self.level:getTreeMap()
-				local newX = math.floor( x / 32 ) + 1
-				local newY = math.floor( y / 32 ) + 1
+				local newX = math.floor( x /64 ) + 1
+				local newY = math.floor( y /64 ) + 1
 				--map[newX][newY] = self.level:addTree(newX,newY)
 				map[newX][newY]:add(nil)
 				map[newX][newY]:setState(true)

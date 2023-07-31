@@ -46,8 +46,8 @@ end
 
 function bfs:init(index, bushParent)
 
-self.animationExtend = self:newAnimation(love.graphics.newImage("images/env/wood.png"), 100, 131, 5)
-self.animationDecrease = self:newAnimation(love.graphics.newImage("images/env/wood.png"), 100, 131, 5)
+self.animationExtend = self:newAnimation(love.graphics.newImage("images/env/seeds.png"), 280, 249, 5)
+self.animationDecrease = self:newAnimation(love.graphics.newImage("images/env/seeds.png"), 280, 249, 5)
 self.index = index
 self.bushParent = bushParent
 end
@@ -243,9 +243,12 @@ function bfs:draw(x, y)
     local r = s.radius
     local pct = math.floor(((r * r) / (sr * sr)) * 100)
 	lg.setColor(255, 255, 255, 255)
-	love.graphics.draw(foodGraphic, x, y)
+	--love.graphics.draw(foodGraphic, x, y)
     --lg.circle("line", x, y, s.radius)
 	--lg.print(pct.."%", x, y)
+	local animationExtend = self.animationExtend
+	local spriteNum = math.floor(animationExtend.currentTime / animationExtend.duration * #animationExtend.quads) + 1
+	love.graphics.draw(animationExtend.spriteSheet, animationExtend.quads[spriteNum], x+25, y)
   end
   
 end

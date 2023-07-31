@@ -2492,7 +2492,7 @@ function bd:draw_debug()
     local lensqr = dx*dx + dy*dy + dz*dz
 	lg.setColor(255, 255, 255, 255)
     --lg.circle("fill", x, y, r1)
-    lg.draw(self.waypointPoint, x-45, y-100)
+    lg.draw(self.waypointPoint, x-10, y-60)
     lg.setColor(255, 0, 0, 255)
     --lg.circle("line", x, y, r1)
     --lg.circle("line", x, y, r2)

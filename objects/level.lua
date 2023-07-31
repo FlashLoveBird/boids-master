@@ -556,20 +556,21 @@ local imageAnimationBigTreeExpire = self.imageAnimationBigTreeExpire
 local imageAnimationOmbre = self.imageAnimationOmbre
 local imageAnimationOmbreBirth = self.imageAnimationOmbreBirth
 
-local animationTreeInspire = self:newAnimation(imageAnimationTreeInspire, 243, 182, 5)
+local animationTreeInspire = self:newAnimation(imageAnimationTreeInspire, 181, 181, 5)
 local animationTreeExpire = self:newAnimation(imageAnimationTreeExpire, 189, 147, 5)
 local animationTreeBirth = self:newAnimation(imageAnimationTreeBirth, 378, 376, 5)
 local animationBigTreeInspire = self:newAnimation(imageAnimationBigTreeInspire, 378, 376, 2)
 local animationBigTreeExpire = self:newAnimation(imageAnimationBigTreeExpire, 378, 376, 2)
 local animationOmbre = self:newAnimation(imageAnimationOmbre, 361, 376, 2)
 local animationOmbreBirth = self:newAnimation(imageAnimationOmbreBirth, 189, 376, 8)
-
+print('treeeeemap')
+print(x,y)
 local te = tree:new(self,self.nbTree,flock,animationTreeInspire,animationTreeExpire,animationTreeBirth,animationBigTreeInspire,animationBigTreeExpire,animationOmbre,animationOmbreBirth)
---self.treeMap[x][y]=te
+self.treeMap[x][y]=te
 
 self.trees[#self.trees + 1] = te
 
-self.treeMap[x][y]= te
+--self.treeMap[x][y]= te
 
 self.pollution = self.pollution - 1
 return te
@@ -591,11 +592,11 @@ local imageAnimationBigBushExpire = self.imageAnimationBigBushExpire
 
 local animationBushInspire = self:newAnimation(imageAnimationBushInspire, 529, 373, 5)
 local animationBushExpire = self:newAnimation(imageAnimationBushExpire, 529, 373, 5)
-local animationBushBirth = self:newAnimation(imageAnimationBushBirth, 529, 373, 5)
+local animationBushBirth = self:newAnimation(imageAnimationBushBirth, 453, 371, 5)
 local animationBigBushInspire = self:newAnimation(imageAnimationBigBushInspire, 529, 373, 2)
 local animationBigBushExpire = self:newAnimation(imageAnimationBigBushExpire, 529, 373, 2)
-
-
+print('treeeeemap')
+print(x,y)
 local bu = boush:new(self,#self.bushs + 1,flock,animationBushInspire,animationBushExpire,animationBushBirth,animationBigBushInspire,animationBigBushExpire)
 self.treeMap[x][y]=bu
 self.pollution = self.pollution - 1

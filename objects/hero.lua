@@ -50,6 +50,8 @@ hero.run = false
 local walk = nil
 local running = nil
 hero.tired = 300
+hero.action = {}
+hero.launch = false
 
 local hero_mt = { __index = hero }
 function hero:new(level, flock, x, y)
@@ -117,17 +119,20 @@ function hero:new(level, flock, x, y)
 end
 
 function hero:init()
-	hero.animation1 = hero:newAnimation(love.graphics.newImage("images/hero_images/walkUp.png"), 322, 282, 3/2)
-	hero.animation2 = hero:newAnimation(love.graphics.newImage("images/hero_images/walkLeft.png"), 322, 282, 3/2)
-	hero.animation3 = hero:newAnimation(love.graphics.newImage("images/hero_images/walkDown.png"), 322, 282, 3/2)
-	hero.animation4 = hero:newAnimation(love.graphics.newImage("images/hero_images/walkRight.png"), 322, 282, 3/2)
-	hero.animation5 = hero:newAnimation(love.graphics.newImage("images/hero_images/noWalk.png"), 322, 282, 3)
+	hero.animation1 = hero:newAnimation(love.graphics.newImage("images/hero_images/walkUp.png"), 426, 240, 3/2)
+	hero.animation2 = hero:newAnimation(love.graphics.newImage("images/hero_images/walkLeft.png"), 426, 240, 3/2)
+	hero.animation3 = hero:newAnimation(love.graphics.newImage("images/hero_images/walkDown.png"), 426, 240, 3/2)
+	hero.animation4 = hero:newAnimation(love.graphics.newImage("images/hero_images/walkRight.png"), 426, 240, 3/2)
+	hero.animation5 = hero:newAnimation(love.graphics.newImage("images/hero_images/noWalk.png"), 426, 240, 3)
 	hero.animation50 = hero:newAnimation(love.graphics.newImage("images/hero_images/noWalk-Night.png"), 322, 282, 3)
-	hero.animation6 = hero:newAnimation(love.graphics.newImage("images/hero_images/call.png"), 144, 200, 0.5)
-	hero.animation8 = hero:newAnimation(love.graphics.newImage("images/hero_images/runUp.png"), 322, 282, 0.5)
-	hero.animation9 = hero:newAnimation(love.graphics.newImage("images/hero_images/runLeft.png"), 322, 282, 0.5)
-	hero.animation10 = hero:newAnimation(love.graphics.newImage("images/hero_images/runDown.png"), 322, 282, 0.5)
-	hero.animation11 = hero:newAnimation(love.graphics.newImage("images/hero_images/runRight.png"), 322, 282, 0.5)
+	hero.animation6 = hero:newAnimation(love.graphics.newImage("images/hero_images/breathe.png"), 426, 240, 2)
+	hero.animation7 = hero:newAnimation(love.graphics.newImage("images/hero_images/expire.png"), 426, 240, 2)
+	hero.animation8 = hero:newAnimation(love.graphics.newImage("images/hero_images/runUp.png"), 426, 240, 0.5)
+	hero.animation9 = hero:newAnimation(love.graphics.newImage("images/hero_images/runLeft.png"), 426, 240, 0.5)
+	hero.animation10 = hero:newAnimation(love.graphics.newImage("images/hero_images/runDown.png"), 426, 240, 0.5)
+	hero.animation11 = hero:newAnimation(love.graphics.newImage("images/hero_images/runRight.png"), 426, 240, 0.5)
+	
+	hero.animation12 = hero:newAnimation(love.graphics.newImage("images/hero_images/throw_down.png"), 426, 240, 1)
 	
 	table.insert(hero.animations, hero.animation1)
 	table.insert(hero.animations, hero.animation2)
@@ -135,10 +140,12 @@ function hero:init()
 	table.insert(hero.animations, hero.animation4)
 	table.insert(hero.animations, hero.animation5)
 	table.insert(hero.animations, hero.animation6)
+	table.insert(hero.animations, hero.animation7)
 	table.insert(hero.animations, hero.animation8)
 	table.insert(hero.animations, hero.animation9)
 	table.insert(hero.animations, hero.animation10)
 	table.insert(hero.animations, hero.animation11)
+	table.insert(hero.animations, hero.animation12)
 end
 
 function hero:set_run(param)
@@ -218,12 +225,39 @@ function hero:update(dt)
 	if self.pos then
 		dt = dt
 		self:_update_map_point(dt)
-		
-		
-		for i=1, #hero.animations do
-			hero.animations[i].currentTime = hero.animations[i].currentTime + dt
-			if hero.animations[i].currentTime >= hero.animations[i].duration then
-				hero.animations[i].currentTime = hero.animations[i].currentTime - hero.animations[i].duration
+		local action = self.action
+		local launch = self.launch
+		local breathing = self.breathing
+		local startBreathe = self.startBreathe
+		for i=1, #self.animations do
+			if i == 6 and self.animations[6].currentTime < 1.95 then
+				self.animations[i].currentTime = self.animations[i].currentTime + dt
+			elseif i ~= 6 then
+				self.animations[i].currentTime = self.animations[i].currentTime + dt
+			end
+			if i == 12 then
+				if action[1] ~= nil and self.animations[i].currentTime >= self.animations[i].duration/2 and launch==false then
+					self:setRandomPoints(action[1], action[2], action[3])
+					self.launch = true
+				end
+				if self.animations[i].currentTime >= self.animations[i].duration/4+self.animations[i].duration/2 then
+					if action[1] ~= nil then
+						self.action = {}
+						self.launch = false
+						--self:setRandomPoints(action[1], action[2], action[3])
+					end
+				end
+			end
+			if i == 6 and self.animations[i].currentTime >= self.animations[i].duration and breathing == false then
+				self.animations[i].currentTime = self.animations[i].currentTime - self.animations[i].duration
+			end
+			if i == 7 and self.animations[7].currentTime >= 1.95 and startBreathe ~= 0 and breathing == false then
+				print("self.animations[7].currentTime")
+				print(self.animations[7].currentTime)
+				self.startBreathe = 0
+			end
+			if i ~= 6 and i ~= 7 and self.animations[i].currentTime >= self.animations[i].duration then
+				self.animations[i].currentTime = self.animations[i].currentTime - self.animations[i].duration
 			end
 		end
 		
@@ -366,7 +400,7 @@ function hero:canIGoHere(pos)
   return self.block
 end
 
-function hero:goDirection(dir)
+function hero:goDirection(dir, mx, my, bType)
   local run = self.run 
   if dir == 1 then
 	self.direction = 1
@@ -404,12 +438,19 @@ function hero:goDirection(dir)
 		love.audio.play(walk)
 		love.audio.stop(running)
 	end
-  elseif dir == 5 then
+  elseif dir == 5 and self.action[1] == nil then
 	self.direction = 5
 	love.audio.stop(running)
 	love.audio.stop(walk)
   elseif dir == 6 then
 	self.direction = 6
+  elseif dir == 7 then
+	self.direction = 7
+	self.action = {mx, my, bType}
+	self.animations[12].currentTime = 0
+  elseif dir == 8 then
+	self.direction = 8
+	self.animations[7].currentTime = 0
   end
 end
 
@@ -441,6 +482,11 @@ function hero:breathe()
 	love.audio.play(inspiration)
 	self.startBreathe = 1
 	self.breathing = true
+	self.animations[6].currentTime = 0
+end
+
+function hero:getBreathe()
+	return self.startBreathe
 end
 
 function hero:expire(activeFlock)
@@ -449,7 +495,7 @@ if self.breathing then
   local radius = self.startBreathe
   self.breathing = false
   love.audio.play(appeau)
-  
+  self:goDirection(8)
   if self.pos.x then
 	  local objects = {}
 	  local x = self.pos.x
@@ -526,7 +572,7 @@ end
 function hero:setRandomPoints(mx, my, element)
 	--source point
 	local x = self.pos.x
-	local y = self.pos.y
+	local y = self.pos.y-20
 	local balls = self.balls
 	local curves = self.curves
 	local curve = nil
@@ -555,25 +601,25 @@ function hero:setRandomPoints(mx, my, element)
 	self.destYEgg[#destYEgg+1] = my
 		
 	self.elements[#self.elements+1] = element
-	self.animationBlast[#self.animationBlast+1] = self:newAnimation(love.graphics.newImage("images/blast.png"), 90, 120, 1)
+	self.animationBlast[#self.animationBlast+1] = self:newAnimation(love.graphics.newImage("images/splash.png"), 350, 233, 1)
 	self.activeBlast[#self.activeBlast+1]=false
 	self.activeBlastX[#self.activeBlastX+1]=dx
 	self.activeBlastY[#self.activeBlastY+1]=dy
 		
 	if element==2 then
 		local map = self.level:getTreeMap()
-		local newX = math.floor( dx / 32 ) + 1
-		local newY = math.floor( dy / 32 ) + 1
-		map[newX][newY] = self.level:addTree(newX,newY)
+		local newX = math.floor( dx / 64 ) + 1
+		local newY = math.floor( dy / 64 ) + 1
+		map[newX][newY] = self.level:addTree(newX,newY,state.flock)
 	elseif element==3 then
 		local map = self.level:getTreeMap()
-		local newX = math.floor( dx / 32 ) + 1
-		local newY = math.floor( dy / 32 ) + 1
-		map[newX][newY] = self.level:addBush(cmx,cmy,state.flock)
+		local newX = math.floor( dx / 64 ) + 1
+		local newY = math.floor( dy / 64 ) + 1
+		map[newX][newY] = self.level:addBush(newX,newY,state.flock)
 		--map[cmx][cmy] = state.level:addBush(cmx,cmy,state.flock)
 		--map[cmx][cmy]:setState(true)
 		--map[cmx][cmy]:set_position(cmx,cmy)
-		--state.level:setTreeMap(map)
+		state.level:setTreeMap(map)
 		print('AJOUT BUSH')
 	end
 
@@ -642,13 +688,21 @@ function hero:draw()
 		end
 	  elseif self.direction == 5 then
 		local spriteNum = math.floor( hero.animation5.currentTime /  hero.animation5.duration * #hero.animation5.quads) + 1
-		love.graphics.draw(hero.animation50.spriteSheet,  hero.animation50.quads[spriteNum], x*2, y*2)
+		--love.graphics.draw(hero.animation50.spriteSheet,  hero.animation50.quads[spriteNum], x*2, y*2)
 		--if current_time<70 and current_time>20 then
 			love.graphics.draw(hero.animation5.spriteSheet,  hero.animation5.quads[spriteNum], x*2, y*2)
 		--end
 	  elseif self.direction == 6 then
 		local spriteNum = math.floor( hero.animation6.currentTime /  hero.animation6.duration * #hero.animation6.quads) + 1
 		love.graphics.draw(hero.animation6.spriteSheet,  hero.animation6.quads[spriteNum], x*2, y*2)
+	  
+	  elseif self.direction == 7 then
+		local spriteNum = math.floor( hero.animation12.currentTime /  hero.animation12.duration * #hero.animation12.quads) + 1
+		love.graphics.draw(hero.animation12.spriteSheet,  hero.animation12.quads[spriteNum], x*2, y*2)
+	  
+	  elseif self.direction == 8 then
+		local spriteNum = math.floor( hero.animation7.currentTime /  hero.animation7.duration * #hero.animation7.quads) + 1
+		love.graphics.draw(hero.animation7.spriteSheet,  hero.animation7.quads[spriteNum], x*2, y*2)
 	  end
 	  
 	  
@@ -680,7 +734,7 @@ function hero:draw()
 		for i=1,#animationBlast do
 			if self.activeBlast[i]==true then
 				local spriteNum = math.floor( animationBlast[i].currentTime /  animationBlast[i].duration * #animationBlast[i].quads) + 1
-				love.graphics.draw(animationBlast[i].spriteSheet,  animationBlast[i].quads[spriteNum], activeBlastX[i]*2, activeBlastY[i]*2)
+				love.graphics.draw(animationBlast[i].spriteSheet,  animationBlast[i].quads[spriteNum], activeBlastX[i]*2-150, activeBlastY[i]*2-100)
 			end
 		end
 	end

@@ -22,7 +22,7 @@ local bitser = require "bitser"
 local save = nil
 local music = nil
 local music_2 = nil
-local nbNids = 1
+local nbNids = 0
 local playIntro = false
 
 
@@ -41,7 +41,9 @@ local newBody = nil
 --[[----------------------------------------------------------------------]]--
 --##########################################################################--
 function food_demo_state.keypressed(key)
-  state.flock:keypressed(key)
+  if state.selectItem ==0 then
+	state.flock:keypressed(key)
+  end
   
   if key == "return" then
     --BOIDS:load_next_state()
@@ -83,9 +85,10 @@ function food_demo_state.wheelmoved(x, y)
 end
 
 function food_demo_state.mousepressed(x, y, button)
-
-  state.flock:mousepressed(x, y, button)
-  state.level:mousepressed(x, y, button, state.flock)
+  if state.selectItem ==0 then
+	state.flock:mousepressed(x, y, button)
+	state.level:mousepressed(x, y, button, state.flock)
+  end
 
   local map = state.level:getTreeMap()
   local x, y = state.level:get_camera():get_viewport()
@@ -136,9 +139,10 @@ function food_demo_state.mousepressed(x, y, button)
 	if mx > 5 and mx < 25600 and my > 5 and my < 25600 then
 		if state.level:canILandHere(cmx,cmy,10) then
 			--state.hero:putEgg(mx-25,my-25,0)
-			state.hero:setRandomPoints(mx,my,0)
+			--state.hero:setRandomPoints(mx,my,0)
 			--love.audio.play(intro)
 			--playIntro = true
+			state.hero:goDirection(7, mx, my, 0)
 		end
 	end
 	
@@ -149,8 +153,8 @@ function food_demo_state.mousepressed(x, y, button)
 		--map[cmx][cmy]:setState(true)
 		--map[cmx][cmy]:set_position(cmx,cmy)
 		--state.level:setTreeMap(map)
-		
-		state.hero:setRandomPoints(mx,my,3)
+		state.hero:goDirection(7, mx,my,3)
+		--state.hero:setRandomPoints(mx,my,3)
 		
 		local level = state.level
 		local level_map = level:get_level_map()
@@ -170,7 +174,8 @@ function food_demo_state.mousepressed(x, y, button)
 	cmx = math.floor(mx /32)
 	cmy = math.floor(my /32)
 	if state.level:canILandHere(cmx,cmy,10) then
-		state.hero:setRandomPoints(mx,my,2)		
+		--state.hero:setRandomPoints(mx,my,2)		
+		state.hero:goDirection(7,mx,my,2)
 		--state.level:spawn_cube_explosion(200, 200, 200, 300, 300)
 	end
   end
@@ -197,7 +202,8 @@ function food_demo_state.mousepressed(x, y, button)
 		cmy = math.floor(my /32)
 		if state.level:canILandHere(cmx,cmy,10) then
 			--state.hero:putEgg(mx-25,my-25,0)
-			state.hero:setRandomPoints(mx,my,0) -- 0 = boid
+			--state.hero:setRandomPoints(mx,my,0) -- 0 = boid
+			state.hero:goDirection(7,mx,my,0)
 		end
 	end
   end  
@@ -214,10 +220,13 @@ food_demo_state.toggle_button = function(b)
 			
       if b.text == "bush" then
         state.selectItem = 1
+		state.level:get_mouse():set_input("bush")
       elseif b.text == "tree" then
         state.selectItem = 2
+		state.level:get_mouse():set_input("tree")
       elseif b.text == "bird" then
         state.selectItem = 3
+		state.level:get_mouse():set_input("bird")
 	  elseif b.text == "pred" then
         state.selectItem = 4
 	   elseif b.text == "ep" then
@@ -259,6 +268,7 @@ food_demo_state.toggle_button = function(b)
 		end
       end
     elseif b.toggle == true then
+	  state.level:get_mouse():set_input(nil)
       if     b.text == "bush" then
         state.selectItem = 1
       elseif b.text == "tree" then
@@ -276,7 +286,7 @@ food_demo_state.toggle_button = function(b)
        elseif b.text == "play" then
 		speedTime = 1
 		intro:setPitch(1)
-		state.selectItem = 50
+		state.selectItem = 0
 		--love.audio.play(intro)
 	   elseif b.text == "recommencer" and escape then
 		BOIDS:load_state("food_menu_state")
@@ -284,7 +294,7 @@ food_demo_state.toggle_button = function(b)
 		love.event.quit() 
       elseif b.text == "fastforward" then
 		speedTime = 2
-		state.selectItem = 50
+		state.selectItem = 0
 		intro:setPitch(2)
 	  elseif b.text == "fullscreen" and escape then
 		if love.window.getFullscreen()==true then
@@ -336,7 +346,9 @@ function food_demo_state.createTown(x, y, r)
 end
 
 function food_demo_state.mousereleased(x, y, button)
-  state.flock:mousereleased(x, y, button)
+  --if state.selectItem ==0 then
+    state.flock:mousereleased(x, y, button)
+  --end
 end
 
 function food_demo_state.wheelmoved(x, y)
@@ -673,10 +685,10 @@ local cam = state.level:get_camera()
 	state.level:setTreeMap(level)--]]
 	state.nbHome = state.nbHome -1	
 	
-	music = love.audio.newSource("sound/airtone_-_roboduck_1.mp3", "stream")
+	music = love.audio.newSource("sound/airtone_-_peaceOut.mp3", "stream")
 	music_2 = love.audio.newSource("sound/airtone_-_bluenotes_6.mp3", "stream")
-	--music:setVolume(0.7)
-	--love.audio.play(music)
+	music:setVolume(0.7)
+	love.audio.play(music)
 	
 	level_map:setWallMap()
 	
@@ -805,7 +817,7 @@ function food_demo_state.update(dt)
   
   --print("camPos")
   --print(camPos)
-  if lk.isDown("z", "up") or lk.isDown("q", "left") or lk.isDown("s", "down") or lk.isDown("d", "right") or lk.isDown("lshift") then
+  if lk.isDown("z", "up") or lk.isDown("q", "left") or lk.isDown("s", "down") or lk.isDown("d", "right") or lk.isDown("lshift") or lk.isDown("space") then
 	  if lk.isDown("lshift") then
 		if state.hero:get_tired()>30 then
 			state.hero:set_run(true)
@@ -842,7 +854,7 @@ function food_demo_state.update(dt)
 		cam:set_target(target, true)
 		state.hero:resetBlock()
 	  end
-  else
+  elseif state.hero:getBreathe() == 0 then
 	state.hero:goDirection(5)
   end
   
@@ -1162,10 +1174,11 @@ function food_demo_state.draw()
   if state.selectItem ~=0 then
 	local cmx = math.floor(mx/64)
 	local cmy = math.floor(my/64)
+	
 	if state.level:canILandHere(cmx,cmy,10) then
-		mouse:setColor(0)
+		mouse:setColor(0,0,0)
 	else
-		mouse:setColor(200)
+		mouse:setColor(255,255,255)
 	end
   end
   

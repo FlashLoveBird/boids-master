@@ -42,7 +42,7 @@ bush.animationBigTreeExpire = nil
 bush.animationBirth = nil
 bush.animationOmbre = nil
 bush.animationOmbreBirth = nil
-bush.timeBirth = 0
+bush.timeBirth = 101
 bush.timeInspire = true
 bush.timeExpire = false
 bush.timeBigInspire = false
@@ -347,7 +347,7 @@ function bush:draw()
 	elseif timeBirth > 100 and timeBigExpire==false and timeBigInspire==false then
 		
 		local spriteNum = math.floor(animationBirth.currentTime / animationBirth.duration * #animationBirth.quads) + 1
-		love.graphics.draw(animationBirth.spriteSheet, animationBirth.quads[spriteNum], mx*2-100, my*2-100)
+		love.graphics.draw(animationBirth.spriteSheet, animationBirth.quads[spriteNum], mx*2-50, my*2-100)
 	elseif timeBigInspire == true then
 		--local spriteNum = math.floor(animationOmbre.currentTime / animationOmbre.duration * #animationOmbre.quads) + 1
 		--love.graphics.draw(animationOmbre.spriteSheet, animationOmbre.quads[spriteNum], mx-225, my-tronc/2-35)

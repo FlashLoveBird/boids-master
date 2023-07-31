@@ -18,6 +18,13 @@ mouse_input.height = SCR_HEIGHT
 mouse_input.left_pressed = false
 mouse_input.left_press_timer = nil
 mouse_input.color = 0
+mouse_input.color1 = 0
+mouse_input.color2 = 0
+mouse_input.color3 = 1
+local mouseBoid = nil
+local mouseTree = nil
+local mouseBush = nil
+local mouseInput = nil
 
 local mouse_input_mt = { __index = mouse_input }
 function mouse_input:new(level)
@@ -35,6 +42,10 @@ function mouse_input:new(level)
   local scr_pos = vector2:new(pos.x, pos.y)
   local ref_pos = vector2:new(pos.x, pos.y)
   
+  mouseBoid = love.graphics.newImage("images/mouse/bird-mouse.png")
+  mouseTree = love.graphics.newImage("images/mouse/bigTree-mouse.png")
+  mouseBush = love.graphics.newImage("images/mouse/bigBush-mouse.png")
+  
   return setmetatable({ reference_pos = ref_pos,
                         screen_pos = scr_pos,
                         width = width,
@@ -49,8 +60,15 @@ function mouse_input:init()
   self.screen_pos = vector2:new(0.5*SCR_WIDTH, 0.5*SCR_HEIGHT)
 end
 
-function mouse_input:setColor(color)
+function mouse_input:set_input(param)  
+	self.mouseInput = param
+end
+
+function mouse_input:setColor(color, color1, color2, color3)
 	self.color=color
+	self.color1=color1
+	self.color2=color2
+	self.color3=color3
 end
 
 function mouse_input:mousepressed(x, y, button)
@@ -171,14 +189,23 @@ end
 ]]--
 
 function mouse_input:draw()
-  lg.setColor(self.color, 0, 0, 255)
+  lg.setColor(self.color, self.color1, self.color2, self.color3)
   lg.setPointSize(3)
+  local mouseInput = self.mouseInput
   local x, y = love.mouse.getPosition()
-  local len = 10
-  lg.setLineWidth(2)
-  lg.line(x, y, x, y + len)
-  lg.line(x, y, x + 0.7 * len, y + len - 3)
-  
+  if mouseInput == nil then
+      lg.setColor(self.color, self.color1, self.color2, self.color3)
+	  local len = 10
+	  lg.setLineWidth(2)
+	  lg.line(x, y, x, y + len)
+	  lg.line(x, y, x + 0.7 * len, y + len - 3)
+  elseif mouseInput =="bird" then
+	lg.draw(mouseBoid, x-15, y-10)
+  elseif mouseInput =="tree" then
+	lg.draw(mouseTree, x-100, y-180)
+  elseif mouseInput =="bush" then
+	lg.draw(mouseBush, x-100, y-80)
+  end
 end
 
 return mouse_input

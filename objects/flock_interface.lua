@@ -42,8 +42,11 @@ function fi:new(level, parent_flock)
   foodIcon = love.graphics.newImage("images/ui/food.png")
   energyIcon = love.graphics.newImage("images/ui/energy.png")
   ageIcon = love.graphics.newImage("images/ui/age.png")
-  sexIcon = love.graphics.newImage("images/ui/sex.png")
+  sexMIcon = love.graphics.newImage("images/ui/sexM.png")
+  sexFIcon = love.graphics.newImage("images/ui/sexF.png")
   homeIcon = love.graphics.newImage("images/ui/home.png")
+  loveIcon = love.graphics.newImage("images/ui/love.png")
+  barre = love.graphics.newImage("images/ui/barre.png")
   
   panelInset_brown = love.graphics.newImage("images/PNG/panelInset_beigeLight.png")
   searchIcon = love.graphics.newImage("images/Colored/genericItem_color_111.png")
@@ -393,21 +396,27 @@ function fi:_draw_selected_boids()
   
   lg.setLineWidth(1)
   local cam = self.level:get_camera()
+  local camWi, camHe = cam:get_size()
   for _,b in pairs(self.selected_boids) do
 	if self.nb_boids_selected == 1 then
 		local x, y = math.floor(b.position.x), math.floor(b.position.y)
 		local r = self.select_boid_radius
-		local tableX = cam.pos.x+1420
+		local tableX = cam.pos.x+camWi-320
 		local tableY = cam.pos.y+180
 		local hunger = math.floor(b.hunger)
 		local tired = math.floor(b.tired)
 		lg.setColor(255, 255, 255, 255)
-		love.graphics.draw(bg, cam.pos.x+1350, cam.pos.y+100)
-		love.graphics.draw(tableImg, cam.pos.x+1390, cam.pos.y+120)
+		love.graphics.draw(bg, cam.pos.x+camWi-400, cam.pos.y+100)
+		love.graphics.draw(tableImg, cam.pos.x+camWi-350, cam.pos.y+120)
+		
+		love.graphics.draw(barre, tableX, tableY-10)
+		love.graphics.draw(barre, tableX, tableY+40)
+		love.graphics.draw(barre, tableX, tableY+80)
+		
 		love.graphics.draw(energyIcon, tableX, tableY+50)
 		love.graphics.draw(foodIcon, tableX, tableY)
 		love.graphics.draw(ageIcon, tableX, tableY+90)
-		love.graphics.draw(sexIcon, tableX+120, tableY)
+		--love.graphics.draw(sexIcon, tableX+120, tableY)
 		
 		if b.needHome == true then
 			love.graphics.draw(homeIcon, tableX+150, tableY+100)
@@ -419,10 +428,12 @@ function fi:_draw_selected_boids()
 		lg.print(hunger, tableX+50, tableY+10)
 		lg.print(tired, tableX+50, tableY+60)
 		lg.print(b.age, tableX+50, tableY+110)
+		lg.setColor(255, 255, 255, 255)
 		if b.sex == true then
-			lg.print("Mâle", tableX+170, tableY+10)
+			--lg.print("Mâle", tableX+170, tableY+10)
+			love.graphics.draw(sexMIcon, tableX+170, tableY)
 		else
-			lg.print("Femelle", tableX+170, tableY+10)
+			love.graphics.draw(sexFIcon, tableX+170, tableY)
 		end
 		lg.print("Objectif :", tableX+120, tableY+50)
 		lg.print(b.objectiv, tableX+120, tableY+70)
@@ -434,14 +445,15 @@ function fi:_draw_selected_boids()
 		end
 		
 		lg.setColor(255, 255, 255, 255)
-		love.graphics.draw(bg, cam.pos.x+1350, cam.pos.y+400)
-		love.graphics.draw(tableImg, cam.pos.x+1390, cam.pos.y+420)
+		love.graphics.draw(bg, cam.pos.x+camWi-400, cam.pos.y+400)
+		love.graphics.draw(tableImg, cam.pos.x+camWi-350, cam.pos.y+420)
 		local tableY = cam.pos.y+460
 		
 		lg.setColor(0, 0, 0, 255)
 		--lg.circle("line", x, y, r)
 		if b.lover then
-			lg.print("En couple avec :", tableX, tableY)
+			love.graphics.draw(loveIcon, tableX, tableY+20)
+			--lg.print("En couple avec :", tableX, tableY)
 			lg.print(b.lover.name, tableX, tableY+20)
 		else
 			lg.print("Pas de relation", tableX, tableY)
@@ -487,11 +499,11 @@ function fi:draw()
   lg.setColor(0, 0, 0, 0.5)
   --love.graphics.rectangle("fill", cx,cy, vx,vy)
   lg.setColor(255, 255, 255, 1)
-  love.graphics.draw(panelInset_brown, cx+vx-150, cy+vy-150)
-  love.graphics.draw(searchIcon, cx+vx-130, cy+vy-140)
+  --love.graphics.draw(panelInset_brown, cx+vx-150, cy+vy-150)
+  --love.graphics.draw(searchIcon, cx+vx-130, cy+vy-140)
   
-  love.graphics.draw(panelInset_brown, cx+vx-250, cy+vy-150)
-  love.graphics.draw(heroIcon, cx+vx-230, cy+vy-140)
+  --love.graphics.draw(panelInset_brown, cx+vx-250, cy+vy-150)
+  --love.graphics.draw(heroIcon, cx+vx-230, cy+vy-140)
   
   local cam = self.level:get_camera()
   local tableX = cam.pos.x+100
