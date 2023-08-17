@@ -96,6 +96,7 @@ love.frame = 0
 nuage.countPath = 1
 nuage.step = 0
 nuage.animationNuage = nil
+nuage.social = nil
                                                                   -- if angle between boundary normal
                                              -- and boid direction is less than this
                                              -- angle.
@@ -254,7 +255,7 @@ function nuage:init(level, parent_flock, x, y, z, dirx, diry, dirz)
   self.id = ID
   self.name = "Jean-Paul-"..ID
   ID = ID + 1
-  
+  self.social = 0
   -- orientation
   vector3.set(self.position, x, y, z)
   if dirx and diry and dirz then

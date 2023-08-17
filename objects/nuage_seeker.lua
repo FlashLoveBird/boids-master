@@ -251,20 +251,20 @@ function nu_sk:draw()
   --lg.setPointStyle("rough")
   lg.setPointSize(5)
   lg.setColor(255, 255, 255, 255)
-  lg.circle("line",p.x, p.y,30)
-  lg.circle("line", p.x, p.y, 10)
+  --lg.circle("line",p.x, p.y,30)
+  --lg.circle("line", p.x, p.y, 10)
   
   local t = self.target
  lg.setColor(255, 0, 0, 255)
   --lg.point(t.x, t.y)
-  lg.circle("line", t.x, t.y, 25)
+  --lg.circle("line", t.x, t.y, 25)
   
   local len = 20
   local d = self.direction
   local px, py = p.x + len * d.x, p.y + len * d.y
   lg.setColor(255, 255, 255, 255)
   lg.line(p.x, p.y, px, py)
-  lg.circle("line", p.x, p.y, 20)
+  --lg.circle("line", p.x, p.y, 20)
   
 end
 

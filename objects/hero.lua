@@ -569,6 +569,22 @@ activeFlock:get_boids_in_radius(x, y, 500, objects)
 	self.boidsIn = false
 end
 
+function hero:fear(activeFlock)
+local boidsIn = self.boidsIn
+local objects = {}
+local x = self.pos.x
+local y = self.pos.y
+activeFlock:get_boids_in_radius(x, y, 500, objects)
+	if #objects>0 then
+		for i=1,#objects do
+			if objects[i].boidType==5 then
+				objects[i]:set_panic(true)
+			end
+		end
+	end
+	self.boidsIn = false
+end
+
 function hero:setRandomPoints(mx, my, element)
 	--source point
 	local x = self.pos.x
@@ -608,18 +624,18 @@ function hero:setRandomPoints(mx, my, element)
 		
 	if element==2 then
 		local map = self.level:getTreeMap()
-		local newX = math.floor( dx / 64 ) + 1
-		local newY = math.floor( dy / 64 ) + 1
+		local newX = math.floor( dx / 32 ) + 1
+		local newY = math.floor( dy / 32 ) + 1
 		map[newX][newY] = self.level:addTree(newX,newY,state.flock)
 	elseif element==3 then
 		local map = self.level:getTreeMap()
-		local newX = math.floor( dx / 64 ) + 1
-		local newY = math.floor( dy / 64 ) + 1
+		local newX = math.floor( dx / 32 ) + 1
+		local newY = math.floor( dy / 32 ) + 1
 		map[newX][newY] = self.level:addBush(newX,newY,state.flock)
 		--map[cmx][cmy] = state.level:addBush(cmx,cmy,state.flock)
 		--map[cmx][cmy]:setState(true)
 		--map[cmx][cmy]:set_position(cmx,cmy)
-		state.level:setTreeMap(map)
+		--state.level:setTreeMap(map)
 		print('AJOUT BUSH')
 	end
 

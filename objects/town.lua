@@ -43,7 +43,7 @@ function tw:add_town(x, y, radius)
   local p = self.level_map:add_point_to_source_polygonizer(x, y, radius)
   self.sources[#self.sources + 1] = self:_new_town(x, y, radius, p)
   self:_calculate_total_area()
-  return p
+  return self
 end
 
 function tw:force_polygonizer_update()
@@ -58,8 +58,37 @@ function tw:set_update_rate(r)
   self.polygonizer_update_rate = r
 end
 
+function tw:getTree()
+	return self
+end
+
+function tw:getEmit()
+	return self
+end
+
+function tw:get_humans()
+	return 0
+end
+
+
+function tw:add_human()
+	
+end
+
+function tw:get_food()
+return 0
+end
+
+function tw:remove_human()
+
+end
+
 function tw:set_surface_threshold(thresh)
   self.surface_threshold = thresh
+end
+
+function tw:mousepressed(mx, my, button)
+	
 end
 
 function tw:remove_town(primitive)
@@ -105,6 +134,43 @@ function tw:_calculate_total_area()
   end
 end
 
+function tw:getType()
+	return 5
+end
+
+function tw:getNumEmits()
+	return 0
+end
+
+function tw:getNumboids()
+	return 0
+end
+
+function tw:getState()
+	return true
+end
+
+function tw:add_food()
+
+end
+
+function tw:try_egg()
+
+end
+
+function tw:add_wood()
+
+end
+
+function tw:add_water()
+
+end
+
+function tw:setFlock(flock)
+	local level = self.level
+	self.flock = flock
+end
+
 function tw:_update_area(dt)
   local sources = self.sources
   local bhash = self.boid_hash
@@ -124,11 +190,11 @@ function tw:_update_area(dt)
 		  if not bhash[objects[i]] and randomNb == 1 then
 			local dead = math.random(1,#objects)
 			--flock:pan(objects[i],s.x,s.y)
-		  else
-			if objects[i].waypoint.is_active then
-				local x, y , z = self.sources[1].x + math.random(-200,200), self.sources[1].y+ math.random(-200,200), 200
-				objects[i]:set_waypoint(x, y, z, 50, 80)
-			end
+		  elseif objects[i]:getObjectiv()~="goOut" and objects[i]:getObjectiv()~="goOnHomeWith" then
+				local x, y, z = objects[i]:get_position()
+				objects[i]:set_waypoint(x+math.random(-200,200), y+math.random(-200,200), math.random(50,1000),50,100)
+				objects[i]:unObstacleMe()
+				objects[i]:setObjectiv("goOut")
 		  end
 		end
 	end
@@ -177,7 +243,7 @@ function tw:draw()
   for i=1,#sources do
     local s = sources[i]
     lg.setColor(255, 255, 255, 255)
-    lg.circle("line", s.x, s.y, s.radius)
+    --lg.circle("line", s.x, s.y, s.radius)
 	love.graphics.draw(townGraphic, s.x-50, s.y-50)
     
     local sr = s.starting_radius

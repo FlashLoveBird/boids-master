@@ -161,7 +161,7 @@ function bfs:_update_area(dt)
 		if #objects>0 then
 			local randomNb = 1--math.random(0,1000)
 			for i=1,#objects do
-			  if not bhash[objects[i]] and objects[i].foodGrab<4 then
+			  if not bhash[objects[i]] and objects[i].foodGrab<50 then
 				count = count + 1
 				bhash[objects[i]] = true
 				objects[i]:grabFood(self.depletion_rate * 10 * dt)

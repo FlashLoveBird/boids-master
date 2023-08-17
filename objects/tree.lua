@@ -46,9 +46,11 @@ tree.emitWood = false
 tree.wood_source = nil
 tree.woodPrim = nil
 tree.food = 0
+tree.index = nil
+tree.life = 100
 
 local tree_mt = { __index = tree }
-function tree:new(level,i,flock, animationTreeInspire,animationTreeExpire,animationTreeBirth,animationBigTreeInspiree,animationBigTreeExpiree,animationOmbree,animationOmbreBirthe)
+function tree:new(level,i,flock, x, y, animationTreeInspire,animationTreeExpire,animationTreeBirth,animationBigTreeInspiree,animationBigTreeExpiree,animationOmbree,animationOmbreBirthe)
   local tree = setmetatable({}, tree_mt)
   tree.level_map = level:get_level_map()
   tree.level = level
@@ -65,8 +67,12 @@ function tree:new(level,i,flock, animationTreeInspire,animationTreeExpire,animat
   troncImg = love.graphics.newImage("images/home/tronc.png")
   troncImg = love.graphics.newImage("images/home/tronc.png")
   tree.name = "Arbre"..i
+  tree.index = i
   print('Arbe ajoute')
   print(tree.name)
+  tree.life = 1000
+  tree.x = x
+  tree.y = y
   treeGroSound = love.audio.newSource("sound/tree_gro.wav", "stream")
   return tree
 end
@@ -90,6 +96,18 @@ end
 
 function tree:getType()
 	return 1
+end
+
+function tree:getIndex()
+	return self.index
+end
+
+function tree:cutMe(value, human)
+	self.life = self.life - value
+	if self.life < 1 then
+		self.level:deleteTree(self.x, self.y, self.index)
+		human.body_graphic:set_cutWood(false)
+	end
 end
 
 function tree:initGraphics(animationTreeInspire,animationTreeExpire,animationTreeBirth,animationBigTreeInspiree,animationBigTreeExpiree,animationOmbree,animationOmbreBirthe)
@@ -156,17 +174,15 @@ if timeBirth > 100 and timeBigInspire == false and timeBigExpire == false then
 	self.timeInspire = false
 	self.timeExpire = false
 	self.tronc = self.tronc + dt*60
+	if self.tronc > 20 and self.tronc < 25 then
+		love.audio.play(treeGroSound)
+	end
 	
 	if animationBirth.currentTime >= animationBirth.duration then
 		self.animationBirth.currentTime = animationBirth.currentTime - animationBirth.duration
 		--self.animationOmbreBirth.currentTime = animationOmbreBirth.currentTime - animationOmbreBirth.duration
 		self.timeBigInspire = true
 		self.timeBigExpire = false
-		
-		if self.tronc > 20 and self.tronc < 25 then
-			love.audio.play(treeGroSound)
-			print(self.tronc)
-		end
 	end
 	if animationOmbreBirth.currentTime >= animationOmbreBirth.duration then
 		--self.animationBirth.currentTime = animationBirth.currentTime - animationBirth.duration
@@ -410,20 +426,19 @@ function tree:draw()
 		--love.graphics.draw(treeGraphicSelect, mx-50, my-64)
 	--end
 	
-	if drawInfo==true then
+	--[[if drawInfo==true then
 		lg.setColor(255, 255, 255, 255)
 		love.graphics.draw(treeGraphicSelect, mx-50, my-64)
 		lg.setColor(255, 255, 255, 255)
-		love.graphics.draw(bg, 1450, 200)
-		love.graphics.draw(tableImg, 1490, 220)
+		--love.graphics.draw(bg, mx-50, my-64)
+		--love.graphics.draw(tableImg, mx-50, my-64)
 		lg.setColor(0, 0, 0, 255)
-		lg.print(self.numEmits, 1600, 280)
+		lg.print(self.numEmits, mx, my)
 		--lg.print(numBoids, 1600, 300)
 		lg.print(food, 1600, 300)
-		
 	else
 		
-	end
+	end--]]
 	
 	--lg.setColor(255, 255, 255, 255)
 	--lg.draw(self.treeGraphic, mx-50, my-64)

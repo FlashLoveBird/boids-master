@@ -565,15 +565,26 @@ local animationOmbre = self:newAnimation(imageAnimationOmbre, 361, 376, 2)
 local animationOmbreBirth = self:newAnimation(imageAnimationOmbreBirth, 189, 376, 8)
 print('treeeeemap')
 print(x,y)
-local te = tree:new(self,self.nbTree,flock,animationTreeInspire,animationTreeExpire,animationTreeBirth,animationBigTreeInspire,animationBigTreeExpire,animationOmbre,animationOmbreBirth)
+local te = tree:new(self,self.nbTree,flock, x, y, animationTreeInspire,animationTreeExpire,animationTreeBirth,animationBigTreeInspire,animationBigTreeExpire,animationOmbre,animationOmbreBirth)
 self.treeMap[x][y]=te
 
 self.trees[#self.trees + 1] = te
 
 --self.treeMap[x][y]= te
-
+print("Je suis arbre numéro")
+print(self.nbTree + 1)
 self.pollution = self.pollution - 1
 return te
+end
+
+function level:deleteTree(x, y, i)
+self.nbTree = self.nbTree - 1
+self.treeMap[x][y]=nil
+
+self.trees[i] = nil
+--self.treeMap[x][y]= te
+
+self.pollution = self.pollution + 1
 end
 
 function level:addRock(x,y)
@@ -846,8 +857,7 @@ function level:draw()
 	end
   end
   
-  if treeSelect then
-		
+  --[[if treeSelect then
 		lg.setColor(255, 255, 255, 255)
 		love.graphics.draw(bg, 1450, 200)
 		love.graphics.draw(tableImg, 1490, 220)
@@ -858,7 +868,7 @@ function level:draw()
 			lg.print(nbBoids, 1600, 320)
 		end
   end
-  self.camera:draw()
+  --self.camera:draw()
   --[[if self.nbEggs>0 then
 		for i=1,self.nbEggs do
 			if self.eggs[i] ~= nil and self.eggs[i].eclose==false then

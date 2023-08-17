@@ -24,6 +24,7 @@ local music = nil
 local music_2 = nil
 local nbNids = 0
 local playIntro = false
+local tableAnimRessources = {}
 
 
 local Shadows = require("shadows")
@@ -34,6 +35,9 @@ local PolygonShadow = require("shadows.ShadowShapes.PolygonShadow")
 local CircleShadow = require("shadows.ShadowShapes.CircleShadow")
 local newLight = nil
 local newBody = nil
+local inkReserveImg = nil
+local inkReserve = 100
+local boidCostInk = 5
 
 --##########################################################################--
 --[[----------------------------------------------------------------------]]--
@@ -125,89 +129,87 @@ function food_demo_state.mousepressed(x, y, button)
     local button = buttons[state.selectItem]
 	if button then
 		food_demo_state.toggle_button(button)
-		state.selectItem = 0
 	end
+	state.selectItem = 0
+	state.level:get_mouse():setColor(0,0,0)
   end
   
+  if inkReserve > boidCostInk - 1 then
   ------------------------------------------------------------------AJOUT BOIS
   --[[local p = state.wood_source:add_wood(mx, my, 200)
   state.wood_source:force_polygonizer_update()--]]
-  cmx = math.floor(mx /64)
-  cmy = math.floor(my /64)
+  cmx = math.floor(mx /32)
+  cmy = math.floor(my /32)
  
-  if button == 1 and state.selectItem == 3 then
-	if mx > 5 and mx < 25600 and my > 5 and my < 25600 then
-		if state.level:canILandHere(cmx,cmy,10) then
+	  if button == 1 and state.selectItem == 3 then
+		if mx > 5 and mx < 25600 and my > 5 and my < 25600 then
+			if state.level:canILandHere(cmx,cmy,10) then
+				--state.hero:putEgg(mx-25,my-25,0)
+				--state.hero:setRandomPoints(mx,my,0)
+				--love.audio.play(intro)
+				--playIntro = true
+				state.hero:goDirection(7, mx, my, 0)
+				inkReserve = inkReserve - boidCostInk
+			end
+		end
+		
+	  end
+	  if cmx > 5 and cmx < 800 and cmy > 5 and cmy < 800 and state.level:canILandHere(cmx,cmy,10) then
+		  if button == 1 and state.selectItem == 1 then
+			--map[cmx][cmy] = state.level:addBush(cmx,cmy,state.flock)
+			--map[cmx][cmy]:setState(true)
+			--map[cmx][cmy]:set_position(cmx,cmy)
+			--state.level:setTreeMap(map)
+			state.hero:goDirection(7, mx,my,3)
+			--state.hero:setRandomPoints(mx,my,3)
+			
+			local level = state.level
+			local level_map = level:get_level_map()
+			local tilemap = level_map:get_tile_map()
+			
+			local mapSave = level:getTreeMapSave()
+			
+			save = {mapSave}
+			bitser.dumpLoveFile('save.dat', mapSave)
+			inkReserve = inkReserve - boidCostInk * 2
+			--local data = bitser.dumps(map(1))
+			--local instance = bitser.loads(data)
+			--map[mx][my]:setFlock(state.flock)
+		  end
+		   if button == 1 and state.selectItem == 2 then   
+			cmx = math.floor(mx /32)
+			cmy = math.floor(my /32)
+			--state.hero:setRandomPoints(mx,my,2)		
+			state.hero:goDirection(7,mx,my,2)
+			inkReserve = inkReserve - boidCostInk * 2
+			--state.level:spawn_cube_explosion(200, 200, 200, 300, 300)
+		  end
+		  if button == 1 and state.selectItem == 5 then
+			cmx = math.floor(mx /32)
+			cmy = math.floor(my /32)
 			--state.hero:putEgg(mx-25,my-25,0)
-			--state.hero:setRandomPoints(mx,my,0)
-			--love.audio.play(intro)
-			--playIntro = true
-			state.hero:goDirection(7, mx, my, 0)
-		end
+			--state.hero:setRandomPoints(mx,my,4) -- 0 = boid
+			
+			local level_map = state.level:get_level_map()
+			local p = level_map:add_point_to_polygonizer(mx, my, 500)
+			level_map:update_polygonizer()
+			state.level:addRock(cmx,cmy)
+			state.primitives[#state.primitives + 1] = p
+			if #state.primitives == 1 then
+			  --state.start_fade()
+			end
+		  end
+		  if button == 1 and state.selectItem == 4 then
+			cmx = math.floor(mx /32)
+			cmy = math.floor(my /32)
+			if state.level:canILandHere(cmx,cmy,10) then
+				--state.hero:putEgg(mx-25,my-25,0)
+				--state.hero:setRandomPoints(mx,my,0) -- 0 = boid
+				state.hero:goDirection(7,mx,my,0)
+			end
+		  end  
+	  end
 	end
-	
-  end
-  if button == 1 and state.selectItem == 1 then
-	if cmx > 5 and cmx < 800 and cmy > 5 and cmy < 800 and state.level:canILandHere(cmx,cmy,10) then
-		--map[cmx][cmy] = state.level:addBush(cmx,cmy,state.flock)
-		--map[cmx][cmy]:setState(true)
-		--map[cmx][cmy]:set_position(cmx,cmy)
-		--state.level:setTreeMap(map)
-		state.hero:goDirection(7, mx,my,3)
-		--state.hero:setRandomPoints(mx,my,3)
-		
-		local level = state.level
-		local level_map = level:get_level_map()
-		local tilemap = level_map:get_tile_map()
-		
-		local mapSave = level:getTreeMapSave()
-		
-		save = {mapSave}
-		bitser.dumpLoveFile('save.dat', mapSave)
-		
-		--local data = bitser.dumps(map(1))
-		--local instance = bitser.loads(data)
-	end
-	--map[mx][my]:setFlock(state.flock)
-  end
-   if button == 1 and state.selectItem == 2 then   
-	cmx = math.floor(mx /32)
-	cmy = math.floor(my /32)
-	if state.level:canILandHere(cmx,cmy,10) then
-		--state.hero:setRandomPoints(mx,my,2)		
-		state.hero:goDirection(7,mx,my,2)
-		--state.level:spawn_cube_explosion(200, 200, 200, 300, 300)
-	end
-  end
-  if button == 1 and state.selectItem == 5 then
-	cmx = math.floor(mx /32)
-	cmy = math.floor(my /32)
-	if state.level:canILandHere(cmx,cmy,10) then
-		--state.hero:putEgg(mx-25,my-25,0)
-		--state.hero:setRandomPoints(mx,my,4) -- 0 = boid
-		
-		local level_map = state.level:get_level_map()
-		local p = level_map:add_point_to_polygonizer(mx, my, 500)
-		level_map:update_polygonizer()
-		state.level:addRock(cmx,cmy)
-		state.primitives[#state.primitives + 1] = p
-		if #state.primitives == 1 then
-		  --state.start_fade()
-		end
-	end
-  end
-  if button == 1 and state.selectItem == 4 then
-	if mx > 5 and mx < 6400 and my > 5 and my < 6400 then
-		cmx = math.floor(mx /32)
-		cmy = math.floor(my /32)
-		if state.level:canILandHere(cmx,cmy,10) then
-			--state.hero:putEgg(mx-25,my-25,0)
-			--state.hero:setRandomPoints(mx,my,0) -- 0 = boid
-			state.hero:goDirection(7,mx,my,0)
-		end
-	end
-  end  
-  
 end
 food_demo_state.toggle_button = function(b)
   --local boids = state.flock.active_boids
@@ -217,7 +219,10 @@ food_demo_state.toggle_button = function(b)
 	myText = b.text
     --local boid = boids[i]
     if     b.toggle == false then
-			
+		for i=1,#state.buttons-6 do
+			local b = state.buttons[i]
+			b.toggle = false
+		end	
       if b.text == "bush" then
         state.selectItem = 1
 		state.level:get_mouse():set_input("bush")
@@ -247,7 +252,7 @@ food_demo_state.toggle_button = function(b)
 	   intro:setPitch(1)
 		speedTime = 1
 		--love.audio.play(intro)
-		state.selectItem = 50
+		state.selectItem = 0
       elseif b.text == "fullscreen" and escape then
 		if love.window.getFullscreen()==true then
 			lw.setFullscreen(false)
@@ -269,6 +274,7 @@ food_demo_state.toggle_button = function(b)
       end
     elseif b.toggle == true then
 	  state.level:get_mouse():set_input(nil)
+	  
       if     b.text == "bush" then
         state.selectItem = 1
       elseif b.text == "tree" then
@@ -342,7 +348,10 @@ function food_demo_state.createTown(x, y, r)
 	if #state.primitives == 1 then
 	  state.start_fade()
 	end
-
+	local level = state.level:getTreeMap()
+	local x = math.floor(x/32)
+	local y = math.floor(y/32)
+	level[x][y] = p
 end
 
 function food_demo_state.mousereleased(x, y, button)
@@ -487,8 +496,19 @@ function food_demo_state.load(level)
  
   button = lg.newImage("images/Jungle/upgrade/btn.png")
   buttonpress = lg.newImage("images/Jungle/upgrade/btn-push.png")
-  panelImg = lg.newImage("images/PNG/panel_beige.png")
+  --panelImg = lg.newImage("images/PNG/panel_beige.png")
+  panelImg1 = state.newAnimation(love.graphics.newImage("images/PNG/panel_beige.png"), 102, 101, 7)
+  panelImg2 = state.newAnimation(love.graphics.newImage("images/PNG/panel_beige.png"), 102, 101, 7)
+  panelImg3 = state.newAnimation(love.graphics.newImage("images/PNG/panel_beige.png"), 102, 101, 7)
+  
+  table.insert(tableAnimRessources, panelImg1)
+  table.insert(tableAnimRessources, panelImg2)
+  table.insert(tableAnimRessources, panelImg3)
+  
+  inkReserveImg = state.newAnimation(love.graphics.newImage("images/ui/reserve-ink.png"), 93, 139, 9)
+  
   foodIcon = lg.newImage("images/ui/food.png")
+  woodIcon = lg.newImage("images/ui/wood_icon.png")
   nbBoidsIcon = lg.newImage("images/ui/nbBoids.png")
  
   birdIcon = lg.newImage("images/env/bird.png")
@@ -506,7 +526,9 @@ function food_demo_state.load(level)
   pause = lg.newImage("images/Black/1x/pause.png")
   play = lg.newImage("images/Black/1x/forward.png")
   fastforward = lg.newImage("images/Black/1x/fastForward.png")
-  fullscreen = lg.newImage("images/Black/1x/smaller.png")
+  fullscreen = lg.newImage("images/ui/fullscreen.png")
+  exitIcon = lg.newImage("images/ui/exit.png")
+  retryIcon = lg.newImage("images/ui/retry.png")
   width = pause:getWidth()
   height = pause:getHeight()
   
@@ -540,7 +562,8 @@ function food_demo_state.load(level)
 local target = vector2:new(1000, 1000)
 local cam = state.level:get_camera()
 
-
+human = state.flock:add_human()
+human2 = state.flock:add_human()
 	
 	for x=5, 800 do--Poly.rows-5 do
 		for y=5, 800 do--Poly.cols-5 do
@@ -596,7 +619,7 @@ local cam = state.level:get_camera()
 				if level[caseX][caseY]~=nil then
 					if count<nbNids and level[caseX][caseY]:getNumEmits()==0 and level[caseX][caseY].table=="tree" then
 						print('ajout de nid')
-						local emit = state.level:addHome(randX-35,randY-60,10,10,0,state.flock,state.level,100,0)
+						local emit = state.level:addHome(randX-35,randY-60,10,10,0,state.flock,state.level,10,0)
 						level[caseX][caseY]:add(emit)
 						level[caseX][caseY]:setNumEmits(1)
 						count = count + 1
@@ -639,9 +662,9 @@ local cam = state.level:get_camera()
 						cam:set_target(target,true)
 						
 					end
-					if math.random(1,1000)==1 and caseX<160 and caseY<160 and caseX>40 and caseY>40 and countTown<1 then
-						local randX = 32*x
-						local randY = 32*y
+					if caseX<160 and caseY<160 and caseX>40 and caseY>40 and countTown<1 then
+						local randX = 62*x
+						local randY = 62*y
 						countTown = countTown + 1
 						food_demo_state.createTown(randX,randY,100)
 						--food_demo_state.createTown(randX,randY,100)
@@ -688,13 +711,30 @@ local cam = state.level:get_camera()
 	music = love.audio.newSource("sound/airtone_-_peaceOut.mp3", "stream")
 	music_2 = love.audio.newSource("sound/airtone_-_bluenotes_6.mp3", "stream")
 	music:setVolume(0.7)
-	love.audio.play(music)
+	--love.audio.play(music)
 	
 	level_map:setWallMap()
 	
 	
 	intro = love.audio.newSource("sound/intro.mp3", "stream")
 	intro:setVolume(0.1)
+end
+
+function food_demo_state.newAnimation(image, width, height, duration)
+   local animation = {}
+   animation.spriteSheet = image;
+   animation.quads = {};
+
+    for y = 0, image:getHeight() - height, height do
+        for x = 0, image:getWidth() - width, width do
+            table.insert(animation.quads, love.graphics.newQuad(x, y, width, height, image:getDimensions()))
+        end
+    end
+
+    animation.duration = duration or 1
+    animation.currentTime = 0
+	
+	return animation
 end
 
 function food_demo_state.getTreeAround(caseX, caseY, radius)
@@ -1005,6 +1045,75 @@ function food_demo_state.update(dt)
   food = state.level:getFood()
   wood = state.level:getWood()
   nbBoids,nbBoidsPrey,nbBoidsPred = state.level:getBoids()
+  
+	if nbBoids > 150 then
+		tableAnimRessources[1].currentTime = 6
+	elseif nbBoids > 100 then
+		tableAnimRessources[1].currentTime = 5
+	elseif nbBoids > 50 then
+		tableAnimRessources[1].currentTime = 4
+	elseif nbBoids > 30 then
+		tableAnimRessources[1].currentTime = 3
+	elseif nbBoids > 10 then
+		tableAnimRessources[1].currentTime = 2
+	elseif nbBoids > 1 then
+		tableAnimRessources[1].currentTime = 1
+	elseif nbBoids < 1 then
+		tableAnimRessources[1].currentTime = 0
+	end
+	
+	if food > 90 then
+		tableAnimRessources[2].currentTime = 6
+	elseif food > 70 then
+		tableAnimRessources[2].currentTime = 5
+	elseif food > 50 then
+		tableAnimRessources[2].currentTime = 4
+	elseif food > 30 then
+		tableAnimRessources[2].currentTime = 3
+	elseif food > 10 then
+		tableAnimRessources[2].currentTime = 2
+	elseif food > 1 then
+		tableAnimRessources[2].currentTime = 1
+	elseif food < 1 then
+		tableAnimRessources[2].currentTime = 0
+	end
+	
+	if wood > 90 then
+		tableAnimRessources[3].currentTime = 6
+	elseif wood > 70 then
+		tableAnimRessources[3].currentTime = 5
+	elseif wood > 50 then
+		tableAnimRessources[3].currentTime = 4
+	elseif wood > 30 then
+		tableAnimRessources[3].currentTime = 3
+	elseif wood > 10 then
+		tableAnimRessources[3].currentTime = 2
+	elseif wood > 1 then
+		tableAnimRessources[3].currentTime = 1
+	elseif wood < 1 then
+		tableAnimRessources[3].currentTime = 0
+	end
+	
+	if inkReserve > 90 then
+		inkReserveImg.currentTime = 8
+	elseif inkReserve > 80 then
+		inkReserveImg.currentTime = 7
+	elseif inkReserve > 60 then
+		inkReserveImg.currentTime = 6
+	elseif inkReserve > 40 then
+		inkReserveImg.currentTime = 5
+	elseif inkReserve > 30 then
+		inkReserveImg.currentTime = 4
+	elseif inkReserve > 20 then
+		inkReserveImg.currentTime = 3
+	elseif inkReserve > 10 then
+		inkReserveImg.currentTime = 2
+	elseif inkReserve > 1 then
+		inkReserveImg.currentTime = 1
+	elseif inkReserve < 1 then
+		inkReserveImg.currentTime = 0
+	end
+  
   --love.audio.play(musique)
   
 end
@@ -1136,22 +1245,30 @@ function food_demo_state.draw()
   
   lg.setFont(FONTS.courier_small)
   lg.setColor(255, 255, 255, 255)
-  lg.draw(panelImg, 10, 10)
-  lg.draw(panelImg, 120, 10)
-  lg.draw(panelImg, 240, 10)
+  --lg.draw(panelImg, 10, 10)
+  --lg.draw(panelImg, 120, 10)
+  --lg.draw(panelImg, 240, 10)
   
+  for i = 1, #tableAnimRessources do
+	local spriteNum = math.floor( tableAnimRessources[i].currentTime /  tableAnimRessources[i].duration * #tableAnimRessources[i].quads) + 1
+	love.graphics.draw(tableAnimRessources[i].spriteSheet,  tableAnimRessources[i].quads[spriteNum], i*120, 10)
+  end
   
+  local spriteNum = math.floor( inkReserveImg.currentTime /  inkReserveImg.duration * #inkReserveImg.quads) + 1
+  love.graphics.draw(inkReserveImg.spriteSheet,  inkReserveImg.quads[spriteNum], vx-125, vy-150)
   
   lg.setColor(255, 255, 255, 255)
   
   local width = vx
   local height = vy
   
-  lg.draw(foodIcon, 120, 30)
-  lg.draw(nbBoidsIcon, 225, 35)
+  lg.draw(foodIcon, 235, 25)
+  lg.draw(nbBoidsIcon, 120, 30)
+  lg.draw(woodIcon, 345, 30)
   lg.setColor(0, 0, 0, 255)
   lg.print(food, 160, 45)
-  lg.print(nbBoids, 285, 45)
+  --lg.print(nbBoids, 285, 45)
+
   --lg.print(nbBoids, 50, 180)
   --lg.print(nbBoidsPrey, 125, 170)
   --lg.print(nbBoidsPred, 125, 130)
@@ -1163,17 +1280,21 @@ function food_demo_state.draw()
   
   if escape then
 	lg.draw(menuFond, actionX+vx/3,vy/4)
-	lg.draw(button, actionX+vx/2-220,vy/3-20)
-	lg.draw(fullscreen, actionX+vx/2-200,vy/3)
+	lg.draw(button, actionX+vx/2-210,vy/3-10)
+	lg.draw(fullscreen, actionX+vx/2-195,vy/3)
 	lg.setFont(FONTS.muli)
-	lg.setColor(0, 0, 0, 255)
-	lg.print("Recommencer la partie", actionX+vx/2-200,vy/3+100)
-	lg.print("Quitter le jeu", actionX+vx/2-200,vy/3+200)
+	--lg.setColor(0, 0, 0, 255)
+	--lg.print("Recommencer la partie", actionX+vx/2-200,vy/3+100)
+	lg.draw(button, actionX+vx/2-210,vy/3+90)
+	lg.draw(retryIcon, actionX+vx/2-195,vy/3+110)
+	lg.draw(button, actionX+vx/2-210,vy/3+190)
+	lg.draw(exitIcon, actionX+vx/2-195,vy/3+208)
+	--lg.print("Quitter le jeu", actionX+vx/2-200,vy/3+200)
   end
   
   if state.selectItem ~=0 then
-	local cmx = math.floor(mx/64)
-	local cmy = math.floor(my/64)
+	local cmx = math.floor(mx/32)
+	local cmy = math.floor(my/32)
 	
 	if state.level:canILandHere(cmx,cmy,10) then
 		mouse:setColor(0,0,0)

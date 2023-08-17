@@ -233,7 +233,7 @@ function be:_get_spawn_point()
   return x, y, z
 end
 
-function be:_emit_boid(boidType,index,needHome,free)
+function be:_emit_boid(boidType,index,needHome,free,speed)
   if not self.is_active then return end
   if self.boid_count >= self.boid_limit then return end
   if self.nbEgg <= 0 then return end
@@ -256,17 +256,17 @@ function be:_emit_boid(boidType,index,needHome,free)
   if free==true then
     local dx, dy, dz = random_direction3()
 	if boidType == 0 then
-		boid = self.flock:add_boid(x, y, z, dx, dy, dz, true, self.gradient)
+		boid = self.flock:add_boid(x, y, z, dx, dy, dz, true, self.gradient,speed)
 	else
-		boid = self.flock:add_predator(x, y, z, dx, dy, dz, true, self.gradient)
+		boid = self.flock:add_predator(x, y, z, dx, dy, dz, true, self.gradient,speed)
 	end
 	self.active_boids[#self.active_boids + 1] = boid
 	boid.myIdTable = #self.active_boids
   else
 	if boidType == 0 then
-		boid = self.flock:add_boid(x, y, z, dir.x, dir.y, dir.z, false, self.gradient)
+		boid = self.flock:add_boid(x, y, z, dir.x, dir.y, dir.z, false, self.gradient,speed)
 	else
-		boid = self.flock:add_predator(x, y, z, dir.x, dir.y, dir.z, false, self.gradient)
+		boid = self.flock:add_predator(x, y, z, dir.x, dir.y, dir.z, false, self.gradient,speed)
 	end
 	self.active_boids[#self.active_boids + 1] = boid
 	boid.myIdTable = #self.active_boids
@@ -394,7 +394,7 @@ end
 ------------------------------------------------------------------------------
 function be:draw()
   if not self.is_active then return end
-  local x, y = self.position.x, self.position.y-50
+  local x, y = self.position.x-20, self.position.y-50
   --[[lg.setColor(255, 0, 0, 255)
   lg.setPointSize(5)
   lg.points(x, y)

@@ -32,6 +32,7 @@ egg.animationBird = nil
 egg.eggImg = nil
 egg.crack = nil
 egg.crackSound = false
+egg.speed = 20
 
 local egg_mt = { __index = egg }
 function egg:new(boidEmit,index,flock,needHome,free,x,y,z,level,boidType)
@@ -57,10 +58,22 @@ end
 
 function egg:initAnim(level,boidType)
   self.animationEclose = self:newAnimation(love.graphics.newImage("images/egg.png"), 192, 113, 10)
-  self.animationBird = self:newAnimation(love.graphics.newImage("images/bird.png"), 56.5, 121, 10)
+  self.animationBird = self:newAnimation(love.graphics.newImage("images/bird.png"), 85.5, 115, 10)
   self.eggImg = love.graphics.newImage("images/origami/rock-sheet0.png")
   
   self.level = level
+  
+  local rand = math.random(1,4)
+  
+  if rand == 1 then
+	self.eggSound = love.audio.newSource("sound/pencil-1.mp3", "stream")
+  elseif rand == 2 then
+	self.eggSound = love.audio.newSource("sound/pencil-2.mp3", "stream")
+  elseif rand == 3 then
+	self.eggSound = love.audio.newSource("sound/pencil-3.mp3", "stream")
+  else
+	self.eggSound = love.audio.newSource("sound/pencil-4.mp3", "stream")
+  end
   
   --self.crack = love.audio.newSource("sound/egg-crack.wav", "stream")
   --self.crack:setVolume(0.3)
@@ -98,6 +111,7 @@ function egg:update(dt)
 	local timeLoc = self.level.master_timer:get_time()
 	local animationEclose = self.animationEclose
 	local animationBird = self.animationBird
+	local speed = self.speed
 
 	if hour_birth>100 and eclose==false and (timeLoc<70 or timeLoc>100) then --hour_birth>math.random(3000,10000) and eclose==false then
 		if self.crackSound == false then
@@ -113,7 +127,7 @@ function egg:update(dt)
 			--self.crackSound = true
 		end
 		if boidEmit then
-			boidEmit:_emit_boid(boidType,index,needHome,free)
+			boidEmit:_emit_boid(boidType,index,needHome,free,speed)
 			self.eclose = true
 		elseif self.ecloseAnim == false then
 			animationEclose.currentTime = animationEclose.currentTime + dt
@@ -122,14 +136,17 @@ function egg:update(dt)
 			end
 		end
 		if animationEclose.currentTime > 9 then
+			self.ecloseAnim = true
+			love.audio.play(self.eggSound)
 			if boidType == 0 then
-				local dx, dy, dz = random_direction3()
-				flock:add_boid(x, y, z, dx, dy, dz, free)
-				self.eclose = true
-				self.ecloseAnim = true
 				animationBird.currentTime = animationBird.currentTime + dt
 				if animationBird.currentTime >= animationBird.duration then
 					self.animationBird.currentTime = animationBird.currentTime - animationBird.duration
+				end
+				if animationBird.currentTime > 9 then
+					local dx, dy, dz = random_direction3()
+					flock:add_boid(x, y, z, dx, dy, dz, free, nil, speed)
+					self.eclose = true
 				end
 			elseif boidType == 1 then
 				local dx, dy, dz = random_direction3()
@@ -137,8 +154,8 @@ function egg:update(dt)
 				self.eclose = true
 			elseif boidType == 2 then
 				local map = self.level:getTreeMap()
-				local newX = math.floor( x /64  ) + 1
-				local newY = math.floor( y /64 ) + 1
+				local newX = math.floor( x /32  ) + 1
+				local newY = math.floor( y /32 ) + 1
 				--map[newX][newY] = self.level:addTree(newX,newY)
 				map[newX][newY]:add(nil)
 				map[newX][newY]:setNumEmits(0)
@@ -149,8 +166,8 @@ function egg:update(dt)
 				self.eclose = true
 			elseif boidType == 3 then
 				local map = self.level:getTreeMap()
-				local newX = math.floor( x /64 ) + 1
-				local newY = math.floor( y /64 ) + 1
+				local newX = math.floor( x /32 ) + 1
+				local newY = math.floor( y /32 ) + 1
 				--map[newX][newY] = self.level:addTree(newX,newY)
 				map[newX][newY]:add(nil)
 				map[newX][newY]:setState(true)

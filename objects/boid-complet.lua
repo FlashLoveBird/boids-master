@@ -1236,7 +1236,7 @@ function bd:draw_debug()
   
   -- sight
   lg.setColor(0, 0, 0, 255)
-  lg.circle("line", x1, y1, self.sight_radius)
+  --lg.circle("line", x1, y1, self.sight_radius)
   
   
   -- neigbours in view
@@ -1314,8 +1314,8 @@ function bd:draw_debug()
     lg.circle("fill", x, y, r1)
     
     lg.setColor(255, 0, 0, 255)
-    lg.circle("line", x, y, r1)
-    lg.circle("line", x, y, r2)
+    --lg.circle("line", x, y, r1)
+    --lg.circle("line", x, y, r2)
   end
   
   

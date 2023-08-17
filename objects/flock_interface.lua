@@ -42,11 +42,19 @@ function fi:new(level, parent_flock)
   foodIcon = love.graphics.newImage("images/ui/food.png")
   energyIcon = love.graphics.newImage("images/ui/energy.png")
   ageIcon = love.graphics.newImage("images/ui/age.png")
+  socialIcon = love.graphics.newImage("images/ui/age.png")
   sexMIcon = love.graphics.newImage("images/ui/sexM.png")
   sexFIcon = love.graphics.newImage("images/ui/sexF.png")
   homeIcon = love.graphics.newImage("images/ui/home.png")
+  nohomeIcon = love.graphics.newImage("images/ui/no-home.png")
   loveIcon = love.graphics.newImage("images/ui/love.png")
   barre = love.graphics.newImage("images/ui/barre.png")
+  rabbitIcon = love.graphics.newImage("images/ui/rabbitIcon.png")
+  turtleIcon = love.graphics.newImage("images/ui/turtleIcon.png")
+  sablePleinIcon = love.graphics.newImage("images/ui/sablier-plein.png")
+  sableVideIcon = love.graphics.newImage("images/ui/sablier-vide.png") 
+  barre2 = love.graphics.newImage("images/ui/barre2.png")
+  rondBlanc = love.graphics.newImage("images/ui/rond-blanc.png")  
   
   panelInset_brown = love.graphics.newImage("images/PNG/panelInset_beigeLight.png")
   searchIcon = love.graphics.newImage("images/Colored/genericItem_color_111.png")
@@ -85,6 +93,8 @@ elseif fi.hero ~= nil and key =="space" and fi.hero.boidsIn==true then
 	fi.hero:release(self.flock)
 elseif fi.hero ~= nil and key =="f" then
 	fi.hero:wakeUp(self.flock)
+elseif fi.hero ~= nil and key =="r" then
+	fi.hero:fear(self.flock)
 end
 end
 function fi:mousepressed(x, y, button)
@@ -337,8 +347,8 @@ function fi:_draw_add_boid_preview()
   
   lg.setColor(255, 0, 0, 255)
   local r = 3
-  lg.circle("line", x1, y1, r)
-  lg.circle("line", x2, y2, r)
+  --lg.circle("line", x1, y1, r)
+  --lg.circle("line", x2, y2, r)
   lg.setLineWidth(1)
   lg.setColor(255, 0, 0, 100)
   lg.line(x1, y1, x2, y2)
@@ -405,36 +415,44 @@ function fi:_draw_selected_boids()
 		local tableY = cam.pos.y+180
 		local hunger = math.floor(b.hunger)
 		local tired = math.floor(b.tired)
+		local social = math.floor(b.social)
 		lg.setColor(255, 255, 255, 255)
 		love.graphics.draw(bg, cam.pos.x+camWi-400, cam.pos.y+100)
 		love.graphics.draw(tableImg, cam.pos.x+camWi-350, cam.pos.y+120)
-		
+		lg.setColor(0, 0, 0, 255)
+		love.graphics.rectangle("fill", tableX+10,tableY+10, hunger,25)
+		love.graphics.rectangle("fill", tableX+10,tableY+60, tired,25)
+		love.graphics.rectangle("fill", tableX+10,tableY+100, social,25)
+		lg.setColor(255, 255, 255, 255)
 		love.graphics.draw(barre, tableX, tableY-10)
 		love.graphics.draw(barre, tableX, tableY+40)
 		love.graphics.draw(barre, tableX, tableY+80)
 		
-		love.graphics.draw(energyIcon, tableX, tableY+50)
+		love.graphics.draw(energyIcon, tableX-10, tableY+50)
 		love.graphics.draw(foodIcon, tableX, tableY)
-		love.graphics.draw(ageIcon, tableX, tableY+90)
+		love.graphics.draw(socialIcon, tableX-10, tableY+90)
 		--love.graphics.draw(sexIcon, tableX+120, tableY)
 		
 		if b.needHome == true then
-			love.graphics.draw(homeIcon, tableX+150, tableY+100)
+			love.graphics.draw(nohomeIcon, tableX+150, tableY+50)
+		else
+			love.graphics.draw(homeIcon, tableX+150, tableY+50)
 		end
 		
 		lg.setColor(0, 0, 0, 255)
 		--lg.circle("line", x, y, r)
 		lg.print(b.name, tableX+70, tableY-30)
-		lg.print(hunger, tableX+50, tableY+10)
-		lg.print(tired, tableX+50, tableY+60)
-		lg.print(b.age, tableX+50, tableY+110)
+		--lg.print(hunger, tableX+50, tableY+10)
+		--lg.print(tired, tableX+50, tableY+60)
+		--lg.print(b.age, tableX+50, tableY+110)
 		lg.setColor(255, 255, 255, 255)
 		if b.sex == true then
 			--lg.print("Mâle", tableX+170, tableY+10)
-			love.graphics.draw(sexMIcon, tableX+170, tableY)
+			love.graphics.draw(sexMIcon, tableX+160, tableY)
 		else
-			love.graphics.draw(sexFIcon, tableX+170, tableY)
+			love.graphics.draw(sexFIcon, tableX+160, tableY)
 		end
+		lg.setColor(0, 0, 0, 255)
 		lg.print("Objectif :", tableX+120, tableY+50)
 		lg.print(b.objectiv, tableX+120, tableY+70)
 		
@@ -456,14 +474,25 @@ function fi:_draw_selected_boids()
 			--lg.print("En couple avec :", tableX, tableY)
 			lg.print(b.lover.name, tableX, tableY+20)
 		else
-			lg.print("Pas de relation", tableX, tableY)
+			--lg.print("Pas de relation", tableX, tableY)
 		end
-		lg.print("is_initialized ?", tableX, tableY+60)
-		lg.print(tostring(b.is_initialized), tableX, tableY+80)
+		--lg.print("is_initialized ?", tableX, tableY+60)
+		--lg.print(tostring(b.is_initialized), tableX, tableY+80)
 		
-		lg.print("is_inHome ?", tableX, tableY+100)
-		lg.print(tostring(b.inHome), tableX, tableY+120)
+		--lg.print("is_inHome ?", tableX, tableY+100)
+		--lg.print(tostring(b.inHome), tableX, tableY+120)
+		lg.setColor(255, 255, 255, 255)
+		--love.graphics.rectangle("fill", tableX+10,tableY+10, hunger,25)
+		--love.graphics.draw(barre, tableX, tableY+10)
+		love.graphics.draw(barre2, tableX+30, tableY+30)
+		love.graphics.draw(rondBlanc, tableX+150, tableY+25)
+		love.graphics.draw(turtleIcon, tableX-10, tableY)
+		love.graphics.draw(rabbitIcon, tableX+180, tableY-10)
 		
+		love.graphics.draw(barre2, tableX+30, tableY+110)
+		love.graphics.draw(rondBlanc, tableX+150, tableY+105)
+		love.graphics.draw(sablePleinIcon, tableX, tableY+80)
+		love.graphics.draw(sableVideIcon, tableX+200, tableY+80)
 		
 		--lg.print(tostring(b.needHome), cam.pos.x+1500, cam.pos.y+620)
 		

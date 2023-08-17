@@ -80,6 +80,10 @@ loader.load_objects = function()
   nouage = require("objects/nuage")
   nuage_seeker = require("objects/nuage_seeker")
   
+  human = require("objects/human")
+  human_graphic = require("objects/human_graphic")
+  human_seeker = require("objects/human_seeker")
+  
 end
 
 return loader

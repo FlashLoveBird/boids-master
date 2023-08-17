@@ -70,6 +70,8 @@ function fk:new(level, boidType, x, y, width, height, depth)
   fk.illuFloor6 = lg.newImage("images/home/bird-sleep6.png")
   fk.illuFloor7 = lg.newImage("images/home/bird-sleep7.png")
   
+  fk.illuFloor8 = lg.newImage("images/human_images/floor.png")
+  
   return fk
 end
 
@@ -132,7 +134,7 @@ function fk:set_camera_tracking_on()
   self.user_interface:set_camera_tracking_on()
 end
 
-function fk:add_boid(x, y, z, dirx, diry, dirz, free, gradient)
+function fk:add_boid(x, y, z, dirx, diry, dirz, free, gradient, speed)
   z = z or 0
   if not x or not y then
     print("ERROR in flock:add_boid - no position specified")
@@ -148,7 +150,7 @@ function fk:add_boid(x, y, z, dirx, diry, dirz, free, gradient)
     new_boid = boid:new(self.level)
 	self.level:setBoids(1)
   end
-  new_boid:init(self.level, self, x, y, z, dirx, diry, dirz, free, self.sing1, self.sing2, self.sing3, self.sing4, self.sing5, self.singS1, self.singS2, self.singS3, self.singS4, self.singS5, self.illuFloor1, self.illuFloor2, self.illuFloor3, self.illuFloor4, self.illuFloor5, self.illuFloor6, self.illuFloor7)
+  new_boid:init(self.level, self, x, y, z, dirx, diry, dirz, free, self.sing1, self.sing2, self.sing3, self.sing4, self.sing5, self.singS1, self.singS2, self.singS3, self.singS4, self.singS5, self.illuFloor1, self.illuFloor2, self.illuFloor3, self.illuFloor4, self.illuFloor5, self.illuFloor6, self.illuFloor7, speed)
   if gradient then
     new_boid:set_gradient(gradient)
   else
@@ -209,6 +211,26 @@ function fk:add_ep(x, y, z, dirx, diry, dirz, free, gradient)
   return new_boid
 end
 
+function fk:add_human()
+  local new_boid = nil
+  if #self.free_boids > 0 then
+    new_boid = self.free_boids[#self.free_boids]
+    self.free_boids[#self.free_boids] = nil
+  else
+    new_boid = human:new(self.level)
+  end
+  print("youraaa je cherche ncore maiso nje suis la")
+  new_boid:init(self.level, self, 2000, 2000, 100, dirx, diry, dirz, free, self.sing1, self.sing2, self.sing3, self.sing4, self.sing5, self.singS1, self.singS2, self.singS3, self.singS4, self.singS5, self.illuFloor8, nil, nil, nil, nil, nil, nil, speed)
+  if gradient then
+    new_boid:set_gradient(gradient)
+  else
+    new_boid:set_gradient(self.gradient)
+  end
+  self.active_boids[#self.active_boids + 1] = new_boid
+  
+  return new_boid
+end
+
 function fk:pan(boidMort,x,y)
   love.audio.play(source)
   local objects = self.collision_table
@@ -232,6 +254,19 @@ function fk:pan(boidMort,x,y)
 end
 
 function fk:remove_boid(unBoid)
+  local active = self:get_active_boids()
+  for i=#active,1,-1 do
+    if active[i] == unBoid then
+      table.remove(self.active_boids, i)
+	  --self.active_boids[i] = nil
+	  self.level:setBoids(-1)
+      unBoid:destroy()
+      break
+    end
+  end
+end
+
+function fk:remove_human(unBoid)
   local active = self:get_active_boids()
   for i=#active,1,-1 do
     if active[i] == unBoid then

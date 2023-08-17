@@ -60,6 +60,7 @@ bd.hunger = 100
 bd.dead = false
 bd.sex = nil
 bd.age = 2
+bd.social = 0
 oneSex = true 
 firstBoids = 0
 bd.hadKid = false 
@@ -226,11 +227,12 @@ function bd:_init_map_point(x, y)
   self.map_point = map_point:new(self.level, vector2:new(x, y))
 end
 
-function bd:init(level, parent_flock, x, y, z, dirx, diry, dirz, free, sing1, sing2, sing3, sing4, sing5, singS1, singS2, singS3, singS4, singS5, illuFloor1, illuFloor2, illuFloor3, illuFloor4, illuFloor5, illuFloor6, illuFloor7)
+function bd:init(level, parent_flock, x, y, z, dirx, diry, dirz, free, sing1, sing2, sing3, sing4, sing5, singS1, singS2, singS3, singS4, singS5, illuFloor1, illuFloor2, illuFloor3, illuFloor4, illuFloor5, illuFloor6, illuFloor7, speed)
   if not parent_flock or not x or not y or not z then
     print("Error in boid:init() - missing parameter")
     return
   end
+  
   love.profiler = require("profile") 
   --love.profiler.start()
   --if not parent_flock:contains_point(x, y, z) then
@@ -286,9 +288,6 @@ function bd:init(level, parent_flock, x, y, z, dirx, diry, dirz, free, sing1, si
   self.age = 1
   self.nbStepPath = 0
   self.countPath = 1
-  
-  print("free")
-  print(free)
 	
   if firstBoids < 3 then
 	self.sex = oneSex
@@ -316,7 +315,7 @@ function bd:init(level, parent_flock, x, y, z, dirx, diry, dirz, free, sing1, si
   local dx, dy, dz = random_direction3()
   self.seeker:set_position(self.position.x+dx, self.position.y+dy, self.position.z+dz)
   self.seeker:set_bounds(b.x, b.y, b.width, b.height, b.depth)
-  
+  self.seeker:set_scale(speed)
   -- collider
   self.collider = parent_flock:get_collider()
   self.map_point:update_position(vector2:new(self.position.x, self.position.y))
@@ -1289,6 +1288,7 @@ function bd:_update_boid_life(dt)
 				self.path=nil
 				self.seeker:set_position(self.position.x+math.random(-10,10), self.position.y+math.random(-10,10), self.position.z+math.random(-10,10))
 				self:setObjectiv("fly")
+				print("GO VOLER !!")
 				self:setHome(false)
 				--self.body_graphic:set_color1(255)
 				--self.rule_weights[self.separation_vector] = 3
@@ -2058,8 +2058,6 @@ if self.treeFound==nil then
 									self.treeFound="bush"
 									tree = self.treeFound
 									self.path=nil
-									print("j'ai trouve un bush en")
-									print(stepX,stepY)
 								end
 							end
 						end
@@ -2419,7 +2417,7 @@ function bd:draw_debug()
   
   -- sight
   lg.setColor(0, 0, 0, 255)
-  lg.circle("line", x1, y1, self.sight_radius)
+  --lg.circle("line", x1, y1, self.sight_radius)
   
   
   -- neigbours in view

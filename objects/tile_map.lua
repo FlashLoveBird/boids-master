@@ -94,7 +94,7 @@ tile_map.countTree=0
 
 tile_map.mapSave = nil
 
-local nbTree = 0
+local nbTree = 2
 local nbBush = 0
 
 local tile_map_mt = { __index = tile_map }
@@ -932,7 +932,7 @@ function tile_map:_generate_chunk(i, j)
 		  
 			local newX = x
 			local newY = y
-			if x > 40 and x<280 and y > 40 and y<280 and countTree<nbTree and element==false and self.level:canILandHere(newX,newY,20)==true and math.random(1,5500)==1 then
+			if x > 40 and x<280 and y > 40 and y<280 and countTree<nbTree and element==false and self.level:canILandHere(newX,newY,20)==true then --and math.random(1,5500)==1 then
 				map[newX][newY] = self.level:addTree(newX,newY)
 				map[newX][newY]:add(nil)
 				map[newX][newY]:setNumEmits(0)

@@ -272,7 +272,7 @@ function camera2d:draw()
     self.target:draw()
 	width, height = lg.getDimensions()
   --end
-    lg.rectangle( "line", 0, 0, self.view_w, self.view_h)
+    --lg.rectangle( "line", 0, 0, self.view_w, self.view_h)
 end
 
 return camera2d
