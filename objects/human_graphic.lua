@@ -54,6 +54,8 @@ hg.animations = {}
 hg.panic = false
 hg.run = false
 hg.cutWood = false
+hg.i = 1
+hg.delay = 0;
 
 local hg_mt = { __index = hg }
 function hg:new(width, height)
@@ -95,7 +97,7 @@ function hg:init_graphics()
   self.animation10 = hero:newAnimation(love.graphics.newImage("images/human_images/run-left.png"), 480, 270, 1/2)
   self.animation11 = hero:newAnimation(love.graphics.newImage("images/human_images/run-down.png"), 480, 270, 1/2)
   self.animation12 = hero:newAnimation(love.graphics.newImage("images/human_images/run-up.png"), 480, 270, 1/2)
-  self.animation13 = hero:newAnimation(love.graphics.newImage("images/human_images/cut-wood.png"), 480, 270, 0.15)
+  self.animation13 = hero:newAnimation(love.graphics.newImage("images/human_images/cut-wood.png"), 480, 405, 0.15)
   table.insert(self.animations, self.animation1)
   table.insert(self.animations, self.animation2)
   table.insert(self.animations, self.animation3)
@@ -626,8 +628,63 @@ function hg:update(dt)
 			self.animations[i].currentTime = self.animations[i].currentTime - self.animations[i].duration
 		end
 	end
-  
-  
+	self.delay = self.delay + 1
+	
+	if self.delay > 50 then
+		self:_update_direction()
+		self.delay = 0
+	end
+end
+
+function hg:_update_direction()
+	local i = 1
+	  local panic = self.panic
+	  local run = self.run
+	  local cutWood = self.cutWood
+	  local p1, p2, p3,p4, p5, p6,p7, p8, p9,p10, p11, p12,p13, p14, p15, p16, p17, p18, p19, p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31 = self.draw_points[1], self.draw_points[2], self.draw_points[3], self.draw_points[4], self.draw_points[5], self.draw_points[6],self.draw_points[7], self.draw_points[8], self.draw_points[9],self.draw_points[10], self.draw_points[11], self.draw_points[12],self.draw_points[13], self.draw_points[14], self.draw_points[15],self.draw_points[16], self.draw_points[17], self.draw_points[18],self.draw_points[19],self.draw_points[20],self.draw_points[21],self.draw_points[22],self.draw_points[23],self.draw_points[24],self.draw_points[25],self.draw_points[26],self.draw_points[27],self.draw_points[28],self.draw_points[29],self.draw_points[30],self.draw_points[31]
+	  local dx1a = p1.x - p10.x
+	  local dy1a = p1.y - p10.y
+	  if dx1a > 0 and dy1a < 30 and dy1a > -30 then
+		--print('droite')
+		if panic == true and run == true then
+			self.i = 9
+		elseif panic == true and run == false then
+			self.i = 5
+		else
+			self.i = 1
+		end
+	  elseif dx1a < 0 and dy1a < 30 and dy1a > -30 then
+		--print('gauche')
+		if panic == true and run == true then
+			self.i = 10
+		elseif panic == true and run == false then
+			self.i = 6
+		else
+			self.i = 2
+		end
+	  elseif dy1a > 30 then
+		--print('bas')
+		if panic == true and run == true then
+			self.i = 11
+		elseif panic == true and run == false then
+			self.i = 7
+		else
+			self.i = 3
+		end
+	  else
+		--print('haut')
+		if panic == true and run == true then
+			self.i = 12
+		elseif panic == true and run == false then
+			self.i = 8
+		else
+			self.i = 4
+		end
+	  end
+	  
+	  if cutWood==true then
+		self.i = 13
+	  end
 end
 
 ------------------------------------------------------------------------------
@@ -649,6 +706,7 @@ function hg:draw(x, y)
 	lg.setColor(255, 255, 255, 1)
 	lg.draw(self.pause, p1.x + x, p1.y + y)
   return end
+  
   
   lg.setColor(0, 0, 0, 1)
 --[[lg.line(p1.x + x, p1 .y + y, p2.x + x, p2.y + y)
@@ -699,58 +757,12 @@ lg.line(p18.x + x, p18 .y + y, p1.x + x, p1.y + y)
   --local rotation =  (a + math.pi)%(math.pi*2) - math.pi
   local rotation =  math.atan2(p1.y, p1.x) --- math.atan2(p8.y, p8.x)
   
-  
-  
-  local i = 1
-  local panic = self.panic
-  local run = self.run
-  local cutWood = self.cutWood
-  if dx1a > 0 and dy1a < 30 and dy1a > -30 then
-	--print('droite')
-	if panic == true and run == true then
-		i = 9
-	elseif panic == true and run == false then
-		i = 5
-	else
-		i = 1
-	end
-  elseif dx1a < 0 and dy1a < 30 and dy1a > -30 then
-	--print('gauche')
-	if panic == true and run == true then
-		i = 10
-	elseif panic == true and run == false then
-		i = 6
-	else
-		i = 2
-	end
-  elseif dy1a > 30 then
-	--print('bas')
-	if panic == true and run == true then
-		i = 11
-	elseif panic == true and run == false then
-		i = 7
-	else
-		i = 3
-	end
-  else
-	--print('haut')
-	if panic == true and run == true then
-		i = 12
-	elseif panic == true and run == false then
-		i = 8
-	else
-		i = 4
-	end
-  end
-  
-  if cutWood==true then
-	i = 13
-  end
-  
+  local i = self.i
   love.graphics.push()
   love.graphics.scale(0.5, 0.5)   -- reduce everything by 50% in both X and Y coordinates
   local spriteNum = math.floor( self.animations[i].currentTime /  self.animations[i].duration * #self.animations[i].quads) + 1
   love.graphics.draw(self.animations[i].spriteSheet,  self.animations[i].quads[spriteNum], (p1.x+x-135)*2, (p1.y+y-70)*2)
+  --love.graphics.rectangle( "fill", (x+55)*2, (y+55)*2, 32, 32 )
   love.graphics.pop()
 
   local i = self.intensity

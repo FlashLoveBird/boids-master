@@ -96,6 +96,7 @@ hu.searchObjRad = 5
 love.frame = 0
 hu.countPath = 1
 hu.step = 0
+hu.bigPath = 1
                                                                   -- if angle between boundary normal
                                              -- and human direction is less than this
                                              -- angle.
@@ -907,6 +908,28 @@ function hu:_update_boundary_rule()
   
 end
 
+function hu:setNewHome()
+	self.needHome = false
+	self.objectiv = "fly"
+	self.woodGrab = 0
+	self.waterGrab = 0
+	--self:setHome(true)
+	self.originX,self.originY,self.originZ = self.caseNewTreeX*32,self.caseNewTreeY*32,100
+	print('self.originX,self.originY')
+	print(self.originX,self.originY)
+	if self.emit then
+		self.emit:remove_human(self)
+	end
+	self:set_emit_parent(self.seekTree:getEmit())
+	if self.emit then
+		self.emit:add_human(self)
+		self.myIdTable = self.emit:get_humans()
+	end
+	self.path=nil
+	self.free=false
+	self.countPath = 1
+end
+
 function hu:_update_waypoint_rule()
   --debugText = tostring(self.waypoint.is_active)
   if not self.waypoint.is_active then return end
@@ -934,25 +957,7 @@ function hu:_update_waypoint_rule()
 	self:clear_waypoint()
     local prog = (dist - w.inner_radius) / (w.outer_radius - w.inner_radius)
     power = min + prog * (max - min)
-	if objectiv == "setNewHome" then 
-		self.needHome = false
-		self.objectiv = "fly"
-		self.woodGrab = 0
-		self.waterGrab = 0
-		--self:setHome(true)
-		self.originX,self.originY,self.originZ = self.caseNewTreeX*32,self.caseNewTreeY*32,100
-		if self.emit then
-			self.emit:remove_human(self)
-		end
-		self:set_emit_parent(self.seekTree:getEmit())
-		if self.emit then
-			self.emit:add_human(self)
-			self.myIdTable = self.emit:get_humans()
-		end
-		self.path=nil
-		self.free=false
-		self.countPath = 1
-	elseif objectiv == "constructNewHome" then 
+	if objectiv == "constructNewHome" then 
 		self.countPath = 1
 		self.needHome = false
 		self.objectiv = "fly"
@@ -1014,31 +1019,6 @@ function hu:_update_waypoint_rule()
 		self.rule_weights[self.obstacle_vector] = 8
 	elseif objectiv == "goConstructHomeWith" then
 		self:goConstructHomeWith()
-	elseif objectiv=="goHomeWithIn" then
-		self.countPath = 1
-		self:set_position(self.originX,self.originY,self.originZ)
-		seeker:set_velocity({x = 0, y = 0, z = 0})
-		self:minusFood(foodGrab)
-		self:minusWood(woodGrab)
-		self:minusWater(waterGrab)
-		if self.emit then
-			self.emit:add_food(foodGrab)
-			self.emit:add_wood(woodGrab)
-			self.emit:add_water(waterGrab)
-		end
-		local timeLoc = self.level.master_timer:get_time()
-		if self.hunger>60 and (timeLoc<70 or timeLoc>100) then
-			self:setObjectiv("fly")
-		elseif timeLoc<70 or timeLoc>100 then
-			self:seekFood(searchObjRad)
-		else
-			self:setHome(true)
-			self:deactivate()
-			self:set_position(self.originX,self.originY,self.originZ)
-			self:setObjectiv("sleep")
-		end
-		self:clear_waypoint()
-		self.path = nil
 	elseif objectiv == "goSleep" then
 		local timeLoc = self.level.master_timer:get_time()
 		self.countPath = 1
@@ -1125,7 +1105,7 @@ function hu:grabWood(wood)
 	local woodGrab = self.woodGrab
 	local seekingHome = self.seekingHome
 	local seekingWood = self.seekingWood
-	self.woodGrab = self.woodGrab + math.floor(wood/10000)
+	self.woodGrab = self.woodGrab + wood
 	local active = self.waypoint.is_active
 	if self.woodGrab > 10 and self.needHome == true and seekingHome == true and seekingWood == true then
 		local x = math.floor(self.caseNewTreeX*32)
@@ -1141,6 +1121,15 @@ function hu:grabWood(wood)
 		--self:setObjectiv("goHomeToConstruct")
 		self.seekingWood = false
 		--self.body_graphic:set_color1(0)
+	end
+	if self.woodGrab > 40 and self.emit then 
+		--self:set_waypoint(self.originX,self.originY,self.originZ)
+		self:clear_waypoint()
+		self:goOnHomeWith()
+		self:setObjectiv("goOnHomeWith")
+		--self.body_graphic:set_color1(0)
+		self.rule_weights[self.waypoint_vector] = 200
+		self.rule_weights[self.obstacle_vector] = 0
 	end
 end
 
@@ -1255,6 +1244,7 @@ function hu:_update_human_life(dt)
 	local objectiv = self.objectiv
 	local tired = self.tired
 	local foodGrab = self.foodGrab
+	local woodGrab = self.woodGrab
 	local hunger = self.hunger
 	local destroy = self.destroy
 	local flock = self.flock
@@ -1294,8 +1284,14 @@ function hu:_update_human_life(dt)
 		if needHome and active==false then
 			self:seekHome(10)
 			print("continue de chrcher maison")
-		elseif math.random(1,120)==1 and active==false then
-			self:seekTreeForWood(10)
+		elseif self.emit and active==false then
+			if woodGrab > 40 then 
+				self:clear_waypoint()
+				self:goOnHomeWith()
+				self:setObjectiv("goOnHomeWith")
+			elseif math.random(-10,10) == 1 and self.emit:get_wood() < 10 and active==false then
+				self:seekTreeForWood(10)
+			end
 		end
 		if self.objectiv~="goFloor" then
 			self.tired = tired - dt*20
@@ -1518,11 +1514,6 @@ local caseX = math.floor( x / h )
 local caseY = math.floor( y / w )
 local originCaseX = math.floor( self.originX / h )
 local originCaseY = math.floor( self.originY / w )
-local foodGrab = self.foodGrab
-local woodGrab = self.woodGrab
-local waterGrab = self.waterGrab
-print('#self.path')
-print(#self.path)
 if inHome == false and active == false then
 	self:updatePath(Vector(caseX,caseY),Vector(originCaseX,originCaseY))
 	if self.path then
@@ -1553,14 +1544,46 @@ if inHome == false and active == false then
 			self:setObjectiv("goOnHomeWith")
 			self.path = nil
 		else
-			self:setObjectiv("goHomeWithIn")
-			local posX = math.floor( self.path[#self.path].x * h ) + 1
-			local posY = math.floor( self.path[#self.path].y * w ) + 1
-			local z = math.random(200,1500)
-			self:set_waypoint(posX, posY,z,50,100)
+			self:backHome()
+			--local posX = math.floor( self.path[#self.path].x * h ) + 1
+			--local posY = math.floor( self.path[#self.path].y * w ) + 1
+			--local z = math.random(200,1500)
+			--self:set_waypoint(posX, posY,z,50,100)
 		end
 	end
 end
+end
+
+function hu:backHome()
+	local foodGrab = self.foodGrab
+	local woodGrab = self.woodGrab
+	local waterGrab = self.waterGrab
+	self.countPath = 1
+	self:set_position(self.originX,self.originY,self.originZ)
+	seeker:set_velocity({x = 0, y = 0, z = 0})
+	self:minusFood(foodGrab)
+	self:minusWood(woodGrab)
+	self:minusWater(waterGrab)
+	if self.emit then
+		self.emit:add_food(foodGrab)
+		self.emit:add_wood(woodGrab)
+		self.emit:add_water(waterGrab)
+	end
+	local timeLoc = self.level.master_timer:get_time()
+	if self.hunger>60 and (timeLoc<70 or timeLoc>100) then
+		self:setObjectiv("fly")
+	elseif timeLoc<70 or timeLoc>100 then
+		self:setObjectiv("fly")
+		self:seekFood(searchObjRad)
+	else
+		self:setHome(true)
+		self:deactivate()
+		self:set_position(self.originX,self.originY,self.originZ)
+		self:setObjectiv("sleep")
+	end
+	self:clear_waypoint()
+	self.path = nil
+	print('videeee')
 end
 
 function hu:goConstructHomeWith()
@@ -1762,7 +1785,12 @@ if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 		print(caseX,caseY, destinationX, destinationY)
 		if self.path then
 			print('JY VAIS ? OU PAS ... BAH GO')
-			self.nbStepPath = #self.path
+			if #self.path > 10 then
+				self.nbStepPath = #self.path -- math.floor(#self.path / 2)
+				self.bigPath = math.floor(#self.path / 5)
+			else
+				self.nbStepPath = #self.path
+			end
 			--selfBody:set_color1(0)
 			self.step = self.nbStepPath
 		else
@@ -1786,18 +1814,26 @@ if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 		end
 	end
 	self:clear_waypoint()
+	print("countPath")
+	print(countPath)
+	print("self.nbStepPath")
+	print(self.nbStepPath)
 	if countPath < self.nbStepPath then
 		self:setObjectiv("goOnSeekHome")
 		local posX = math.floor( self.path[countPath].x * h ) + 1
 		local posY = math.floor( self.path[countPath].y * w ) + 1
 		self:set_waypoint(posX, posY,500,50,100)
 		--self.step = self.step + self.step
-		self.countPath = countPath + 1
+		if self.bigPath then
+			self.countPath = countPath + self.bigPath
+		else
+			self.countPath = countPath + 1
+		end
 	else
 		self.step = #self.path
 		if tree=="freeTree" then
 			if self.seekTree then
-				self:setObjectiv("setNewHome")
+				self:setNewHome()
 				self.free = false
 				self.countPath = 1
 				--self.seekTree:setNumEmits(1)
@@ -1806,18 +1842,22 @@ if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 				self.homeTree = self.seekTree
 				self.path = nil
 				self.needHome = false
+				self.emit = self.seekTree
+				print('ON EST OU LA')
 			else
 				self:setObjectiv("seekHome")
 			end
 		else
 			if self.seekTree:getNumhumans()<20 then
-				self:setObjectiv("setNewHome")
+				self:setNewHome()
 				self.searchObjRad = 10
 				self.free = false
 				self.countPath = 1
 				self.seekingHome = false
 				self.path = nil
 				self.needHome = false
+				self.emit = self.seekTree
+				print('ON EST OU LA 2')
 			else
 				local randX = math.random(-300,300)
 				local randY = math.random(-300,300)
@@ -1918,6 +1958,7 @@ if self.treeFound==nil then
 									destinationX = math.floor(stepX/32)
 									destinationY = math.floor(stepY/32)
 									self.seekTree = mapTrees[stepX][stepY]:getTree()
+									self.seekTree:setState(false)
 								end
 							elseif mapTrees[stepX][stepY]:getNumEmits()>0 then
 								if mapTrees[stepX][stepY]:getState() == true then
@@ -1928,6 +1969,7 @@ if self.treeFound==nil then
 									destinationX = stepX
 									destinationY = stepY
 									self.seekTree = mapTrees[stepX][stepY]:getTree()
+									self.seekTree:setState(false)
 								end
 							end
 						end
@@ -2393,18 +2435,16 @@ function hu:update(dt)
 		self:_update_seeker(dt)
 		self:_update_map_point(dt)
 		self:_update_human_orientation(dt/10)
+	else
+		if self.seekTree then
+			self.seekTree:cutMe(1, self)
+		else
+			selfBody:set_cutWood(false)
+			love.audio.stop(self.chop_sound)
+		end
 	end
 	self:_update_graphic_orientation(dt/10)
 	self:_update_human_life(dt/30)	
-	
-	if self.seekTree then
-		if selfBody:get_cutWood()==true then
-			self.seekTree:cutMe(1, self)
-		end
-	else
-		selfBody:set_cutWood(false)
-		love.audio.stop(self.chop_sound)
-	end
 end
 
 function hu:updatePath(start,finish)
@@ -2552,15 +2592,18 @@ end
 function hu:draw()
   if not self.is_initialized then
 	local inHome = self.inHome
+	love.graphics.push()
+	love.graphics.scale(0.5, 0.5)   -- reduce everything by 50% in both X and Y coordinates
 	if inHome == false then
 		local x, y, z = self:get_position()
 		lg.setColor(255, 255, 255, 1)
-		lg.draw(self.illuFloor, x-25, y-25)
+		lg.draw(self.illuFloor, (x-25)*2, (y-25)*2)
 	end
+	love.graphics.pop()
   return end
   debugText = self.rule_weights[self.separation_vector]
   local x, y, z = self:get_position()
-  
+  love.graphics.rectangle( "fill", x+55, y-25, 32, 32 )
   self.body_graphic:draw(x, y)
   
   --self.animation:draw(x, y)

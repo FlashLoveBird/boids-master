@@ -889,6 +889,56 @@ function bd:_update_boundary_rule()
   
 end
 
+function bd:setNewHome()
+	self.needHome = false
+	self.objectiv = "fly"
+	self.woodGrab = 0
+	self.waterGrab = 0
+	--self:setHome(true)
+	self.originX,self.originY,self.originZ = self.caseNewTreeX*32,self.caseNewTreeY*32,100
+	if self.emit then
+		self.emit:remove_boid(self)
+	end
+	self:set_emit_parent(self.seekTree:getEmit())
+	if self.emit then
+		self.emit:add_boid(self)
+		self.myIdTable = self.emit:get_boids()
+	end
+	self.path=nil
+	self.free=false
+	self.countPath = 1
+end
+
+function bd:backHome()
+	local foodGrab = self.foodGrab
+	local woodGrab = self.woodGrab
+	local waterGrab = self.waterGrab
+	self.countPath = 1
+	self:set_position(self.originX,self.originY,self.originZ)
+	seeker:set_velocity({x = 0, y = 0, z = 0})
+	self:minusFood(foodGrab)
+	self:minusWood(woodGrab)
+	self:minusWater(waterGrab)
+	if self.emit then
+		self.emit:add_food(foodGrab)
+		self.emit:add_wood(woodGrab)
+		self.emit:add_water(waterGrab)
+	end
+	local timeLoc = self.level.master_timer:get_time()
+	if self.hunger>60 and (timeLoc<70 or timeLoc>100) then
+		self:setObjectiv("fly")
+	elseif timeLoc<70 or timeLoc>100 then
+		self:seekFood(searchObjRad)
+	else
+		self:setHome(true)
+		self:deactivate()
+		self:set_position(self.originX,self.originY,self.originZ)
+		self:setObjectiv("sleep")
+	end
+	self:clear_waypoint()
+	self.path = nil
+end
+
 function bd:_update_waypoint_rule()
   --debugText = tostring(self.waypoint.is_active)
   if not self.waypoint.is_active then return end
@@ -902,9 +952,6 @@ function bd:_update_waypoint_rule()
   local waypoinTimeLocal = self.waypointTime
   local inHome = self.inHome
   local level = self.level
-  local foodGrab = self.foodGrab
-  local woodGrab = self.woodGrab
-  local waterGrab = self.waterGrab
   local is_initialized = self.is_initialized
   local seeker = self.seeker
   local flock = self.flock
@@ -916,25 +963,7 @@ function bd:_update_waypoint_rule()
 	self:clear_waypoint()
     local prog = (dist - w.inner_radius) / (w.outer_radius - w.inner_radius)
     power = min + prog * (max - min)
-	if objectiv == "setNewHome" then 
-		self.needHome = false
-		self.objectiv = "fly"
-		self.woodGrab = 0
-		self.waterGrab = 0
-		--self:setHome(true)
-		self.originX,self.originY,self.originZ = self.caseNewTreeX*32,self.caseNewTreeY*32,100
-		if self.emit then
-			self.emit:remove_boid(self)
-		end
-		self:set_emit_parent(self.seekTree:getEmit())
-		if self.emit then
-			self.emit:add_boid(self)
-			self.myIdTable = self.emit:get_boids()
-		end
-		self.path=nil
-		self.free=false
-		self.countPath = 1
-	elseif objectiv == "constructNewHome" then 
+	if objectiv == "constructNewHome" then 
 		self.countPath = 1
 		self.needHome = false
 		self.objectiv = "fly"
@@ -1528,7 +1557,7 @@ if inHome == false and active == false then
 			self:setObjectiv("goOnHomeWith")
 			self.path = nil
 		else
-			self:setObjectiv("goHomeWithIn")
+			self:backHome()
 			local posX = math.floor( self.path[#self.path].x * h ) + 1
 			local posY = math.floor( self.path[#self.path].y * w ) + 1
 			local z = math.random(200,1500)
@@ -1766,7 +1795,7 @@ if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 		self.step = #self.path
 		if tree=="freeTree" then
 			if self.seekTree then
-				self:setObjectiv("setNewHome")
+				self:setNewHome()
 				self.free = false
 				self.countPath = 1
 				--self.seekTree:setNumEmits(1)
@@ -1778,7 +1807,7 @@ if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 			end
 		else
 			if self.seekTree:getNumBoids()<20 then
-				self:setObjectiv("setNewHome")
+				self:setNewHome()
 				self.searchObjRad = 10
 				self.free = false
 				self.countPath = 1
@@ -1801,9 +1830,6 @@ if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 				end
 			end
 		end
-		local posX = math.floor( self.path[self.step].x * h ) + 1
-		local posY = math.floor( self.path[self.step].y * w ) + 1
-		self:set_waypoint(posX, posY,500,50,100)
 	end		
 end
 end

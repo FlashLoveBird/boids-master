@@ -107,6 +107,8 @@ function tree:cutMe(value, human)
 	if self.life < 1 then
 		self.level:deleteTree(self.x, self.y, self.index)
 		human.body_graphic:set_cutWood(false)
+		human.seekTree = nil
+		human:grabWood(50)
 	end
 end
 

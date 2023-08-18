@@ -394,7 +394,6 @@ function fk:draw()
   for i=1,#self.draw_boids do
     self.draw_boids[i]:draw()
   end
-
   self.user_interface:draw()
   
   if not self.debug then return end

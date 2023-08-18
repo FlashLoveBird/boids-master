@@ -562,8 +562,10 @@ function food_demo_state.load(level)
 local target = vector2:new(1000, 1000)
 local cam = state.level:get_camera()
 
-human = state.flock:add_human()
-human2 = state.flock:add_human()
+for x=1, 10 do
+	human = state.flock:add_human()
+end
+--human2 = state.flock:add_human()
 	
 	for x=5, 800 do--Poly.rows-5 do
 		for y=5, 800 do--Poly.cols-5 do
@@ -1200,7 +1202,7 @@ function food_demo_state.draw()
   
   --state.draw_field_vector()
   if journeyTime ~= "MIDI" then
-	newLightWorld:Draw()
+	--newLightWorld:Draw()
   end
   --state.draw_field_vector()
   state.level.camera:unset()

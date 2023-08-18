@@ -14,6 +14,7 @@ tw.sources = nil
 tw.depletion_rate = 300
 tw.surface_threshold = 0.5
 tw.area = 0
+tw.wood = 0
 tw.unit_area = TILE_WIDTH * TILE_HEIGHT
 tw.area_changed = false
 tw.boid_hash = nil
@@ -158,8 +159,12 @@ function tw:try_egg()
 
 end
 
-function tw:add_wood()
+function tw:add_wood(wood)
+	self.wood = wood + self.wood
+end
 
+function tw:get_wood()
+	return self.wood
 end
 
 function tw:add_water()
@@ -190,7 +195,7 @@ function tw:_update_area(dt)
 		  if not bhash[objects[i]] and randomNb == 1 then
 			local dead = math.random(1,#objects)
 			--flock:pan(objects[i],s.x,s.y)
-		  elseif objects[i]:getObjectiv()~="goOut" and objects[i]:getObjectiv()~="goOnHomeWith" then
+		  elseif objects[i]:getObjectiv()~="goOut" and objects[i]:getObjectiv()~="goOnHomeWith" and objects[i]:getObjectiv()~="sleep" then
 				local x, y, z = objects[i]:get_position()
 				objects[i]:set_waypoint(x+math.random(-200,200), y+math.random(-200,200), math.random(50,1000),50,100)
 				objects[i]:unObstacleMe()
