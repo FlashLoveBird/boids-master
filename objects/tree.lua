@@ -105,6 +105,11 @@ end
 function tree:cutMe(value, human)
 	self.life = self.life - value
 	if self.life < 1 then
+		local emmiter = self.emmiter
+		if emmiter~=nil then
+			emmiter:removeAllBoid()
+			--self.emmiter = nil
+		end
 		self.level:deleteTree(self.x, self.y, self.index)
 		human.body_graphic:set_cutWood(false)
 		human.seekTree = nil

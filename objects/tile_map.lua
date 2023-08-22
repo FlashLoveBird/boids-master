@@ -94,8 +94,8 @@ tile_map.countTree=0
 
 tile_map.mapSave = nil
 
-local nbTree = 2
-local nbBush = 0
+local nbTree = 1
+local nbBush = 20
 
 local tile_map_mt = { __index = tile_map }
 function tile_map:new(level, columns, rows, tile_width, tile_height, mapSave)

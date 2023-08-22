@@ -30,49 +30,61 @@ be.eggs = nil
 be.food = 0
 be.wood = 0
 be.water = 0
-
+be.i = nil
 
 local be_mt = { __index = be }
-function be:new(level, flock, x, y, z, dirx, diry, dirz, radius, nbEgg, boidType, parent)
+function be:new(level, flock, x, y, z, dirx, diry, dirz, radius, nbEgg, boidType, parent, i)
   local be = setmetatable({}, be_mt)
-  be.flock = flock
-  be.level = level
-  be.nbEgg = nbEgg
   
-  be.position = {}
-  be.direction = {}
-  be.waypoint = {}
-  be.collision_table = {}
-  be.radius = radius
-  vector3.set(be.position, x, y, z)
-  vector3.set(be.direction, dirx, diry, dirz)
-  vector3.normalize(be.direction)
-  
-  be.active_boids = {}
-  be.eggs = {}
-  
-  if level then
-	  local t = poisson_interval(self.rate)
-	  be.spawn_timer = timer:new(level:get_master_timer(), t)
-	  be.spawn_timer:start()
-  end
-  
-  be.dead_zone_bbox = bbox:new(0, 0, 0, 0)
-  
-  for i=1, nbEgg do
-	be.eggs[i] = egg:new(be,i,flock,false,false,x,y,z,level,boidType) --boidEmit,index,flock,needHome,free,x,y,z,level,boidType
-  end
-  
-  nid = love.graphics.newImage("images/home/nid.png")
-  emptyNid = love.graphics.newImage("images/home/empty-nid.png")
-  
-  click = love.audio.newSource("sound/click1.mp3", "stream")
-  
-  if parent then
-    self.active_boids[#self.active_boids + 1] = parent
-	parent.myIdTable = #self.active_boids
-  end    
+  be:init(level, flock, x, y, z, dirx, diry, dirz, radius, nbEgg, boidType, parent, i)
   return be
+end
+
+function be:init(level, flock, x, y, z, dirx, diry, dirz, radius, nbEgg, boidType, parent, i)
+	self.flock = flock
+	self.level = level
+	self.nbEgg = nbEgg
+	  
+	self.position = {}
+	self.direction = {}
+	self.waypoint = {}
+	self.collision_table = {}
+	self.radius = radius
+	vector3.set(self.position, x, y, z)
+	vector3.set(self.direction, dirx, diry, dirz)
+	vector3.normalize(self.direction)
+	
+	print('AJOUT DUN OEUF EN MILIEU DE CHAINE en ')
+    print(x, y ,z)
+	  
+	self.active_boids = {}
+	self.eggs = {}
+	self.i = i
+	  
+	  if level then
+		  local t = poisson_interval(self.rate)
+		  self.spawn_timer = timer:new(level:get_master_timer(), t)
+		  self.spawn_timer:start()
+	  end
+	self.dead_zone_bbox = bbox:new(0, 0, 0, 0)
+	self:initEgg(nbEgg)
+	  
+	nid = love.graphics.newImage("images/home/nid.png")
+	emptyNid = love.graphics.newImage("images/home/empty-nid.png")
+	  
+	click = love.audio.newSource("sound/click1.mp3", "stream")
+	  
+	if parent then
+	  self.active_boids[#self.active_boids + 1] = parent
+	  parent.myIdTable = #self.active_boids
+	end
+end
+
+function be:initEgg(nbEgg)
+  local x, y, z = self.position.x, self.position.y, self.position.z
+  for i=1, nbEgg do
+	self.eggs[i] = egg:new(self,i,flock,false,false,x,y,z,level,boidType) --boidEmit,index,flock,needHome,free,x,y,z,level,boidType
+  end
 end
 
 function be:reset()
@@ -281,7 +293,8 @@ function be:_emit_boid(boidType,index,needHome,free,speed)
 	boid:set_needHome(true)
   end
   boid:set_emit_parent(self)
-  
+  print('-----------------------------------#self.active_boids')
+  print(#self.active_boids)
 end
 
 function be:remove_boid(boid)
@@ -298,10 +311,24 @@ function be:remove_boid(boid)
     end
 end
 
-function be:add_boid(boid)
+function be:removeAllBoid()
+	if #self.active_boids>0 then
+	  for i=1,#self.active_boids do
+		local b = self.active_boids[i]
+		if b~=nil then
+			b:destructHome()
+		end
+	  end
+    end
+	self.active_boids = {}
+end
+
+--[[function be:add_boid(boid)
 	self.active_boids[#self.active_boids+1] = boid
 	self.boid_count = self.boid_count + 1
-end
+	 print('++++++++++++++++++++++++++++111111111111111111111')
+     print(#self.active_boids)
+end--]]
 
 function be:_destroy_boid(b)
   self.flock:remove_boid(b)
@@ -355,6 +382,7 @@ end
 function be:update(dt)
   local active = self.active_boids
   local bbox = self.dead_zone_bbox
+  if not self.is_active then return end
   for i=#active,1,-1 do
     local b = active[i]
     --if bbox:contains_coordinate(b.position.x, b.position.y) then
@@ -378,13 +406,14 @@ function be:update(dt)
 		self.spawn_timer:start()
 	end
 	
-	if not self.is_active then return end
 	local eggs = self.eggs
+	local journeyTime = self.level.master_timer:get_time()
+	local player = self.level:get_player():get_position()
 	
 	if self.nbEgg>0 then
 		for i=1,#eggs do
 			if self.eggs[i] ~= nil then
-				self.eggs[i]:update(dt)
+				self.eggs[i]:update(dt, journeyTime, player)
 				--print(self.position.x)
 			end
 		end

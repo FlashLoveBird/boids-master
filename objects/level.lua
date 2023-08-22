@@ -24,7 +24,7 @@ level.shard_explosions = nil
 level.emitters = {}
 
 level.eggs = {}
-level.nbEggs = 1
+level.nbEggs = 0
 level.treeSelect = nil
 level.trees = {}
 level.bushs = {}
@@ -112,7 +112,7 @@ function level:new()
   level.audio_sample_sets = {}
   
   level.eggs = {}
-  level.nbEggs = 1
+  level.nbEggs = 0
   
   level.screen_canvas = lg.newCanvas(SCR_WIDTH, SCR_HEIGHT)
   
@@ -211,9 +211,13 @@ function level:addHome(x,y,width,height,depth,flock,level,nbEggs, boidType)
 	local depth = 1500
 	local dx, dy, dz = 0, 1, 0.5
 	local r = 200
-	local lvl = level
+	local lvl = self
+	local i = #self.emitters + 1
 	
-	local emitter = boid_emitter:new(lvl, flock, x, y, z, dx, dy, dz, r, nbEggs, boidType)
+	print('AJOUT DUN OEUF EN DEBUT DE CHAINE en ')
+    print(x, y ,z)
+	
+	local emitter = boid_emitter:new(lvl, flock, x, y, z, dx, dy, dz, r, nbEggs, boidType, nil, i)
 	emitter:set_dead_zone( 0, 4000, 3000, 100)
 	emitter:set_type("boid")
 	emitter:set_emission_rate(200)
@@ -578,6 +582,12 @@ return te
 end
 
 function level:deleteTree(x, y, i)
+if self.trees[i]:getEmit() then
+	local emit = self.trees[i]:getEmit()
+	self.trees[i].emit = nil
+	--self.emitters[i] = nil
+	table.remove( self.emitters, i )
+end
 self.nbTree = self.nbTree - 1
 self.treeMap[x][y]=nil
 
@@ -634,6 +644,11 @@ end
 
 function level:removeWood(i)
 	table.remove(self.wood_source, i)
+end
+
+function level:addEgg(egg)
+	self.nbEggs = self.nbEggs + 1
+	table.insert(self.eggs, egg)
 end
 
 function level:keypressed(key)
@@ -779,12 +794,15 @@ function level:update(dt)
 		end
 	end
   
-  local eggs = self.eggs
-	
-  if self.nbEggs>0 then
-		for i=1,self.nbEggs do
-			if self.eggs[i] ~= nil then
-				self.eggs[i]:update(dt)
+  if self.hero then
+	  local eggs = self.eggs
+	  local journeyTime = self.master_timer:get_time()
+	  local player = self.hero:get_position()
+	  if self.nbEggs>0 then
+			for i=1,self.nbEggs do
+				if self.eggs[i] ~= nil then
+					self.eggs[i]:update(dt, journeyTime, player)
+				end
 			end
 		end
 	end
@@ -869,13 +887,14 @@ function level:draw()
 		end
   end
   --self.camera:draw()
-  --[[if self.nbEggs>0 then
+  --]]
+  if self.nbEggs>0 then
 		for i=1,self.nbEggs do
 			if self.eggs[i] ~= nil and self.eggs[i].eclose==false then
 				self.eggs[i]:draw(cx, cy)
 			end
 		end
-	end--]]
+	end
 end
 
 return level

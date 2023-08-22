@@ -85,19 +85,19 @@ function hg:init_graphics()
   self.face = lg.newImage("images/home/face-bird.png")
   
   
-  self.animation1 = hero:newAnimation(love.graphics.newImage("images/human_images/walk-right.png"), 480, 270, 1/2)
-  self.animation2 = hero:newAnimation(love.graphics.newImage("images/human_images/walk-left.png"), 480, 270, 1/2)
-  self.animation3 = hero:newAnimation(love.graphics.newImage("images/human_images/walk-down.png"), 480, 270, 1/2)
-  self.animation4 = hero:newAnimation(love.graphics.newImage("images/human_images/walk-up.png"), 480, 270, 1/2)
-  self.animation5 = hero:newAnimation(love.graphics.newImage("images/human_images/start-run-right.png"), 480, 270, 1/2)
-  self.animation6 = hero:newAnimation(love.graphics.newImage("images/human_images/start-run-left.png"), 480, 270, 1/2)
-  self.animation7 = hero:newAnimation(love.graphics.newImage("images/human_images/start-run-down.png"), 480, 270, 1/2)
-  self.animation8 = hero:newAnimation(love.graphics.newImage("images/human_images/start-run-up.png"), 480, 270, 1/2)
-  self.animation9 = hero:newAnimation(love.graphics.newImage("images/human_images/run-right.png"), 480, 270, 1/2)
-  self.animation10 = hero:newAnimation(love.graphics.newImage("images/human_images/run-left.png"), 480, 270, 1/2)
-  self.animation11 = hero:newAnimation(love.graphics.newImage("images/human_images/run-down.png"), 480, 270, 1/2)
-  self.animation12 = hero:newAnimation(love.graphics.newImage("images/human_images/run-up.png"), 480, 270, 1/2)
-  self.animation13 = hero:newAnimation(love.graphics.newImage("images/human_images/cut-wood.png"), 480, 405, 0.15)
+  self.animation1 = hero:newAnimation(love.graphics.newImage("images/human_images/walk-right.png"), 480, 270, 3)
+  self.animation2 = hero:newAnimation(love.graphics.newImage("images/human_images/walk-left.png"), 480, 270, 3)
+  self.animation3 = hero:newAnimation(love.graphics.newImage("images/human_images/walk-down.png"), 480, 270, 3)
+  self.animation4 = hero:newAnimation(love.graphics.newImage("images/human_images/walk-up.png"), 480, 270, 3)
+  self.animation5 = hero:newAnimation(love.graphics.newImage("images/human_images/start-run-right.png"), 480, 270, 3)
+  self.animation6 = hero:newAnimation(love.graphics.newImage("images/human_images/start-run-left.png"), 480, 270, 3)
+  self.animation7 = hero:newAnimation(love.graphics.newImage("images/human_images/start-run-down.png"), 480, 270, 3)
+  self.animation8 = hero:newAnimation(love.graphics.newImage("images/human_images/start-run-up.png"), 480, 270, 3)
+  self.animation9 = hero:newAnimation(love.graphics.newImage("images/human_images/run-right.png"), 480, 270, 3)
+  self.animation10 = hero:newAnimation(love.graphics.newImage("images/human_images/run-left.png"), 480, 270, 3)
+  self.animation11 = hero:newAnimation(love.graphics.newImage("images/human_images/run-down.png"), 480, 270, 3)
+  self.animation12 = hero:newAnimation(love.graphics.newImage("images/human_images/run-up.png"), 480, 270, 3)
+  self.animation13 = hero:newAnimation(love.graphics.newImage("images/human_images/cut-wood.png"), 480, 405, 3)
   table.insert(self.animations, self.animation1)
   table.insert(self.animations, self.animation2)
   table.insert(self.animations, self.animation3)
@@ -612,7 +612,6 @@ end
 
 function hg:update(dt)
   if self.is_current then return end
-  
   self:_update_geometry()
   self:_update_intensity()
   
@@ -630,7 +629,7 @@ function hg:update(dt)
 	end
 	self.delay = self.delay + 1
 	
-	if self.delay > 50 then
+	if self.delay > 20 then
 		self:_update_direction()
 		self.delay = 0
 	end

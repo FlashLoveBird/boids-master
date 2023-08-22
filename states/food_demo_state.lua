@@ -22,7 +22,7 @@ local bitser = require "bitser"
 local save = nil
 local music = nil
 local music_2 = nil
-local nbNids = 0
+local nbNids = 1
 local playIntro = false
 local tableAnimRessources = {}
 
@@ -562,7 +562,7 @@ function food_demo_state.load(level)
 local target = vector2:new(1000, 1000)
 local cam = state.level:get_camera()
 
-for x=1, 10 do
+for x=1, 3 do
 	human = state.flock:add_human()
 end
 --human2 = state.flock:add_human()
@@ -621,7 +621,7 @@ end
 				if level[caseX][caseY]~=nil then
 					if count<nbNids and level[caseX][caseY]:getNumEmits()==0 and level[caseX][caseY].table=="tree" then
 						print('ajout de nid')
-						local emit = state.level:addHome(randX-35,randY-60,10,10,0,state.flock,state.level,10,0)
+						local emit = state.level:addHome(randX-35,randY-60,10,10,0,state.flock,state.level,2,0)
 						level[caseX][caseY]:add(emit)
 						level[caseX][caseY]:setNumEmits(1)
 						count = count + 1
@@ -1268,8 +1268,8 @@ function food_demo_state.draw()
   lg.draw(nbBoidsIcon, 120, 30)
   lg.draw(woodIcon, 345, 30)
   lg.setColor(0, 0, 0, 255)
-  lg.print(food, 160, 45)
-  --lg.print(nbBoids, 285, 45)
+  lg.print(food, 235, 85)
+  lg.print(nbBoids, 120, 85)
 
   --lg.print(nbBoids, 50, 180)
   --lg.print(nbBoidsPrey, 125, 170)

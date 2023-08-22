@@ -276,13 +276,13 @@ function hero:update(dt)
 		self.startBreathe = radius + 10
 	end
 	
-	if self.nbEggs>0 then
+	--[[if self.nbEggs>0 then
 		for i=1,#eggs do
 			if self.eggs[i] ~= nil then
 				self.eggs[i]:update(dt)
 			end
 		end
-	end
+	end--]]
 	
 	local run = self.run
 	local tired = self.tired
@@ -382,8 +382,10 @@ end
 
 function hero:putEgg(x,y,boidType)
 	local nbEggs = self.nbEggs
+	local egg = egg:new(nil,nbEggs,self.flock,true,true,x,y,100,self.level,boidType)
+	self.level:addEgg(egg)
 	
-	self.eggs[nbEggs] = egg:new(nil,nbEggs,self.flock,true,true,x,y,100,self.level,boidType)
+	--self.eggs[nbEggs] = egg:new(nil,nbEggs,self.flock,true,true,x,y,100,self.level,boidType)
 	self.nbEggs = nbEggs + 1
 		--[[local map = self.level:getTreeMap()
 		local newX = math.floor( x / 32 ) + 1
@@ -645,13 +647,13 @@ end
 function hero:draw()
 	--if self.pos and hero.animation1 then
 	
-		if self.nbEggs>0 then
+		--[[if self.nbEggs>0 then
 			for i=1,self.nbEggs do
 				if self.eggs[i] ~= nil and self.eggs[i].eclose==false then
 					self.eggs[i]:draw()
 				end
 			end
-		end
+		end--]]
 	
 	
 	  local x = self.pos.x - 80

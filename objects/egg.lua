@@ -37,31 +37,33 @@ egg.speed = 20
 local egg_mt = { __index = egg }
 function egg:new(boidEmit,index,flock,needHome,free,x,y,z,level,boidType)
   local egg = setmetatable({}, egg_mt)
-  egg.boidEmit = boidEmit
-  egg.index = index
-  egg.eclose = false
-  egg.flock = flock
-  egg.needHome = needHome
   
-  egg.x = x
-  egg.y = y
-  egg.z = z
-  egg.free = free
-  egg.hour_birth = 0
-  
-  egg.boidType = boidType
-  
-  egg:initAnim(level,boidType)
+  egg:init(boidEmit,index,flock,needHome,free,x,y,z,level,boidType)
   
   return egg
 end
 
-function egg:initAnim(level,boidType)
+function egg:init(boidEmit,index,flock,needHome,free,x,y,z,level,boidType)
   self.animationEclose = self:newAnimation(love.graphics.newImage("images/egg.png"), 192, 113, 10)
   self.animationBird = self:newAnimation(love.graphics.newImage("images/bird.png"), 85.5, 115, 10)
   self.eggImg = love.graphics.newImage("images/origami/rock-sheet0.png")
   
   self.level = level
+  
+  self.x = x
+  self.y = y
+  self.z = z
+  
+  self.boidEmit = boidEmit
+  self.index = index
+  self.eclose = false
+  self.flock = flock
+  self.needHome = needHome
+  
+  self.free = free
+  self.hour_birth = 0
+  
+  self.boidType = boidType
   
   local rand = math.random(1,4)
   
@@ -94,7 +96,7 @@ function egg:distance ( x1, y1, x2, y2 )
   return math.sqrt ( dx * dx + dy * dy )
 end
 
-function egg:update(dt)
+function egg:update(dt, journeyTime, player)
 	if self.eclose then return end
 	local hour_birth = self.hour_birth
 	local boidEmit = self.boidEmit
@@ -108,15 +110,13 @@ function egg:update(dt)
     local y = self.y
     local z = self.z
 	local free = self.free
-	local timeLoc = self.level.master_timer:get_time()
+	local timeLoc = journeyTime
 	local animationEclose = self.animationEclose
 	local animationBird = self.animationBird
 	local speed = self.speed
-
 	if hour_birth>100 and eclose==false and (timeLoc<70 or timeLoc>100) then --hour_birth>math.random(3000,10000) and eclose==false then
 		if self.crackSound == false then
-			local hero = self.level:get_player()
-			local pos = hero:get_position()
+			local pos = player
 			local volume = self:distance(pos.x, pos.y, x, y)
 			if volume > 100 then
 				--self.crack:setVolume(0)
@@ -124,7 +124,7 @@ function egg:update(dt)
 				--self.crack:setVolume((100-volume)/100)
 			end
 			--love.audio.play(self.crack)
-			--self.crackSound = true
+			self.crackSound = true
 		end
 		if boidEmit then
 			boidEmit:_emit_boid(boidType,index,needHome,free,speed)
@@ -135,6 +135,7 @@ function egg:update(dt)
 				self.animationEclose.currentTime = animationEclose.currentTime - animationEclose.duration
 			end
 		end
+		
 		if animationEclose.currentTime > 9 then
 			self.ecloseAnim = true
 			love.audio.play(self.eggSound)

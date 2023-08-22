@@ -599,8 +599,6 @@ function hu:_update_graphic_orientation(dt)
   local prog = (z - minz) / (maxz - minz)
   local scale = lerp(mins, maxs, prog)
   graphic:set_scale(scale+age/10)
-  
-  graphic:update(dt)
 end
 
 function hu:set_panic(panic)
@@ -2044,7 +2042,7 @@ if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 				self:setObjectiv("seekHome")
 			end
 		else
-			if self.seekTree:getNumhumans()<20 then
+			if self.seekTree then
 				self:setObjectiv("goSleep")
 				self.searchObjRad = 10
 				self.countPath = 1
@@ -2444,7 +2442,8 @@ function hu:update(dt)
 		end
 	end
 	self:_update_graphic_orientation(dt/10)
-	self:_update_human_life(dt/30)	
+	self:_update_human_life(dt/30)
+	selfBody:update(dt)
 end
 
 function hu:updatePath(start,finish)
@@ -2603,7 +2602,7 @@ function hu:draw()
   return end
   debugText = self.rule_weights[self.separation_vector]
   local x, y, z = self:get_position()
-  love.graphics.rectangle( "fill", x+55, y-25, 32, 32 )
+  --love.graphics.rectangle( "fill", x+55, y-25, 32, 32 )
   self.body_graphic:draw(x, y)
   
   --self.animation:draw(x, y)

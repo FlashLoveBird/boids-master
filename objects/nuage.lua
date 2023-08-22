@@ -376,7 +376,7 @@ function nuage:set_newHome(tree,caseNewTreeX,caseNewTreeY)
 	self.emit:remove_boid(self)
   end
   self:set_emit_parent(self.seekTree:getEmit())
-  self.emit:add_boid(self)
+  --self.emit:add_boid(self)
   self.myIdTable = self.emit:get_boids()
   self.path=nil
 end
@@ -877,7 +877,7 @@ function nuage:_update_waypoint_rule()
 		end
 		self:set_emit_parent(self.seekTree:getEmit())
 		if self.emit then
-			self.emit:add_boid(self)
+			--self.emit:add_boid(self)
 			self.myIdTable = self.emit:get_boids()
 		end
 		self.path=nil
@@ -900,7 +900,7 @@ function nuage:_update_waypoint_rule()
 		self.level.treeMap[self.caseNewTreeX][self.caseNewTreeY]:add(emit)
 		self.level.treeMap[self.caseNewTreeX][self.caseNewTreeY]:setNumEmits(1)
 		self.originX,self.originY,self.originZ = self.caseNewTreeX*32,self.caseNewTreeY*32,100
-		self.emit:add_boid(self)
+		--self.emit:add_boid(self)
 		self.free=false
 		self.path=nil
 		self.free=false
