@@ -1014,7 +1014,6 @@ function bd:_update_waypoint_rule()
 		self.objectiv = "fly"
 		self.woodGrab = 0
 		self.waterGrab = 0
-		print('Apres cosntruction')
 		if self.emit then
 			self.emit:remove_boid(self)
 		end
@@ -1569,7 +1568,6 @@ end
 end
 
 function bd:goConstructHomeWith()
-print('je vais a la maison pour construire')
 local inHome = self.inHome
 local active = self.waypoint.is_active
 local level_map = self.level:get_level_map()

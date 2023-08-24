@@ -1501,7 +1501,6 @@ end
 end
 
 function hu:goOnHomeWith()
-print('je vais a la maison pour ajouter de la bouffe')
 local inHome = self.inHome
 local active = self.waypoint.is_active
 local level_map = self.level:get_level_map()
@@ -1585,7 +1584,6 @@ function hu:backHome()
 end
 
 function hu:goConstructHomeWith()
-print('je vais a la maison pour construire')
 local inHome = self.inHome
 local active = self.waypoint.is_active
 local level_map = self.level:get_level_map()
@@ -1721,7 +1719,6 @@ if self.treeFound==nil then
 				if mapTrees[stepX][stepY] then
 					if mapTrees[stepX][stepY] ~= nil then
 						if mapTrees[stepX][stepY]:getType() == 5 then
-							print('JAI TROUVE MAISON')
 							if mapTrees[stepX][stepY]:getNumEmits()<1 then
 								if mapTrees[stepX][stepY]:getState() == true then
 									--[[self.seekTree = mapTrees[stepX][stepY]:getTree() -- NON CEST ICI QUIL FAUT RECUP LES COORD DE WOOD VIA TREE
@@ -1737,7 +1734,6 @@ if self.treeFound==nil then
 									destinationX = math.floor(stepX/32)
 									destinationY = math.floor(stepY/32)
 									self.seekTree = mapTrees[stepX][stepY]:getTree()
-									print('JY VAIS ?')
 								end
 							elseif mapTrees[stepX][stepY]:getNumEmits()>0 then
 								if mapTrees[stepX][stepY]:getState() == true and mapTrees[stepX][stepY]:getNumhumans()<20 then
@@ -1748,8 +1744,6 @@ if self.treeFound==nil then
 									destinationX = stepX
 									destinationY = stepY
 									self.seekTree = mapTrees[stepX][stepY]:getTree()
-									print('ou pas ? ?')
-									
 								end
 							end
 						end
@@ -1779,10 +1773,7 @@ end
 if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 	if self.path==nil then
 		self:updatePath(Vector(caseX,caseY),Vector(destinationX,destinationY))
-		print('YA UN CHEMIN ENTRE')
-		print(caseX,caseY, destinationX, destinationY)
 		if self.path then
-			print('JY VAIS ? OU PAS ... BAH GO')
 			if #self.path > 10 then
 				self.nbStepPath = #self.path -- math.floor(#self.path / 2)
 				self.bigPath = math.floor(#self.path / 5)
@@ -1812,10 +1803,6 @@ if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 		end
 	end
 	self:clear_waypoint()
-	print("countPath")
-	print(countPath)
-	print("self.nbStepPath")
-	print(self.nbStepPath)
 	if countPath < self.nbStepPath then
 		self:setObjectiv("goOnSeekHome")
 		local posX = math.floor( self.path[countPath].x * h ) + 1
@@ -2435,15 +2422,17 @@ function hu:update(dt)
 		self:_update_human_orientation(dt/10)
 	else
 		if self.seekTree then
-			self.seekTree:cutMe(1, self)
-		else
-			selfBody:set_cutWood(false)
-			love.audio.stop(self.chop_sound)
+			self.seekTree:cutMe(dt, self)			
 		end
 	end
 	self:_update_graphic_orientation(dt/10)
 	self:_update_human_life(dt/30)
 	selfBody:update(dt)
+end
+
+function hu:stopSound()
+	love.audio.stop(self.chop_sound)
+	print('STOP LE SON')
 end
 
 function hu:updatePath(start,finish)

@@ -22,7 +22,7 @@ local bitser = require "bitser"
 local save = nil
 local music = nil
 local music_2 = nil
-local nbNids = 1
+local nbNids = 0
 local playIntro = false
 local tableAnimRessources = {}
 
@@ -131,7 +131,7 @@ function food_demo_state.mousepressed(x, y, button)
 		food_demo_state.toggle_button(button)
 	end
 	state.selectItem = 0
-	state.level:get_mouse():setColor(0,0,0)
+	state.level:get_mouse():setColor(255,255,255)
   end
   
   if inkReserve > boidCostInk - 1 then
@@ -621,7 +621,7 @@ end
 				if level[caseX][caseY]~=nil then
 					if count<nbNids and level[caseX][caseY]:getNumEmits()==0 and level[caseX][caseY].table=="tree" then
 						print('ajout de nid')
-						local emit = state.level:addHome(randX-35,randY-60,10,10,0,state.flock,state.level,2,0)
+						local emit = state.level:addHome(randX-35,randY-60,10,10,0,state.flock,state.level,200,0)
 						level[caseX][caseY]:add(emit)
 						level[caseX][caseY]:setNumEmits(1)
 						count = count + 1
@@ -848,7 +848,8 @@ function food_demo_state.update(dt)
   local speed = 5
   local cam = state.level:get_camera()
   local x, y = cam:get_viewport()
-  local mpos = state.level:get_mouse():get_position()
+  local mouse = state.level:get_mouse()
+  local mpos = mouse:get_position()
   local vx,vy = cam:get_size()
   local mx, my = x + mpos.x, y + mpos.y
   local camPos = cam:get_center()
@@ -888,13 +889,16 @@ function food_demo_state.update(dt)
 	  target.x, target.y = target.x + tx, target.y + ty
 	  
 	  local block = state.hero:canIGoHere(target)
-	  if target.x>vx/2 and target.y>vy/2 and target.x<ACTIVE_AREA_WIDTH-vx/2 and target.y<ACTIVE_AREA_HEIGHT-vy/2 and block==false then
+	  if target.x>vx/2+50 and target.y>vy/2+50 and target.x<ACTIVE_AREA_WIDTH-vx/2-50 and target.y<ACTIVE_AREA_HEIGHT-vy/2-50 and block==false then
 		state.hero:set_position(target,true)
 		local w, h = lg.getDimensions()
 		state.hero:set_target(target.x, target.y)
 		local target2 = vector2:new(target.x+w/2, target.y+h/2)
 		cam:set_target(target, true)
 		state.hero:resetBlock()
+		state.hero:showWarning(false)
+	  else
+		state.hero:showWarning(true)
 	  end
   elseif state.hero:getBreathe() == 0 then
 	state.hero:goDirection(5)
@@ -1115,7 +1119,24 @@ function food_demo_state.update(dt)
 	elseif inkReserve < 1 then
 		inkReserveImg.currentTime = 0
 	end
-  
+	local click = false
+	for i=1, #state.buttons do
+		if i > 8 and escape then
+			if state.buttons[i].bbox:contains_coordinate(mpos.x, mpos.y) == true then
+				click = true
+			end
+		elseif i < 9 then
+			if state.buttons[i].bbox:contains_coordinate(mpos.x, mpos.y) == true then
+				click = true
+			end
+		end
+	end
+    
+	if click then
+		mouse:setClick(true)
+	else
+		mouse:setClick(false)
+	end
   --love.audio.play(musique)
   
 end

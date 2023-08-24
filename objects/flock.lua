@@ -104,8 +104,6 @@ function fk:_init_bbox(x, y, width, height, depth)
   self.bbox = bbox:new(x, y, width, height)
   self.bbox.depth = depth
   self.temp_collision_bbox = bbox:new(0, 0, 0, 0)
-  print('INIT BBOX FLOCKKKKKKK')
-  print(self.temp_collision_bbox)
 end
 
 function fk:_init_collider()

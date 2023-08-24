@@ -47,7 +47,7 @@ tree.wood_source = nil
 tree.woodPrim = nil
 tree.food = 0
 tree.index = nil
-tree.life = 100
+tree.life = 0
 
 local tree_mt = { __index = tree }
 function tree:new(level,i,flock, x, y, animationTreeInspire,animationTreeExpire,animationTreeBirth,animationBigTreeInspiree,animationBigTreeExpiree,animationOmbree,animationOmbreBirthe)
@@ -70,7 +70,7 @@ function tree:new(level,i,flock, x, y, animationTreeInspire,animationTreeExpire,
   tree.index = i
   print('Arbe ajoute')
   print(tree.name)
-  tree.life = 1000
+  tree.life = 20
   tree.x = x
   tree.y = y
   treeGroSound = love.audio.newSource("sound/tree_gro.wav", "stream")
@@ -114,6 +114,7 @@ function tree:cutMe(value, human)
 		human.body_graphic:set_cutWood(false)
 		human.seekTree = nil
 		human:grabWood(50)
+		human:stopSound()
 	end
 end
 
@@ -218,8 +219,8 @@ end
 local emitWoodTime = self.emitWoodTime
 
 if self.emitWoodTime~=0 then
-	self.emitWoodTime = emitWoodTime + dt * math.random(0,2)
-	if emitWoodTime>10 then
+	self.emitWoodTime = emitWoodTime + dt * math.random(-10,11)
+	if emitWoodTime>11 then
 		self.emitWoodTime=0
 		self:emiterWood()
 	end
@@ -236,8 +237,6 @@ function tree:setFlock(flock)
 	self.flock = flock
 	if self.wood_source==nil then
 		self.wood_source = boid_wood_source:new(level, flock, self, 1)
-		print('crer woodsource')
-		print(self.wood_source)
 	end
 	self.emitWood = true
 	self.wood_source:setFlock(flock)
@@ -250,31 +249,12 @@ function tree:emiterWood()
 	local yWood = 0
 	local level = self.level
 	local flock = self.flock
-	if rand==1 then
-		xWood = math.random(-75,-50)
-		yWood = math.random(-75,-50)
-		self.xWood = xWood
-		self.yWood = yWood
-	elseif rand==2 then
-		xWood = math.random(-75,-50)
-		yWood = math.random(50,75)
-		self.xWood = xWood
-		self.yWood = yWood
-	elseif rand==3 then
-		xWood = math.random(50,75)
-		yWood = math.random(-75,-50)
-		self.xWood = xWood
-		self.yWood = yWood
-	else
-		xWood = math.random(50,75)
-		yWood = math.random(50,75)
-		self.xWood = xWood
-		self.yWood = yWood
-	end
+	self.xWood = math.random(-75,75)
+	self.yWood = math.random(-75,75)
 	--self.food_source = boid_food_source:new(level, flock, self)
 	if level:canILandHere(x+xWood,y+yWood,20)==true then
 		local p, primtive = self.wood_source:add_wood(x*32+xWood*32, y*32+yWood*32, 100)
-		self.wood_source:force_polygonizer_update()
+		--self.wood_source:force_polygonizer_update()
 		self.emitWood = false
 		local map = level:getTreeMap()
 		print("x+xWood,y+yWood1")

@@ -567,16 +567,12 @@ local animationBigTreeInspire = self:newAnimation(imageAnimationBigTreeInspire, 
 local animationBigTreeExpire = self:newAnimation(imageAnimationBigTreeExpire, 378, 376, 2)
 local animationOmbre = self:newAnimation(imageAnimationOmbre, 361, 376, 2)
 local animationOmbreBirth = self:newAnimation(imageAnimationOmbreBirth, 189, 376, 8)
-print('treeeeemap')
-print(x,y)
 local te = tree:new(self,self.nbTree,flock, x, y, animationTreeInspire,animationTreeExpire,animationTreeBirth,animationBigTreeInspire,animationBigTreeExpire,animationOmbre,animationOmbreBirth)
 self.treeMap[x][y]=te
 
 self.trees[#self.trees + 1] = te
 
 --self.treeMap[x][y]= te
-print("Je suis arbre numéro")
-print(self.nbTree + 1)
 self.pollution = self.pollution - 1
 return te
 end

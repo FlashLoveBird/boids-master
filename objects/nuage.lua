@@ -156,12 +156,9 @@ function nuage:new(level, nbNuage, parent_flock, animationNuage, x, y, z, dirx, 
   nuage:_init_rule_vectors()
   nuage:_init_waypoint()
   
-  print('parent_flock')
-  print(parent_flock)
   
   if level and parent_flock and x and y and z then
     nuage:init(level, parent_flock, x, y, z, dirx, diry, dirz)
-	print("----------------init NUAGE")
   end
   return nuage
 end

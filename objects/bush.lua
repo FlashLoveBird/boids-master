@@ -162,8 +162,8 @@ local emitFoodTime = self.emitFoodTime
 if not self.food_source:get_food() then
 	if self.emitFood == true and timeBirth>100 then
 		--print(self.emitFoodTime)
-		self.emitFoodTime = emitFoodTime + dt * math.random(0,2)
-		if self.emitFoodTime>10 then
+		self.emitFoodTime = emitFoodTime + dt * math.random(-10,11)
+		if self.emitFoodTime>11 then
 			self.emitFoodTime=0
 			self:emiterFood()
 		end
@@ -178,35 +178,15 @@ end
 
 function bush:emiterFood()
 	local x, y = self.x , self.y
-	local rand = math.random(1,4)
 	local xFood = 0
 	local yFood = 0
 	local level = self.level
 	local flock = self.flock
-	if rand==1 then
-		xFood = math.random(-75,-50)
-		yFood = math.random(-75,-50)
-		self.xFood = xFood
-		self.yFood = yFood
-	elseif rand==2 then
-		xFood = math.random(-75,-50)
-		yFood = math.random(50,75)
-		self.xFood = xFood
-		self.yFood = yFood
-	elseif rand==3 then
-		xFood = math.random(50,75)
-		yFood = math.random(-75,-50)
-		self.xFood = xFood
-		self.yFood = yFood
-	else
-		xFood = math.random(50,75)
-		yFood = math.random(50,75)
-		self.xFood = xFood
-		self.yFood = yFood
-	end
+	self.xFood = xFood
+	self.yFood = yFood
 	--self.food_source = boid_food_source:new(level, flock, self)
 	local p = self.food_source:add_food(x*32, y*32, 200)
-    self.food_source:force_polygonizer_update()
+    --self.food_source:force_polygonizer_update()
 	self.emitFood = false
 	self.emitFoodTime=0
 end
@@ -225,7 +205,6 @@ function bush:setNumEmits(num)
 end
 
 function bush:resetFood()
-	print('tt mangeé')
 	self.emitFood = true
 	self:setGrow()
 end

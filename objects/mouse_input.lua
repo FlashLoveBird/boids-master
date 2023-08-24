@@ -17,14 +17,17 @@ mouse_input.height = SCR_HEIGHT
 
 mouse_input.left_pressed = false
 mouse_input.left_press_timer = nil
-mouse_input.color = 0
-mouse_input.color1 = 0
-mouse_input.color2 = 0
+mouse_input.color = 255
+mouse_input.color1 = 255
+mouse_input.color2 = 255
 mouse_input.color3 = 1
 local mouseBoid = nil
 local mouseTree = nil
 local mouseBush = nil
 local mouseInput = nil
+local mouseImg = nil
+local mouseImgClick = nil
+mouse_input.click = nil
 
 local mouse_input_mt = { __index = mouse_input }
 function mouse_input:new(level)
@@ -45,6 +48,8 @@ function mouse_input:new(level)
   mouseBoid = love.graphics.newImage("images/mouse/bird-mouse.png")
   mouseTree = love.graphics.newImage("images/mouse/bigTree-mouse.png")
   mouseBush = love.graphics.newImage("images/mouse/bigBush-mouse.png")
+  mouseImg = love.graphics.newImage("images/mouse/mouse.png")
+  mouseImgClick = love.graphics.newImage("images/mouse/mouse-click.png")
   
   return setmetatable({ reference_pos = ref_pos,
                         screen_pos = scr_pos,
@@ -58,6 +63,10 @@ function mouse_input:init()
   self.height = SCR_HEIGHT
   self.reference_pos = vector2:new(0.5*SCR_WIDTH, 0.5*SCR_HEIGHT)
   self.screen_pos = vector2:new(0.5*SCR_WIDTH, 0.5*SCR_HEIGHT)
+end
+
+function mouse_input:setClick(bool)
+  self.click = bool
 end
 
 function mouse_input:set_input(param)  
@@ -195,10 +204,15 @@ function mouse_input:draw()
   local x, y = love.mouse.getPosition()
   if mouseInput == nil then
       lg.setColor(self.color, self.color1, self.color2, self.color3)
-	  local len = 10
-	  lg.setLineWidth(2)
-	  lg.line(x, y, x, y + len)
-	  lg.line(x, y, x + 0.7 * len, y + len - 3)
+	  --local len = 10
+	  --lg.setLineWidth(2)
+	  --lg.line(x, y, x, y + len)
+	  --lg.line(x, y, x + 0.7 * len, y + len - 3)
+	  if self.click then
+	    lg.draw(mouseImgClick, x-15, y-10)
+	  else
+		lg.draw(mouseImg, x-15, y-10)
+	  end
   elseif mouseInput =="bird" then
 	lg.draw(mouseBoid, x-15, y-10)
   elseif mouseInput =="tree" then

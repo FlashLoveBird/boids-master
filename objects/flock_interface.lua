@@ -54,11 +54,16 @@ function fi:new(level, parent_flock)
   sablePleinIcon = love.graphics.newImage("images/ui/sablier-plein.png")
   sableVideIcon = love.graphics.newImage("images/ui/sablier-vide.png") 
   barre2 = love.graphics.newImage("images/ui/barre2.png")
-  rondBlanc = love.graphics.newImage("images/ui/rond-blanc.png")  
+  rondBlanc = love.graphics.newImage("images/ui/rond-blanc.png")
+  objectiv = love.graphics.newImage("images/ui/objectiv.png")
+  sleepIcon = love.graphics.newImage("images/ui/sleepIcon.png")
+  searchIcon = love.graphics.newImage("images/ui/search.png")
+  flyIcon = love.graphics.newImage("images/ui/flyIcon.png")  
   
   panelInset_brown = love.graphics.newImage("images/PNG/panelInset_beigeLight.png")
-  searchIcon = love.graphics.newImage("images/Colored/genericItem_color_111.png")
+  searchBigIcon = love.graphics.newImage("images/Colored/genericItem_color_111.png")
   heroIcon = love.graphics.newImage("images/Colored/genericItem_color_111.png")
+  selectBoid = love.graphics.newImage("images/ui/selectBoid.png")
   
   fi.buttons = {}
   local cam = level:get_camera()
@@ -71,18 +76,17 @@ function fi:new(level, parent_flock)
 end
 
 function fi:keypressed(key)
-print(key)
-if fi.hero == nil then 
-	fi.hero = self.level:get_player()
-end
-if key =="space" and fi.hero.boidsIn==false then
-	fi.hero:breathe()
-elseif key =="space" and fi.hero.boidsIn==true then
-	fi.hero:breathe()
-	--fi.hero:unbreathe()
-elseif key =="lshift" and fi.hero.boidsIn==true then
-	fi.hero:release(self.flock)
-end
+	print(key)
+	if fi.hero == nil then 
+		fi.hero = self.level:get_player()
+	end
+	if key =="space" and fi.hero.boidsIn==false then
+		fi.hero:breathe()
+	elseif key =="space" and fi.hero.boidsIn==true then
+		--fi.hero:breathe()
+		fi.hero:release(self.flock)
+		--fi.hero:unbreathe()
+	end
 end
 function fi:keyreleased(key)
 if fi.hero == nil then 
@@ -377,10 +381,10 @@ function fi:_draw_select_boid_preview()
   self:_update_select_bboid_preview_bbox()
   local bbox = self.select_boid_bbox
   
-  lg.setColor(0, 100, 255, 255)
+  lg.setColor(255, 255, 255, 255)
   lg.setLineWidth(1)
   bbox:draw()
-  lg.setColor(0, 0, 255, 20)
+  --lg.setColor(0, 0, 255, 20)
   bbox:draw("line")
   
   local storage = self.temp_collision_table
@@ -393,10 +397,11 @@ function fi:_draw_select_boid_preview()
     local b = storage[i]
     local x, y = b.position.x, b.position.y
     local r = self.select_boid_radius
-    lg.setColor(0, 100, 255, 255)
-    lg.circle("line", x, y, r)
-    lg.setColor(0, 100, 255, 100)
-    lg.circle("line", x, y, r - 3)
+    --lg.setColor(0, 100, 255, 255)
+    --lg.circle("line", x, y, r)
+    --lg.setColor(0, 100, 255, 100)
+    --lg.circle("line", x, y, r - 3)
+	love.graphics.draw(selectBoid, x-25, y-25)
   end
   
   
@@ -434,9 +439,9 @@ function fi:_draw_selected_boids()
 		--love.graphics.draw(sexIcon, tableX+120, tableY)
 		
 		if b.needHome == true then
-			love.graphics.draw(nohomeIcon, tableX+150, tableY+50)
+			love.graphics.draw(nohomeIcon, tableX+150, tableY+70)
 		else
-			love.graphics.draw(homeIcon, tableX+150, tableY+50)
+			love.graphics.draw(homeIcon, tableX+150, tableY+70)
 		end
 		
 		lg.setColor(0, 0, 0, 255)
@@ -448,13 +453,23 @@ function fi:_draw_selected_boids()
 		lg.setColor(255, 255, 255, 255)
 		if b.sex == true then
 			--lg.print("Mâle", tableX+170, tableY+10)
-			love.graphics.draw(sexMIcon, tableX+160, tableY)
+			love.graphics.draw(sexMIcon, tableX+220, tableY+95)
 		else
-			love.graphics.draw(sexFIcon, tableX+160, tableY)
+			love.graphics.draw(sexFIcon, tableX+220, tableY+95)
 		end
-		lg.setColor(0, 0, 0, 255)
-		lg.print("Objectif :", tableX+120, tableY+50)
-		lg.print(b.objectiv, tableX+120, tableY+70)
+		--lg.setColor(0, 0, 0, 255)
+		--lg.print("Objectif :", tableX+120, tableY+50)
+		--lg.print(b.objectiv, tableX+120, tableY+70)
+		
+		love.graphics.draw(objectiv, tableX+150, tableY+10)
+		
+		if b.objectiv=="sleep" or b.objectiv=="goFloor" then
+			love.graphics.draw(sleepIcon, tableX+215, tableY+15)
+		elseif b.objectiv=="fly" then
+			love.graphics.draw(flyIcon, tableX+215, tableY+15)
+		else
+			love.graphics.draw(searchIcon, tableX+215, tableY+15)
+		end
 		
 		--love.graphics.draw(homeIcon, tableX+170, tableY+100)
 		

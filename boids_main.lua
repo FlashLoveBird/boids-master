@@ -64,12 +64,6 @@ function love.load(args)
   lk = love.keyboard
   li = love.image
   
-   print('args[1]')
-  print(args[1])
-   print('args[2]')
-  print(args[2])
-  print('args[3]')
-  print(args[3])
   ARGS = args
   DEBUG = true
   FREEZE = false

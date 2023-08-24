@@ -52,6 +52,7 @@ local running = nil
 hero.tired = 300
 hero.action = {}
 hero.launch = false
+hero.showWarningBool = false
 
 local hero_mt = { __index = hero }
 function hero:new(level, flock, x, y)
@@ -133,6 +134,8 @@ function hero:init()
 	hero.animation11 = hero:newAnimation(love.graphics.newImage("images/hero_images/runRight.png"), 426, 240, 0.5)
 	
 	hero.animation12 = hero:newAnimation(love.graphics.newImage("images/hero_images/throw_down.png"), 426, 240, 1)
+	
+	showWarningImg = love.graphics.newImage("images/ui/sensInterdit.png")
 	
 	table.insert(hero.animations, hero.animation1)
 	table.insert(hero.animations, hero.animation2)
@@ -513,9 +516,11 @@ if self.breathing then
 					maxI = #objects
 				end
 				for i=1,maxI do
-					local boid = objects[i]
-					boid:goHero()
-					self.boidsIn = true
+					if objects[i].boidType == 1 then
+						local boid = objects[i]
+						boid:goHero()
+						self.boidsIn = true
+					end
 				end
 			end
 	  end
@@ -555,6 +560,10 @@ return end
   end
 end
 
+function hero:showWarning(bool)
+	self.showWarningBool = bool
+end
+
 function hero:release(activeFlock)
 local boidsIn = self.boidsIn
 local objects = {}
@@ -584,7 +593,6 @@ activeFlock:get_boids_in_radius(x, y, 500, objects)
 			end
 		end
 	end
-	self.boidsIn = false
 end
 
 function hero:setRandomPoints(mx, my, element)
@@ -638,7 +646,6 @@ function hero:setRandomPoints(mx, my, element)
 		--map[cmx][cmy]:setState(true)
 		--map[cmx][cmy]:set_position(cmx,cmy)
 		--state.level:setTreeMap(map)
-		print('AJOUT BUSH')
 	end
 
 end
@@ -662,7 +669,7 @@ function hero:draw()
 	  local current_time = self.level.master_timer:get_time()
 	  if self.breathing == true then
 		lg.setColor(255, 0, 0, 255)
-		--lg.circle("line", x+60, y+60, radius)
+		lg.circle("line", x+60, y+60, radius)
 	  end
 	  --love.graphics.circle("fill", x, y, 50, 100)
 	  lg.setColor(255, 255, 255, 255)
@@ -724,7 +731,9 @@ function hero:draw()
 	  end
 	  
 	  
-	  
+	if self.showWarningBool == true then
+		lg.draw(showWarningImg, x*2+150, y*2-80)
+	end
 	--end
 	
 	
