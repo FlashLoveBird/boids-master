@@ -109,6 +109,8 @@ local timeBigInspire = self.timeBigInspire
 local timeBigExpire = self.timeBigExpire
 local timeBirth = self.timeBirth
 
+local dt = dt * 10
+
 if timeInspire == true and timeBirth <= 100 then
 	animationInspire.currentTime = animationInspire.currentTime + dt
 	if animationInspire.currentTime >= animationInspire.duration then
@@ -157,13 +159,14 @@ if timeBigExpire == true then
 	end
 end
 
+local dt = dt / 5
 
 local emitFoodTime = self.emitFoodTime
 if not self.food_source:get_food() then
-	if self.emitFood == true and timeBirth>100 then
+	if self.emitFood == true and timeBigInspire==true then
 		--print(self.emitFoodTime)
-		self.emitFoodTime = emitFoodTime + dt * math.random(-10,11)
-		if self.emitFoodTime>11 then
+		self.emitFoodTime = emitFoodTime + dt * math.random(-1,2)
+		if self.emitFoodTime>3 then
 			self.emitFoodTime=0
 			self:emiterFood()
 		end

@@ -208,22 +208,26 @@ function fi:mousereleased(x, y, button)
       --self.flock:get_boids_in_radius(x, y, r, storage)
       local boid = storage[1]
       if boid then
-        if selected[boid] then
-          selected[boid] = nil
-        else
-          selected[boid] = boid
-		  boid:sing(1)
-		  self.nb_boids_selected = self.nb_boids_selected + 1
-        end
+		 if boid.boidType~=10 then
+			if selected[boid] then
+			  selected[boid] = nil
+			else
+			  selected[boid] = boid
+			  boid:sing(1)
+			  self.nb_boids_selected = self.nb_boids_selected + 1
+			end
+		 end
       end
     else
       local bbox = self.select_boid_bbox
       self.flock:get_boids_in_bbox(bbox, storage)
       for i=1,#storage do
-        selected[storage[i]] = storage[i]
-		storage[i]:sing(1)
-		self.nb_boids_selected = self.nb_boids_selected + 1
-      end
+		if storage[i].boidType~=10 then
+			selected[storage[i]] = storage[i]
+			storage[i]:sing(1)
+			self.nb_boids_selected = self.nb_boids_selected + 1
+		end
+	  end
     end
     
     --self.left_click_mode = false
@@ -290,6 +294,23 @@ function fi:toggle_button(b)
  -- end
   b.toggle = not b.toggle
   print(self.selectItem)
+end
+
+function fi:newAnimation(image, width, height, duration)
+    local animation = {}
+    animation.spriteSheet = image;
+    animation.quads = {};
+
+    for y = 0, image:getHeight() - height, height do
+        for x = 0, image:getWidth() - width, width do
+            table.insert(animation.quads, love.graphics.newQuad(x, y, width, height, image:getDimensions()))
+        end
+    end
+
+    animation.duration = duration or 1
+    animation.currentTime = 0
+
+    return animation
 end
 
 ------------------------------------------------------------------------------
@@ -401,7 +422,9 @@ function fi:_draw_select_boid_preview()
     --lg.circle("line", x, y, r)
     --lg.setColor(0, 100, 255, 100)
     --lg.circle("line", x, y, r - 3)
-	love.graphics.draw(selectBoid, x-25, y-25)
+	if b.boidType~=10 then
+		love.graphics.draw(selectBoid, x-25, y-25)
+	end
   end
   
   
@@ -412,18 +435,20 @@ function fi:_draw_selected_boids()
   lg.setLineWidth(1)
   local cam = self.level:get_camera()
   local camWi, camHe = cam:get_size()
+  lg.setFont(FONTS.appleLight)
+  
   for _,b in pairs(self.selected_boids) do
 	if self.nb_boids_selected == 1 then
 		local x, y = math.floor(b.position.x), math.floor(b.position.y)
 		local r = self.select_boid_radius
 		local tableX = cam.pos.x+camWi-320
-		local tableY = cam.pos.y+180
+		local tableY = cam.pos.y+280
 		local hunger = math.floor(b.hunger)
 		local tired = math.floor(b.tired)
 		local social = math.floor(b.social)
 		lg.setColor(255, 255, 255, 255)
-		love.graphics.draw(bg, cam.pos.x+camWi-400, cam.pos.y+100)
-		love.graphics.draw(tableImg, cam.pos.x+camWi-350, cam.pos.y+120)
+		love.graphics.draw(bg, cam.pos.x+camWi-400, cam.pos.y+200)
+		love.graphics.draw(tableImg, cam.pos.x+camWi-350, cam.pos.y+220)
 		lg.setColor(0, 0, 0, 255)
 		love.graphics.rectangle("fill", tableX+10,tableY+10, hunger,25)
 		love.graphics.rectangle("fill", tableX+10,tableY+60, tired,25)
@@ -477,43 +502,45 @@ function fi:_draw_selected_boids()
 			lg.print("A ete enceinte", tableX+50, tableY+140)
 		end
 		
-		lg.setColor(255, 255, 255, 255)
-		love.graphics.draw(bg, cam.pos.x+camWi-400, cam.pos.y+400)
-		love.graphics.draw(tableImg, cam.pos.x+camWi-350, cam.pos.y+420)
-		local tableY = cam.pos.y+460
-		
-		lg.setColor(0, 0, 0, 255)
-		--lg.circle("line", x, y, r)
-		if b.lover then
-			love.graphics.draw(loveIcon, tableX, tableY+20)
-			--lg.print("En couple avec :", tableX, tableY)
-			lg.print(b.lover.name, tableX, tableY+20)
-		else
-			--lg.print("Pas de relation", tableX, tableY)
+		if b.boidType == 1 then
+			lg.setColor(255, 255, 255, 255)
+			love.graphics.draw(bg, cam.pos.x+camWi-400, cam.pos.y+500)
+			love.graphics.draw(tableImg, cam.pos.x+camWi-350, cam.pos.y+520)
+			local tableY = cam.pos.y+560
+			
+			lg.setColor(0, 0, 0, 255)
+			--lg.circle("line", x, y, r)
+			if b.lover then
+				love.graphics.draw(loveIcon, tableX, tableY+20)
+				--lg.print("En couple avec :", tableX, tableY)
+				lg.print(b.lover.name, tableX, tableY+20)
+			else
+				--lg.print("Pas de relation", tableX, tableY)
+			end
+			--lg.print("is_initialized ?", tableX, tableY+60)
+			--lg.print(tostring(b.is_initialized), tableX, tableY+80)
+			
+			--lg.print("is_inHome ?", tableX, tableY+100)
+			--lg.print(tostring(b.inHome), tableX, tableY+120)
+			lg.setColor(255, 255, 255, 255)
+			--love.graphics.rectangle("fill", tableX+10,tableY+10, hunger,25)
+			--love.graphics.draw(barre, tableX, tableY+10)
+			love.graphics.draw(barre2, tableX+30, tableY+30)
+			love.graphics.draw(rondBlanc, tableX+150, tableY+25)
+			love.graphics.draw(turtleIcon, tableX-10, tableY)
+			love.graphics.draw(rabbitIcon, tableX+180, tableY-10)
+			
+			love.graphics.draw(barre2, tableX+30, tableY+110)
+			love.graphics.draw(rondBlanc, tableX+150, tableY+105)
+			love.graphics.draw(sablePleinIcon, tableX, tableY+80)
+			love.graphics.draw(sableVideIcon, tableX+200, tableY+80)
+			
+			--lg.print(tostring(b.needHome), cam.pos.x+1500, cam.pos.y+620)
+			
+			
+			lg.print(b.foodGrab, x+100, y+50)
+			lg.print(b.woodGrab, x+100, y+30)
 		end
-		--lg.print("is_initialized ?", tableX, tableY+60)
-		--lg.print(tostring(b.is_initialized), tableX, tableY+80)
-		
-		--lg.print("is_inHome ?", tableX, tableY+100)
-		--lg.print(tostring(b.inHome), tableX, tableY+120)
-		lg.setColor(255, 255, 255, 255)
-		--love.graphics.rectangle("fill", tableX+10,tableY+10, hunger,25)
-		--love.graphics.draw(barre, tableX, tableY+10)
-		love.graphics.draw(barre2, tableX+30, tableY+30)
-		love.graphics.draw(rondBlanc, tableX+150, tableY+25)
-		love.graphics.draw(turtleIcon, tableX-10, tableY)
-		love.graphics.draw(rabbitIcon, tableX+180, tableY-10)
-		
-		love.graphics.draw(barre2, tableX+30, tableY+110)
-		love.graphics.draw(rondBlanc, tableX+150, tableY+105)
-		love.graphics.draw(sablePleinIcon, tableX, tableY+80)
-		love.graphics.draw(sableVideIcon, tableX+200, tableY+80)
-		
-		--lg.print(tostring(b.needHome), cam.pos.x+1500, cam.pos.y+620)
-		
-		
-		lg.print(b.foodGrab, x+100, y+50)
-		lg.print(b.woodGrab, x+100, y+30)
 	end
 	
     if self.debug then
@@ -548,20 +575,6 @@ function fi:draw()
   
   --love.graphics.draw(panelInset_brown, cx+vx-250, cy+vy-150)
   --love.graphics.draw(heroIcon, cx+vx-230, cy+vy-140)
-  
-  local cam = self.level:get_camera()
-  local tableX = cam.pos.x+100
-  local tableY = cam.pos.y+100
-  for i=1,#self.buttons do
-    local b = self.buttons[i]
-    if b.toggle then
-	  lg.setColor(50, 100, 255, 255)
-      --lg.rectangle("fill", tableX, tableY, 100,100)
-    else
-	  lg.setColor(100, 20, 100, 255)
-      --lg.rectangle("fill", tableX, tableY, 100,100)
-    end
-  end
   
 end
 

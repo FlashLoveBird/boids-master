@@ -23,6 +23,8 @@ tw.polygonizer_update_rate = 1.5   -- updates per second
 tw.min_radius = 0
 local startTime = os.time()
 local endTime = startTime+10
+tw.animations = {}
+tw.animation1 = nil
 
 local tw_mt = { __index = tw }
 function tw:new(level, flock)
@@ -35,9 +37,34 @@ function tw:new(level, flock)
   tw.collision_table = {}
   tw.update_timer = timer:new(level:get_master_timer(), 1/tw.polygonizer_update_rate)
   tw.update_timer:start()
-  townGraphic = love.graphics.newImage("images/3D/tentClosed.png")
+  --townGraphic = love.graphics.newImage("images/env/town.png")
+  
+  tw:initTown()
+  
   
   return tw
+end
+
+function tw:initTown(x, y, radius)
+	self.animation1 = self:newAnimation(love.graphics.newImage("images/env/town.png"), 524, 351, 2)
+    table.insert(self.animations, self.animation1)
+end
+
+function tw:newAnimation(image, width, height, duration)
+   local animation = {}
+   animation.spriteSheet = image;
+   animation.quads = {};
+
+    for y = 0, image:getHeight() - height, height do
+        for x = 0, image:getWidth() - width, width do
+            table.insert(animation.quads, love.graphics.newQuad(x, y, width, height, image:getDimensions()))
+        end
+    end
+
+    animation.duration = duration or 1
+    animation.currentTime = 0
+	
+	return animation
 end
 
 function tw:add_town(x, y, radius)
@@ -195,7 +222,7 @@ function tw:_update_area(dt)
 		  if not bhash[objects[i]] and randomNb == 1 then
 			local dead = math.random(1,#objects)
 			--flock:pan(objects[i],s.x,s.y)
-		  elseif objects[i]:getObjectiv()~="goOut" and objects[i]:getObjectiv()~="goOnHomeWith" and objects[i]:getObjectiv()~="sleep" then
+		  elseif objects[i]:getObjectiv()~="goOut" and objects[i]:getObjectiv()~="goOnHomeWith" and objects[i]:getObjectiv()~="sleep" and objects[i].boidType ~= 10 then
 				local x, y, z = objects[i]:get_position()
 				objects[i]:set_waypoint(x+math.random(-200,200), y+math.random(-200,200), math.random(50,1000),50,100)
 				objects[i]:unObstacleMe()
@@ -238,6 +265,9 @@ function tw:update(dt)
   self:_update_area(dt)
   self:_calculate_total_area()
   self:_update_polygonizer()
+  
+  self.animations[1].currentTime = 1
+  
 end
 
 ------------------------------------------------------------------------------
@@ -249,7 +279,11 @@ function tw:draw()
     local s = sources[i]
     lg.setColor(255, 255, 255, 255)
     --lg.circle("line", s.x, s.y, s.radius)
-	love.graphics.draw(townGraphic, s.x-50, s.y-50)
+	--love.graphics.draw(townGraphic, s.x-220, s.y-150)
+	
+	local spriteNum = math.floor( self.animations[1].currentTime /  self.animations[1].duration * #self.animations[1].quads) + 1
+    love.graphics.draw(self.animations[1].spriteSheet,  self.animations[1].quads[spriteNum], s.x-220, s.y-150)
+	
     
     local sr = s.starting_radius
     local r = s.radius

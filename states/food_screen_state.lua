@@ -58,7 +58,7 @@ function food_screen_state.draw()
   local x = 0.5 * SCR_WIDTH - 0.5 * width + xpad
   local y = 0.5 * SCR_HEIGHT - 0.5 * height + ypad
 
-  lg.setFont(FONTS.muli)
+  lg.setFont(FONTS.muliBig)
   lg.setColor(255, 255, 255, 255)
   lg.print("Paper life", x, y)
   

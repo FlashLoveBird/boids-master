@@ -563,8 +563,8 @@ local imageAnimationOmbreBirth = self.imageAnimationOmbreBirth
 local animationTreeInspire = self:newAnimation(imageAnimationTreeInspire, 181, 181, 5)
 local animationTreeExpire = self:newAnimation(imageAnimationTreeExpire, 189, 147, 5)
 local animationTreeBirth = self:newAnimation(imageAnimationTreeBirth, 378, 376, 5)
-local animationBigTreeInspire = self:newAnimation(imageAnimationBigTreeInspire, 378, 376, 2)
-local animationBigTreeExpire = self:newAnimation(imageAnimationBigTreeExpire, 378, 376, 2)
+local animationBigTreeInspire = self:newAnimation(imageAnimationBigTreeInspire, 1278, 1048, 2)
+local animationBigTreeExpire = self:newAnimation(imageAnimationBigTreeExpire, 1278, 1048, 2)
 local animationOmbre = self:newAnimation(imageAnimationOmbre, 361, 376, 2)
 local animationOmbreBirth = self:newAnimation(imageAnimationOmbreBirth, 189, 376, 8)
 local te = tree:new(self,self.nbTree,flock, x, y, animationTreeInspire,animationTreeExpire,animationTreeBirth,animationBigTreeInspire,animationBigTreeExpire,animationOmbre,animationOmbreBirth)
@@ -785,7 +785,7 @@ function level:update(dt)
   if #bushs>0 then
 		for i=#bushs,1,-1 do
 			if self.bushs[i] ~= nil then
-				self.bushs[i]:update(dt)
+				self.bushs[i]:update(dt/10)
 			end
 		end
 	end
@@ -816,6 +816,12 @@ function level:draw()
     shard_set:draw_ground_layer()
   end
   
+  --self.camera:set()
+  
+  if self.hero then self.hero:draw() end
+  
+  --self.camera:unset()
+  
 
   
   for _,shard_set in pairs(self.shard_sets) do
@@ -844,15 +850,7 @@ function level:draw()
 		self.bushs[i]:draw()
 	end
   end
-  
-  
-  self.camera:set()
-  
-  if self.hero then self.hero:draw() end
-  
-  self.camera:unset()
    
-  
   for i=1,#self.trees do
     if self.trees[i] ~= nil then
 		self.trees[i]:draw()

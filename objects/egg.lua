@@ -188,7 +188,7 @@ function egg:update(dt, journeyTime, player)
 end
 
 ----------------------------------------------------------------4--------------
-function egg:draw()
+function egg:draw(cx, cy)
 local boidEmit = self.boidEmit
 local x = self.x 
 local y = self.y
@@ -203,13 +203,13 @@ love.graphics.scale(0.5, 0.5)   -- reduce everything by 50% in both X and Y coor
 		lg.setColor(255, 255, 255, 255)
 		--lg.draw(eggImg, x, y)
 	end
-	
+
 if self.ecloseAnim==false then
 	local spriteNum = math.floor(animationEclose.currentTime / animationEclose.duration * #animationEclose.quads) + 1
-	love.graphics.draw(animationEclose.spriteSheet, animationEclose.quads[spriteNum], x*2, y*2)
+	love.graphics.draw(animationEclose.spriteSheet, animationEclose.quads[spriteNum], (x-cx)*2, (y-cy)*2)
 else
 	local spriteNum2 = math.floor(animationBird.currentTime / animationBird.duration * #animationBird.quads) + 1
-	love.graphics.draw(animationBird.spriteSheet, animationBird.quads[spriteNum2], x*2, y*2)
+	love.graphics.draw(animationBird.spriteSheet, animationBird.quads[spriteNum2], (x-cx)*2, (y-cy)*2)
 end
 
 love.graphics.pop()

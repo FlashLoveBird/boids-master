@@ -127,13 +127,13 @@ function food_menu_state.draw()
   local x = 0.5 * SCR_WIDTH - 0.25 * SCR_WIDTH
   local y = 0.5 * SCR_HEIGHT - 0.25 * SCR_HEIGHT
 
-  lg.setFont(FONTS.muli)
+  lg.setFont(FONTS.appleMedium)
   lg.setColor(251, 121, 0, 255)
   lg.print("Menu", x, y)
   
     -- intruction text
   lg.setColor(0, 0, 0, 255)
-  lg.setFont(FONTS.bebas_text)
+  lg.setFont(FONTS.muli)
   lg.print("Nb de bush", x-100, y+300)
   lg.print(tostring(nbBush), x-35, y+500)
   lg.print("Nb de nids", x+400, y+300)
@@ -144,7 +144,6 @@ function food_menu_state.draw()
   local ystep = 200
   
   -- draw buttons
-  lg.setFont(FONTS.muli)
   for i=1,#state.buttons do
     local b = state.buttons[i]
 	lg.setColor(255, 255, 255, 255)

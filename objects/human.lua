@@ -2,6 +2,7 @@ local vector3 = require("vector3")
 local profile = require( "profile" )
 local Vector = require( "vector" )
 local Luafinding = require( "luafinding" )
+local namegen = require("namegen")
 local ID = 1
 
 --##########################################################################--
@@ -286,8 +287,14 @@ function hu:init(level, parent_flock, x, y, z, dirx, diry, dirz, free, sing1, si
   self.dead = false
   self.confuse = false
   --self.needHome = false
-  if math.random(1,2)==1 then self.sex = false
-  else self.sex = true
+  if math.random(1,2)==1 then 
+	self.sex = false
+	local name = namegen.generate("dwarf male")
+    self.name = name
+  else 
+	self.sex = true
+	local name = namegen.generate("elf female")
+    self.name = name
   end
   self.age = 1
   self.nbStepPath = 0
@@ -305,7 +312,6 @@ function hu:init(level, parent_flock, x, y, z, dirx, diry, dirz, free, sing1, si
   end
   
   self.id = ID
-  self.name = "Jean-Paul-"..ID
   ID = ID + 1
   
   -- orientation
@@ -1005,6 +1011,12 @@ function hu:_update_waypoint_rule()
 		self:deactivate()
 		self.inHome = false
 		self.countPath = 1
+		if self.seekTree~=nil then
+			if self.seekTree:getType() == 1 then
+				self.seekTree:setState(true)
+				self.seekTree = nil
+			end
+		end
 		--self.objectiv = "fly"
 	elseif objectiv == "goOnHome" then 
 		self:goHome()
@@ -1066,8 +1078,6 @@ function hu:grabFood(food)
 	if foodGrab < 50 then
 		self.foodGrab = foodGrab + math.floor(food/10000)
 		self:set_emote('food')
-		print("self.foodGrab")
-		print(self.foodGrab)
 	end
 	if self.foodGrab > 40 and self.emit then 
 		--self:set_waypoint(self.originX,self.originY,self.originZ)
@@ -1985,26 +1995,29 @@ if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 	if self.path==nil then
 		self:updatePath(Vector(caseX,caseY),Vector(destinationX,destinationY))
 		print("IL Y A UN ARBRE ET JY VAIS LA")
-		if self.path then
-			self.nbStepPath = #self.path
-			--selfBody:set_color1(0)
-			self.step = self.nbStepPath
+		if #self.path > 10 then
+			self.nbStepPath = #self.path -- math.floor(#self.path / 2)
+			self.bigPath = math.floor(#self.path / 5)
 		else
-			local randX = math.random(-300,300)
-			local randY = math.random(-300,300)
-			if x+randX > 500 and x+randX < 12800 and y+randY > 500 and y+randY < 12800 then
-				self:set_waypoint(x+randX, y+randY,math.random(50,100),50,100)
-				self:setObjectiv("goOnSeekTree")
-				self.searchObjRad = self.searchObjRad + 10
-				self.treeFound = nil
-			else
-				local randX = math.random(-10,10)
-				local randY = math.random(-10,10)
-				self:set_waypoint(x+randX, y+randY,math.random(50,100),50,100)
-				self:setObjectiv("goOnSeekTree")
-				self.searchObjRad = self.searchObjRad + 10
-				self.treeFound = nil
-			end
+			self.nbStepPath = #self.path
+		end
+		--selfBody:set_color1(0)
+		self.step = self.nbStepPath
+	else
+		local randX = math.random(-300,300)
+		local randY = math.random(-300,300)
+		if x+randX > 500 and x+randX < 12800 and y+randY > 500 and y+randY < 12800 then
+			self:set_waypoint(x+randX, y+randY,math.random(50,100),50,100)
+			self:setObjectiv("goOnSeekTree")
+			self.searchObjRad = self.searchObjRad + 10
+			self.treeFound = nil
+		else
+			local randX = math.random(-10,10)
+			local randY = math.random(-10,10)
+			self:set_waypoint(x+randX, y+randY,math.random(50,100),50,100)
+			self:setObjectiv("goOnSeekTree")
+			self.searchObjRad = self.searchObjRad + 10
+			self.treeFound = nil
 		end
 	end
 	self:clear_waypoint()
@@ -2014,7 +2027,11 @@ if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 		local posY = math.floor( self.path[countPath].y * w ) + 1
 		self:set_waypoint(posX, posY,500,50,100)
 		--self.step = self.step + self.step
-		self.countPath = countPath + 1
+		if self.bigPath then
+			self.countPath = countPath + self.bigPath
+		else
+			self.countPath = countPath + 1
+		end
 	else
 		self.step = #self.path
 		if tree=="freeTree" then

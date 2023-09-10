@@ -161,15 +161,24 @@ function bfs:_update_area(dt)
 		if #objects>0 then
 			local randomNb = 1--math.random(0,1000)
 			for i=1,#objects do
-			  if not bhash[objects[i]] and objects[i].foodGrab<50 then
+			  if not bhash[objects[i]] and objects[i].foodGrab<50 and objects[i].boidType~=10 then
 				count = count + 1
 				bhash[objects[i]] = true
 				objects[i]:grabFood(self.depletion_rate * 10 * dt)
-			  elseif objects[i]:getObjectiv()~="goOut" and objects[i]:getObjectiv()~="goOnHomeWith" then
+			  elseif objects[i]:getObjectiv()~="goOut" and objects[i]:getObjectiv()~="goOnHomeWith" and objects[i].boidType~=10 then
 				local x, y, z = objects[i]:get_position()
 				objects[i]:set_waypoint(x+math.random(-200,200), y+math.random(-200,200), math.random(50,1000),50,100)
 				objects[i]:unObstacleMe()
 				objects[i]:setObjectiv("goOut")
+			  end
+			  if objects[i].boidType==10 then
+					if objects[i]:getFood()<7 then
+						objects[i]:canSetStateGrab(true)
+						if objects[i]:getStateGrab() == true then
+							count = count + 1
+							objects[i]:grabFood(self.depletion_rate * 10 * dt)
+						end
+					end
 			  end
 			end
 		end

@@ -2,6 +2,7 @@ local vector3 = require("vector3")
 local profile = require( "profile" )
 local Vector = require( "vector" )
 local Luafinding = require( "luafinding" )
+local namegen = require("namegen")
 local ID = 1
 
 --##########################################################################--
@@ -298,7 +299,8 @@ function bd:init(level, parent_flock, x, y, z, dirx, diry, dirz, free, sing1, si
   end
   
   self.id = ID
-  self.name = "Jean-Paul-"..ID
+  local name = namegen.generate("dwarf male")
+  self.name = name--"Jean-Paul-"..ID
   ID = ID + 1
   
   -- orientation
@@ -1283,6 +1285,7 @@ function bd:_update_boid_life(dt)
 	local pollution = self.level:get_pollution()
 	local searchObjRad = self.searchObjRad
 	local active = self.waypoint.is_active
+	local acc = self:get_acceleration()
 	
 	self.sight_radius = 200 --- pollution
 	
@@ -1307,8 +1310,17 @@ function bd:_update_boid_life(dt)
 			print("continue de chrcher maison")
 		end
 		if self.objectiv~="goFloor" then
-			self.tired = tired - dt*20
-			self.hunger = hunger - dt*25
+			if acc.x<0 then
+				acc.x = -acc.x
+			end
+			if acc.y<0 then
+				acc.y = -acc.y
+			end
+			if acc.z<0 then
+				acc.z = -acc.z
+			end
+			self.hunger = hunger - (((acc.x + acc.y + acc.z)*2-math.random(-2,0))*dt)
+			self.tired = tired - (((acc.x + acc.y + acc.z)*2-math.random(-2,0))*dt)
 		else
 			if tired < 99 then
 				self.tired = tired + dt

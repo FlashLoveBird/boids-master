@@ -192,7 +192,7 @@ function LightWorld:GetColor()
 end
 
 function LightWorld:SetPosition(x, y, z)
-	
+
 	if x ~= self.x then
 		
 		self.x = x
@@ -314,7 +314,6 @@ function LightWorld:Update(dt)
 				local x, y = Light:GetPosition()
 				
 				love.graphics.draw(Light.Canvas, x - Light.Radius, y - Light.Radius)
-				
 			end
 			
 		end

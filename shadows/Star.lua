@@ -9,7 +9,7 @@ Star.__index = Star
 Star.__type = "Star"
 
 Star.Star = true
-Star.Blur = true
+Star.Blur = false
 
 halfPi = math.pi * 0.5
 
@@ -124,11 +124,11 @@ function Star:Update()
 		if self.Blur then
 			
 			-- Generate a radial blur (to make the light softer)
-			love.graphics.origin()
-			love.graphics.setShader(Shadows.RadialBlurShader)
-			Shadows.RadialBlurShader:send("Size", { self.Canvas:getDimensions() })
-			Shadows.RadialBlurShader:send("Position", { self:GetCanvasCenter() })
-			Shadows.RadialBlurShader:send("Radius", self.Radius * wz)
+			--love.graphics.origin()
+			--love.graphics.setShader(Shadows.RadialBlurShader)
+			--Shadows.RadialBlurShader:send("Size", { self.Canvas:getDimensions() })
+			--Shadows.RadialBlurShader:send("Position", { self:GetCanvasCenter() })
+			--Shadows.RadialBlurShader:send("Radius", self.Radius * wz)
 			
 		end
 		

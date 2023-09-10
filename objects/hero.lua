@@ -1,3 +1,5 @@
+local vector3 = require("vector3")
+local Vector = require( "vector" )
 
 --##########################################################################--
 --[[----------------------------------------------------------------------]]--
@@ -49,114 +51,197 @@ hero.activeBlastY = {}
 hero.run = false
 local walk = nil
 local running = nil
-hero.tired = 300
+hero.tired = 100
+hero.hunder = 0
+hero.social = 0
+hero.name = "Thomas"
+hero.sex = 0
+hero.foodGrab = 0
+hero.woodGrab = 0
 hero.action = {}
 hero.launch = false
 hero.showWarningBool = false
+hero.boidType = 10
+hero.temp_vector = nil
+hero.stateGrab = false
+hero.canStateGrab = false
+hero.getOut = false
 
 local hero_mt = { __index = hero }
 function hero:new(level, flock, x, y)
   local hero = setmetatable({}, hero_mt)
-  hero.level_map = level:get_level_map()
-  hero.level = level
-  hero.flock = flock
-  
-  local pos = vector2:new(600, 600)
-  -- for smooth movement
-  local target = physics.steer:new(pos)
-  target:set_dscale(1)
-  target:set_target(pos)
-  target:set_mass(camera2d.mass)  
-  target:set_max_speed(500)
-  target:set_force(500)
-  target:set_radius(300)
-  
-  hero.collision_table = {}
-  hero.t = 0
-  
-  local center = vector2:new(SCR_WIDTH/2, SCR_HEIGHT/2)
-  
-  hero.pos = pos
-  hero.center = center
-  hero.target = target
-  
-  local tmap = level:get_level_map().tile_maps[1]
-  x, y = x or tmap.bbox.x + TILE_WIDTH, y or tmap.bbox.y + TILE_HEIGHT
-  self.map_point = map_point:new(level, vector2:new(x, y))
-  self.map_point_2 = map_point:new(level, vector2:new(x+50, y))
-  self.map_point_3 = map_point:new(level, vector2:new(x+50, y+50))
-  self.map_point_4 = map_point:new(level, vector2:new(x, y+50))
-  
-  woosh = love.audio.newSource("sound/whoosh.wav", "stream")
-  woosh:setVolume(0.3)
-  
-  walk = love.audio.newSource("sound/steps-through-the-forest.mp3", "stream")
-  running = love.audio.newSource("sound/running.mp3", "stream")
-  breath1 = love.audio.newSource("sound/breath-1.mp3", "stream")
-  breath2 = love.audio.newSource("sound/breath-2.mp3", "stream")
-  breath3 = love.audio.newSource("sound/breath-3.mp3", "stream")
-  
-  walk:setVolume(0.2)
-  running:setVolume(0.3)
-  breath1:setVolume(0.3)
-  breath2:setVolume(0.3)
-  breath3:setVolume(0.3)
-  
-  --level:set_player(hero)
-  -- collider
-  --self.collider = flock:get_collider()
-  --self.map_point:update_position(vector2:new(x,y))
-  --self.collider:add_object(self.map_point, self)
-  
-  inspiration = love.audio.newSource("sound/inspiration_forte.mp3", "stream")
-  expiration = love.audio.newSource("sound/expiration.mp3", "stream")
-  appeau = love.audio.newSource("sound/chouette.wav", "stream")
-  vol = love.audio.newSource("sound/vol.wav", "stream")
-  fuite = love.audio.newSource("sound/sing-4.mp3", "stream")
-  
-  eggHeroImg = love.graphics.newImage("images/solo-egg.png")
-  hero:init()
+  hero:init(level, flock, x, y)
   return hero
 end
 
-function hero:init()
-	hero.animation1 = hero:newAnimation(love.graphics.newImage("images/hero_images/walkUp.png"), 426, 240, 3/2)
-	hero.animation2 = hero:newAnimation(love.graphics.newImage("images/hero_images/walkLeft.png"), 426, 240, 3/2)
-	hero.animation3 = hero:newAnimation(love.graphics.newImage("images/hero_images/walkDown.png"), 426, 240, 3/2)
-	hero.animation4 = hero:newAnimation(love.graphics.newImage("images/hero_images/walkRight.png"), 426, 240, 3/2)
-	hero.animation5 = hero:newAnimation(love.graphics.newImage("images/hero_images/noWalk.png"), 426, 240, 3)
-	hero.animation50 = hero:newAnimation(love.graphics.newImage("images/hero_images/noWalk-Night.png"), 322, 282, 3)
-	hero.animation6 = hero:newAnimation(love.graphics.newImage("images/hero_images/breathe.png"), 426, 240, 2)
-	hero.animation7 = hero:newAnimation(love.graphics.newImage("images/hero_images/expire.png"), 426, 240, 2)
-	hero.animation8 = hero:newAnimation(love.graphics.newImage("images/hero_images/runUp.png"), 426, 240, 0.5)
-	hero.animation9 = hero:newAnimation(love.graphics.newImage("images/hero_images/runLeft.png"), 426, 240, 0.5)
-	hero.animation10 = hero:newAnimation(love.graphics.newImage("images/hero_images/runDown.png"), 426, 240, 0.5)
-	hero.animation11 = hero:newAnimation(love.graphics.newImage("images/hero_images/runRight.png"), 426, 240, 0.5)
+function hero:init(level, flock, x, y)
+	self.animation1 = self:newAnimation(love.graphics.newImage("images/hero_images/walkUp.png"), 426, 240, 3/2)
+	self.animation2 = self:newAnimation(love.graphics.newImage("images/hero_images/walkLeft.png"), 426, 240, 3/2)
+	self.animation3 = self:newAnimation(love.graphics.newImage("images/hero_images/walkDown.png"), 426, 240, 3/2)
+	self.animation4 = self:newAnimation(love.graphics.newImage("images/hero_images/walkRight.png"), 426, 240, 3/2)
+	self.animation5 = self:newAnimation(love.graphics.newImage("images/hero_images/noWalk.png"), 426, 240, 3)
+	self.animation50 = self:newAnimation(love.graphics.newImage("images/hero_images/noWalk-Night.png"), 322, 282, 3)
+	self.animation6 = self:newAnimation(love.graphics.newImage("images/hero_images/breathe.png"), 426, 240, 2)
+	self.animation7 = self:newAnimation(love.graphics.newImage("images/hero_images/expire.png"), 426, 240, 2)
+	self.animation8 = self:newAnimation(love.graphics.newImage("images/hero_images/runUp.png"), 426, 240, 0.5)
+	self.animation9 = self:newAnimation(love.graphics.newImage("images/hero_images/runLeft.png"), 426, 240, 0.5)
+	self.animation10 = self:newAnimation(love.graphics.newImage("images/hero_images/runDown.png"), 426, 240, 0.5)
+	self.animation11 = self:newAnimation(love.graphics.newImage("images/hero_images/runRight.png"), 426, 240, 0.5)
 	
-	hero.animation12 = hero:newAnimation(love.graphics.newImage("images/hero_images/throw_down.png"), 426, 240, 1)
+	self.animation12 = self:newAnimation(love.graphics.newImage("images/hero_images/throw_down.png"), 426, 240, 1)
+	self.animation13 = self:newAnimation(love.graphics.newImage("images/hero_images/grabFood.png"), 426, 266, 3)
+	self.animation14 = self:newAnimation(love.graphics.newImage("images/hero_images/getOut.png"), 426, 240, 5)
 	
 	showWarningImg = love.graphics.newImage("images/ui/sensInterdit.png")
 	
-	table.insert(hero.animations, hero.animation1)
-	table.insert(hero.animations, hero.animation2)
-	table.insert(hero.animations, hero.animation3)
-	table.insert(hero.animations, hero.animation4)
-	table.insert(hero.animations, hero.animation5)
-	table.insert(hero.animations, hero.animation6)
-	table.insert(hero.animations, hero.animation7)
-	table.insert(hero.animations, hero.animation8)
-	table.insert(hero.animations, hero.animation9)
-	table.insert(hero.animations, hero.animation10)
-	table.insert(hero.animations, hero.animation11)
-	table.insert(hero.animations, hero.animation12)
+	table.insert(self.animations, self.animation1)
+	table.insert(self.animations, self.animation2)
+	table.insert(self.animations, self.animation3)
+	table.insert(self.animations, self.animation4)
+	table.insert(self.animations, self.animation5)
+	table.insert(self.animations, self.animation6)
+	table.insert(self.animations, self.animation7)
+	table.insert(self.animations, self.animation8)
+	table.insert(self.animations, self.animation9)
+	table.insert(self.animations, self.animation10)
+	table.insert(self.animations, self.animation11)
+	table.insert(self.animations, self.animation12)
+	table.insert(self.animations, self.animation13)
+	table.insert(self.animations, self.animation14)
+	
+	  self.level_map = level:get_level_map()
+	  self.level = level
+	  self.flock = flock
+	  
+	  local pos = vector2:new(600, 600, 100)
+	  -- for smooth movement
+	  local target = physics.steer:new(pos)
+	  target:set_dscale(1)
+	  target:set_target(pos)
+	  target:set_mass(camera2d.mass)  
+	  target:set_max_speed(500)
+	  target:set_force(500)
+	  target:set_radius(300)
+	  
+	  self.collision_table = {}
+	  self.t = 0
+	  
+	  self.getOut = false
+	  
+	  self.temp_vector = {}
+	  
+	  self.hunger = 100
+	  self.social = 0
+	  
+	  local center = vector2:new(SCR_WIDTH/2, SCR_HEIGHT/2)
+	  
+	  self.pos = pos
+	  self.position = pos
+	  self.center = center
+	  self.target = target
+	  
+	  local tmap = level:get_level_map().tile_maps[10]
+	  x, y, z = x or tmap.bbox.x + TILE_WIDTH, y or tmap.bbox.y + TILE_HEIGHT , 100
+	  self.map_point = map_point:new(level, vector2:new(x, y,z))
+	  self.map_point_2 = map_point:new(level, vector2:new(x+50, y))
+	  self.map_point_3 = map_point:new(level, vector2:new(x+50, y+50))
+	  self.map_point_4 = map_point:new(level, vector2:new(x, y+50))
+	  
+	  woosh = love.audio.newSource("sound/whoosh.wav", "stream")
+	  woosh:setVolume(0.3)
+	  
+	  walk = love.audio.newSource("sound/steps-through-the-forest.mp3", "stream")
+	  running = love.audio.newSource("sound/running.mp3", "stream")
+	  breath1 = love.audio.newSource("sound/breath-1.mp3", "stream")
+	  breath2 = love.audio.newSource("sound/breath-2.mp3", "stream")
+	  breath3 = love.audio.newSource("sound/breath-3.mp3", "stream")
+	  
+	  eatFood = love.audio.newSource("sound/eat-food.mp3", "stream")
+	  stomach = love.audio.newSource("sound/stomach.mp3", "stream")
+	  
+	  walk:setVolume(0.2)
+	  running:setVolume(0.3)
+	  breath1:setVolume(0.3)
+	  breath2:setVolume(0.3)
+	  breath3:setVolume(0.3)
+	  
+	  --level:set_player(hero)
+	  -- collider
+	  self.collider = flock:get_collider()
+	  self.map_point:update_position(vector2:new(x,y))
+	  self.collider:add_object(self.map_point, self)
+	  
+	  inspiration = love.audio.newSource("sound/inspiration_forte.mp3", "stream")
+	  expiration = love.audio.newSource("sound/expiration.mp3", "stream")
+	  appeau = love.audio.newSource("sound/chouette.wav", "stream")
+	  vol = love.audio.newSource("sound/vol.wav", "stream")
+	  fuite = love.audio.newSource("sound/sing-4.mp3", "stream")
+	  lookForFoodSound = love.audio.newSource("sound/looking_in_bushes.mp3", "stream")
+	  
+	  eggHeroImg = love.graphics.newImage("images/solo-egg.png")
+	
+	self.boidType=10
+	
 end
 
 function hero:set_run(param)
 	self.run = param
 end
 
+function hero:sing()
+	
+end
+
+function hero:getStateGrab()
+	return self.stateGrab
+end
+
+function hero:setStateGrab(bool)
+	self.stateGrab = bool
+end
+
+function hero:canSetStateGrab(bool)
+	self.canStateGrab = bool
+end
+
+function hero:getCanStateGrab()
+	return self.canStateGrab
+end
+
 function hero:get_tired()
 	return self.tired
+end
+
+function hero:set_emote(emoteType)
+	
+end
+
+function hero:getFood()
+	return self.foodGrab
+end
+
+function hero:grabFood(food)
+	local foodGrab = self.foodGrab
+	if foodGrab < 7 then
+		local testFood = foodGrab + math.floor(food/4000)
+		if testFood < 7 then
+			self.foodGrab = testFood
+			self:set_emote('food')
+		elseif testFood == 7 then
+			self.foodGrab = 6
+			--self:set_emote('food')
+		end
+	else
+		self.stateGrab = false
+	end
+	--[[if self.foodGrab > 3 and self.emit then 
+		--self:set_waypoint(self.originX,self.originY,self.originZ)
+		self:goOnHomeWith()
+		self:setObjectiv("goOnHomeWith")
+		--self.body_graphic:set_color1(0)
+		self.rule_weights[self.waypoint_vector] = 200
+		self.rule_weights[self.obstacle_vector] = 0
+	end--]]
 end
 
 function hero:_update_map_point(dt)
@@ -169,7 +254,7 @@ function hero:_update_map_point(dt)
   self.map_point_3:update(dt)
   self.map_point_4:set_position_coordinates(x, y+50)
   self.map_point_4:update(dt)
-  --self.collider:update_object(self.map_point)
+  self.collider:update_object(self.map_point)
   local collided, normal, collision_point, collision_offset, collsion_tile = self.map_point:get_collision_data()
   if collided then
     self:_handle_tile_collision(normal, collision_point, collision_offset, collision_tile, 1)
@@ -223,11 +308,47 @@ function hero:_handle_tile_collision(normal, point, offset, tile, move)
   end
 end
 
+function hero:get_emote()
+  return self.emoteType
+end
+
+function hero:get_hunger()
+  return self.hunger
+end
+
+function hero:get_energy()
+  return self.tired
+end
+
+function hero:feed(nb)
+local myHunger = self.hunger
+	if myHunger < 100 then
+		if myHunger + nb > 100 then
+			self.hunger = 100
+			--self.body_graphic:set_color4(255)
+			--self.age = self.age + 1
+			return true
+		else
+			self.hunger = myHunger + nb
+			--self.body_graphic:set_color4(255)
+			--self.age = self.age + 1
+			return true
+		end
+	else
+		return false
+	end
+end
+
+function hero:minusFood(food)
+	self.foodGrab = self.foodGrab - food
+end
+
 ------------------------------------------------------------------------------
 function hero:update(dt)
 	if self.pos then
 		dt = dt
 		self:_update_map_point(dt)
+		self:_update_boid_life(dt)
 		local action = self.action
 		local launch = self.launch
 		local breathing = self.breathing
@@ -255,12 +376,13 @@ function hero:update(dt)
 				self.animations[i].currentTime = self.animations[i].currentTime - self.animations[i].duration
 			end
 			if i == 7 and self.animations[7].currentTime >= 1.95 and startBreathe ~= 0 and breathing == false then
-				print("self.animations[7].currentTime")
-				print(self.animations[7].currentTime)
 				self.startBreathe = 0
 			end
 			if i ~= 6 and i ~= 7 and self.animations[i].currentTime >= self.animations[i].duration then
 				self.animations[i].currentTime = self.animations[i].currentTime - self.animations[i].duration
+				if i == 14 then
+					self.getOut = true
+				end
 			end
 		end
 		
@@ -287,13 +409,19 @@ function hero:update(dt)
 		end
 	end--]]
 	
+	if self.direction==10 then
+		local pos = self:get_position()
+		pos.y = pos.y - 0.1
+		self:set_position(pos)
+	end
+	
 	local run = self.run
 	local tired = self.tired
 	if run==true and tired>1 then
-		--self.tired = tired - 1
-	elseif run==false and tired<300 and tired>0 then
+		--self.tired = tired - 0.1
+	elseif run==false and tired<100 and tired>0 then
 		self.tired = tired + 1/2
-	elseif run==true and tired<30 then
+	elseif run==true and tired<50 then
 		self:set_run(false)
 		self.tired = 1
 		local rand = math.random(1,3)
@@ -345,6 +473,94 @@ function hero:update(dt)
 	end
 end
 
+function hero:_update_boid_life(dt)
+	
+	local inHome = self.inHome
+	local objectiv = self.objectiv
+	local tired = self.tired
+	local foodGrab = self.foodGrab
+	local hunger = self.hunger
+	local destroy = self.destroy
+	local flock = self.flock
+	local myTime = flock:get_time()
+	local emoteTime = self.emoteTime
+	local confuseTime = self.confuseTime
+	local predatorInViewTime = self.predatorInViewTime
+	local emote = self:get_emote()
+	local needHome = self.needHome
+	local age = self.age
+	local confuse = self.confuse
+	local predatorInView = self.predatorInView
+	local hadKid = self.hadKid
+	local hadKidTime = self.hadKidTime
+	local pollution = self.level:get_pollution()
+	local searchObjRad = self.searchObjRad
+	
+	self.sight_radius = 200 --- pollution
+	
+	if self.stateGrab == true then
+		self.canStateGrab = false
+	end
+	
+	if inHome == true then
+		if tired<101 then
+			self.tired = tired + dt
+		end
+	else
+		if needHome and active==false then
+
+		end
+		if self.objectiv~="goFloor" and self.hunger > 0 then
+			self.hunger = hunger - dt
+		end
+		if self.objectiv~="goFloor" and self.tired > 0 then
+			--self.tired = tired - dt*20
+		end
+		if hunger < 55 and foodGrab > 0 then 
+			self:feed(50)
+			self:minusFood(1)
+			love.audio.play(eatFood)
+		elseif hunger < 50 and self.emit and active==false then
+			if self.emit:get_food() > 0 then
+				self:goHome()
+			else
+				self:seekFood(searchObjRad)
+				self:set_emote('hungry')
+			end
+		elseif hunger < 25 and foodGrab == 0 then 
+			--self:seekFood(searchObjRad)
+			love.audio.play(stomach)
+		end
+		if hunger == 0 then 
+			self.dead = true
+		end
+		if tired < 40 then 
+			if tired > 20 and math.random(1,300) == 3 and self.objectiv~="goFloor" then
+				
+			elseif tired < 20 then 
+				
+			elseif tired < 0 then 
+				self.dead = true
+			end
+		end
+		if emote~=nil then
+			self.emoteTime = emoteTime + dt*10
+			if emoteTime>2 then
+				self:set_emote(nil)
+				self.emoteTime=0
+			end
+		end
+		if confuse then
+			self.confuseTime = confuseTime + dt
+			if confuseTime>1000 then
+				self:unconfuse()
+				self.confuseTime=0
+				self.confuse = false
+			end
+		end
+	end
+end
+
 function hero:newAnimation(image, width, height, duration)
    local animation = {}
    animation.spriteSheet = image;
@@ -369,10 +585,11 @@ end
 
 function hero:set_position(pos)
 	local block = self.block
-	if not block then
+	if not block and self:getStateGrab()==false then
 		self.pos:set(pos.x , pos.y )
+		self:set_big_position(pos.x , pos.y,100)
 	end
-  --self:set_target_position(pos)
+  --self:set_target(pos)
 end
 
 function hero:get_position()
@@ -456,11 +673,39 @@ function hero:goDirection(dir, mx, my, bType)
   elseif dir == 8 then
 	self.direction = 8
 	self.animations[7].currentTime = 0
+  elseif dir == 9 and self.canStateGrab==true then
+	self.direction = 9
+	self.stateGrab = true
+	love.audio.play(lookForFoodSound)
+	--self.animations[13].currentTime = 0
+  elseif dir == 10 then--and self.firstDance==false then
+	self.direction = 10
+	--self.animations[13].currentTime = 0
   end
 end
 
 function hero:get_pos()
   return self.pos
+end
+
+function hero:draw_shadow()
+  
+end
+
+function hero:getObjectiv()
+  return "fly"
+end
+
+function hero:set_waypoint()
+
+end
+
+function hero:unObstacleMe()
+
+end
+
+function hero:setObjectiv()
+
 end
 
 function hero:get_posX()
@@ -477,6 +722,19 @@ end
 
 function hero:set_posY(position)
    self.pos.y = position
+end
+
+function hero:set_big_position(x, y, z)
+  vector3.set(self.position, x, y, z)
+  --self.seeker:set_position(x, y, z)
+  self.position.x = x
+  self.position.y = y
+  self.position.z = z
+  local pos = self.temp_vector
+  vector3.set(pos, x, y, nil)
+  if pos.x~=nil then
+	--self.map_point:update_position(pos)
+  end
 end
 
 function hero:cry()
@@ -595,6 +853,10 @@ activeFlock:get_boids_in_radius(x, y, 500, objects)
 	end
 end
 
+function hero:getFirstDance()
+	return self.getOut
+end
+
 function hero:setRandomPoints(mx, my, element)
 	--source point
 	local x = self.pos.x
@@ -650,6 +912,10 @@ function hero:setRandomPoints(mx, my, element)
 
 end
 
+function hero:draw_debug()
+
+end
+
 ------------------------------------------------------------------------------
 function hero:draw()
 	--if self.pos and hero.animation1 then
@@ -681,53 +947,61 @@ function hero:draw()
 	  
 	  if self.direction == 1 then
 		if run == false then
-			local spriteNum = math.floor( hero.animation1.currentTime /  hero.animation1.duration * #hero.animation1.quads) + 1
-			love.graphics.draw(hero.animation1.spriteSheet,  hero.animation1.quads[spriteNum], x*2, y*2)
+			local spriteNum = math.floor( self.animation1.currentTime /  self.animation1.duration * #self.animation1.quads) + 1
+			love.graphics.draw(self.animation1.spriteSheet,  self.animation1.quads[spriteNum], x*2, y*2)
 		else
-			local spriteNum = math.floor( hero.animation8.currentTime /  hero.animation8.duration * #hero.animation8.quads) + 1
-			love.graphics.draw(hero.animation8.spriteSheet,  hero.animation8.quads[spriteNum], x*2, y*2)
+			local spriteNum = math.floor( self.animation8.currentTime /  self.animation8.duration * #self.animation8.quads) + 1
+			love.graphics.draw(self.animation8.spriteSheet,  self.animation8.quads[spriteNum], x*2, y*2)
 		end
 	  elseif self.direction == 2 then
 		if run == false then
-			local spriteNum = math.floor( hero.animation2.currentTime /  hero.animation2.duration * #hero.animation2.quads) + 1
-			love.graphics.draw(hero.animation2.spriteSheet,  hero.animation2.quads[spriteNum], x*2, y*2)
+			local spriteNum = math.floor( self.animation2.currentTime /  self.animation2.duration * #self.animation2.quads) + 1
+			love.graphics.draw(self.animation2.spriteSheet,  self.animation2.quads[spriteNum], x*2, y*2)
 		else
-			local spriteNum = math.floor( hero.animation9.currentTime /  hero.animation9.duration * #hero.animation9.quads) + 1
-			love.graphics.draw(hero.animation9.spriteSheet,  hero.animation9.quads[spriteNum], x*2, y*2)
+			local spriteNum = math.floor( self.animation9.currentTime /  self.animation9.duration * #self.animation9.quads) + 1
+			love.graphics.draw(self.animation9.spriteSheet,  self.animation9.quads[spriteNum], x*2, y*2)
 		end
 	  elseif self.direction == 3 then
 		if run == false then
-			local spriteNum = math.floor( hero.animation3.currentTime /  hero.animation3.duration * #hero.animation3.quads) + 1
-			love.graphics.draw(hero.animation3.spriteSheet,  hero.animation3.quads[spriteNum], x*2, y*2)
+			local spriteNum = math.floor( self.animation3.currentTime /  self.animation3.duration * #self.animation3.quads) + 1
+			love.graphics.draw(self.animation3.spriteSheet,  self.animation3.quads[spriteNum], x*2, y*2)
 		else
-			local spriteNum = math.floor( hero.animation10.currentTime /  hero.animation10.duration * #hero.animation10.quads) + 1
-			love.graphics.draw(hero.animation10.spriteSheet,  hero.animation10.quads[spriteNum], x*2, y*2)
+			local spriteNum = math.floor( self.animation10.currentTime /  self.animation10.duration * #self.animation10.quads) + 1
+			love.graphics.draw(self.animation10.spriteSheet,  self.animation10.quads[spriteNum], x*2, y*2)
 		end
 	  elseif self.direction == 4 then
 		if run == false then
-			local spriteNum = math.floor( hero.animation4.currentTime /  hero.animation4.duration * #hero.animation4.quads) + 1
-			love.graphics.draw(hero.animation4.spriteSheet,  hero.animation4.quads[spriteNum], x*2, y*2)
+			local spriteNum = math.floor( self.animation4.currentTime /  self.animation4.duration * #self.animation4.quads) + 1
+			love.graphics.draw(self.animation4.spriteSheet,  self.animation4.quads[spriteNum], x*2, y*2)
 		else
-			local spriteNum = math.floor( hero.animation11.currentTime /  hero.animation11.duration * #hero.animation11.quads) + 1
-			love.graphics.draw(hero.animation11.spriteSheet,  hero.animation11.quads[spriteNum], x*2, y*2)
+			local spriteNum = math.floor( self.animation11.currentTime /  self.animation11.duration * #self.animation11.quads) + 1
+			love.graphics.draw(self.animation11.spriteSheet,  self.animation11.quads[spriteNum], x*2, y*2)
 		end
 	  elseif self.direction == 5 then
-		local spriteNum = math.floor( hero.animation5.currentTime /  hero.animation5.duration * #hero.animation5.quads) + 1
-		--love.graphics.draw(hero.animation50.spriteSheet,  hero.animation50.quads[spriteNum], x*2, y*2)
+		local spriteNum = math.floor( self.animation5.currentTime /  self.animation5.duration * #self.animation5.quads) + 1
+		--love.graphics.draw(self.animation50.spriteSheet,  self.animation50.quads[spriteNum], x*2, y*2)
 		--if current_time<70 and current_time>20 then
-			love.graphics.draw(hero.animation5.spriteSheet,  hero.animation5.quads[spriteNum], x*2, y*2)
+			love.graphics.draw(self.animation5.spriteSheet,  self.animation5.quads[spriteNum], x*2, y*2)
 		--end
 	  elseif self.direction == 6 then
-		local spriteNum = math.floor( hero.animation6.currentTime /  hero.animation6.duration * #hero.animation6.quads) + 1
-		love.graphics.draw(hero.animation6.spriteSheet,  hero.animation6.quads[spriteNum], x*2, y*2)
+		local spriteNum = math.floor( self.animation6.currentTime /  self.animation6.duration * #self.animation6.quads) + 1
+		love.graphics.draw(self.animation6.spriteSheet,  self.animation6.quads[spriteNum], x*2, y*2)
 	  
 	  elseif self.direction == 7 then
-		local spriteNum = math.floor( hero.animation12.currentTime /  hero.animation12.duration * #hero.animation12.quads) + 1
-		love.graphics.draw(hero.animation12.spriteSheet,  hero.animation12.quads[spriteNum], x*2, y*2)
+		local spriteNum = math.floor( self.animation12.currentTime /  self.animation12.duration * #self.animation12.quads) + 1
+		love.graphics.draw(self.animation12.spriteSheet,  self.animation12.quads[spriteNum], x*2, y*2)
 	  
 	  elseif self.direction == 8 then
-		local spriteNum = math.floor( hero.animation7.currentTime /  hero.animation7.duration * #hero.animation7.quads) + 1
-		love.graphics.draw(hero.animation7.spriteSheet,  hero.animation7.quads[spriteNum], x*2, y*2)
+		local spriteNum = math.floor( self.animation7.currentTime /  self.animation7.duration * #self.animation7.quads) + 1
+		love.graphics.draw(self.animation7.spriteSheet,  self.animation7.quads[spriteNum], x*2, y*2)
+	  
+	  elseif self.direction == 9 then
+		local spriteNum = math.floor( self.animation13.currentTime /  self.animation13.duration * #self.animation13.quads) + 1
+		love.graphics.draw(self.animation13.spriteSheet,  self.animation13.quads[spriteNum], x*2-25, y*2)
+	  
+	  elseif self.direction == 10 then
+		local spriteNum = math.floor( self.animation14.currentTime /  self.animation14.duration * #self.animation14.quads) + 1
+		love.graphics.draw(self.animation14.spriteSheet,  self.animation14.quads[spriteNum], x*2-25, y*2)
 	  end
 	  
 	  
@@ -735,7 +1009,6 @@ function hero:draw()
 		lg.draw(showWarningImg, x*2+150, y*2-80)
 	end
 	--end
-	
 	
 	if #self.curves>0 then
 		love.graphics.setColor(150,150,150,255)
@@ -768,11 +1041,13 @@ function hero:draw()
 	
 	love.graphics.pop()
 	
-	--[[local pos = self.map_point:get_position()
-	local x, y = pos.x, pos.y
-	lg.circle("fill", x, y, 10, 100)
+	--lg.print(self.tired, x, y)
 	
-	local pos = self.map_point_2:get_position()
+	--local pos = self.map_point:get_position()
+	--local x, y = pos.x, pos.y
+	--lg.circle("fill", x, y, 10, 100)
+	
+	--[[local pos = self.map_point_2:get_position()
 	local x, y = pos.x, pos.y
 	lg.circle("fill", x, y, 10, 100)
 	
