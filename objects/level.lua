@@ -224,7 +224,7 @@ function level:addHome(x,y,width,height,depth,flock,level,nbEggs, boidType)
 	emitter:set_boid_limit(2000)
 	emitter:set_position(x,y,100)
 	emitter:start_emission()
-	self.emitters[#self.emitters + 1] = emitter
+	self.emitters[i] = emitter
 	
 	if #self.emitters < 10 then
 		emitter:add_food(0)
@@ -578,16 +578,34 @@ return te
 end
 
 function level:deleteTree(x, y, i)
-if self.trees[i]:getEmit() then
-	local emit = self.trees[i]:getEmit()
-	self.trees[i].emit = nil
-	--self.emitters[i] = nil
-	table.remove( self.emitters, i )
+print('mon index est')
+print(i)
+local indexTree = i
+for j = 1, #self.trees do
+	if self.trees[j]:getIndex() == i then
+		print("je suis le numero")
+		print(j)
+		print('Avant coupe il y a')
+		print(#self.emitters)
+		print('emitters')
+		print('je coupe le numero')
+		local emit = self.trees[j]:getEmit()
+		indexTree = j
+		if emit then
+			print(emit:getIndex())
+			table.remove( self.emitters, j )
+			self.trees[j].emit = nil
+			--self.emitters[i] = nil
+		end
+		print('Après coupe il y a')
+		print(#self.emitters)
+		print('emitters')
+	end
 end
 self.nbTree = self.nbTree - 1
-self.treeMap[x][y]=nil
-
-self.trees[i] = nil
+self.treeMap[x][y] = nil
+table.remove(self.trees, indexTree)
+--self.trees[i] = nil
 --self.treeMap[x][y]= te
 
 self.pollution = self.pollution + 1
@@ -810,17 +828,16 @@ function level:draw()
   
   if self.level_map then self.level_map:draw() end
   
-  self.camera:set()
   
   for _,shard_set in pairs(self.shard_sets) do
     shard_set:draw_ground_layer()
   end
   
-  --self.camera:set()
+  self.camera:set()
   
   if self.hero then self.hero:draw() end
   
-  --self.camera:unset()
+  self.camera:unset()
   
 
   
@@ -831,8 +848,6 @@ function level:draw()
   for i=1,#self.shard_explosions do
     self.shard_explosions[i]:draw()
   end
-  
-  self.camera:unset()
   --self.camera:draw()
   
   local sample_sets = self.audio_sample_sets

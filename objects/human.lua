@@ -1297,7 +1297,7 @@ function hu:_update_human_life(dt)
 				self:clear_waypoint()
 				self:goOnHomeWith()
 				self:setObjectiv("goOnHomeWith")
-			elseif math.random(-10,10) == 1 and self.emit:get_wood() < 10 and active==false then
+			elseif math.random(-10,10) == 1 and self.emit:get_wood() < 100 and active==false then
 				self:seekTreeForWood(10)
 			end
 		end
@@ -1424,6 +1424,33 @@ function hu:_update_human_life(dt)
 	if searchObjRad > 800 then
 		self.searchObjRad = 1
 	end
+	
+	if math.random(1,10)==1 then
+		local tile_map = self.level:get_level_map():get_tile_map()
+		local i, j , chunk = tile_map:get_chunk_index(self.position)
+		chunk:addPollution(1)
+			
+		local newPosition = vector2:new(0, 0, 0)
+		newPosition.x = chunk.x-200
+		newPosition.y = chunk.y
+		local i, j , chunkLeft = self.level:get_level_map():get_tile_map():get_chunk_index(newPosition)
+		chunkLeft:addPollutionRight(1)
+		
+		newPosition.x = chunk.x+300
+		newPosition.y = chunk.y
+		local i, j , chunkRight = self.level:get_level_map():get_tile_map():get_chunk_index(newPosition)
+		chunkRight:addPollutionLeft(1)
+		
+		newPosition.x = chunk.x
+		newPosition.y = chunk.y-200
+		local i, j , chunkTop = self.level:get_level_map():get_tile_map():get_chunk_index(newPosition)
+		chunkTop:addPollutionDown(1)
+		
+		newPosition.x = chunk.x
+		newPosition.y = chunk.y+300
+		local i, j , chunkDown = self.level:get_level_map():get_tile_map():get_chunk_index(newPosition)
+		chunkDown:addPollutionTop(1)--]]
+	end
 end
 
 function hu:goHome()
@@ -1526,7 +1553,9 @@ if inHome == false and active == false then
 	if self.path then
 		self:clear_waypoint()
 		local step = 1
-		if #self.path>8 then
+		print('#self.path')
+		print(#self.path)
+		if #self.path>10 then
 			self.rule_weights[self.waypoint_vector] = 1
 			--self:set_emote("sleep")
 			step = 9
@@ -1540,7 +1569,7 @@ if inHome == false and active == false then
 			self:set_waypoint(posX, posY,z,50,100)
 			--self.seeker:add_force(posX,posY,100)
 			self:setObjectiv("goOnHomeWith")
-		elseif #self.path>5 then
+		elseif #self.path>8 then
 			step = 4
 			self.rule_weights[self.obstacle_vector] = 3000
 			local posX = math.floor( self.path[step].x * h ) + 1
@@ -1992,32 +2021,37 @@ if self.treeFound ==nil and active==false then
 end
 
 if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
+	print("IL Y A UN ARBRE ET JE ME DEMANDE SIL Y A PATH")
 	if self.path==nil then
 		self:updatePath(Vector(caseX,caseY),Vector(destinationX,destinationY))
-		print("IL Y A UN ARBRE ET JY VAIS LA")
-		if #self.path > 10 then
-			self.nbStepPath = #self.path -- math.floor(#self.path / 2)
-			self.bigPath = math.floor(#self.path / 5)
+		print("JE CREE NOUVEAU PATH")
+		if self.path==nil then
+			local randX = math.random(-300,300)
+			local randY = math.random(-300,300)
+			if x+randX > 500 and x+randX < 12800 and y+randY > 500 and y+randY < 12800 then
+				self:set_waypoint(x+randX, y+randY,math.random(50,100),50,100)
+				self:setObjectiv("goOnSeekTree")
+				self.searchObjRad = self.searchObjRad + 10
+				self.treeFound = nil
+				return
+			else
+				local randX = math.random(-10,10)
+				local randY = math.random(-10,10)
+				self:set_waypoint(x+randX, y+randY,math.random(50,100),50,100)
+				self:setObjectiv("goOnSeekTree")
+				self.searchObjRad = self.searchObjRad + 10
+				self.treeFound = nil
+				return
+			end
 		else
-			self.nbStepPath = #self.path
-		end
-		--selfBody:set_color1(0)
-		self.step = self.nbStepPath
-	else
-		local randX = math.random(-300,300)
-		local randY = math.random(-300,300)
-		if x+randX > 500 and x+randX < 12800 and y+randY > 500 and y+randY < 12800 then
-			self:set_waypoint(x+randX, y+randY,math.random(50,100),50,100)
-			self:setObjectiv("goOnSeekTree")
-			self.searchObjRad = self.searchObjRad + 10
-			self.treeFound = nil
-		else
-			local randX = math.random(-10,10)
-			local randY = math.random(-10,10)
-			self:set_waypoint(x+randX, y+randY,math.random(50,100),50,100)
-			self:setObjectiv("goOnSeekTree")
-			self.searchObjRad = self.searchObjRad + 10
-			self.treeFound = nil
+			if #self.path > 10 then
+				self.nbStepPath = #self.path -- math.floor(#self.path / 2)
+				self.bigPath = math.floor(#self.path / 5)
+			else
+				self.nbStepPath = #self.path
+			end
+			--selfBody:set_color1(0)
+			self.step = self.nbStepPath
 		end
 	end
 	self:clear_waypoint()
@@ -2041,7 +2075,7 @@ if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 				selfBody:set_cutWood(true)
 				love.audio.play(self.chop_sound)
 				self.treeFound = nil
-				self:set_position(destinationX*32+120, destinationY*32+120, 100)
+				self:set_position(destinationX*32+120, destinationY*32+140, 100)
 			else
 				self:setObjectiv("seekHome")
 			end

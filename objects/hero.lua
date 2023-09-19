@@ -141,11 +141,11 @@ function hero:init(level, flock, x, y)
 	  self.target = target
 	  
 	  local tmap = level:get_level_map().tile_maps[10]
-	  x, y, z = x or tmap.bbox.x + TILE_WIDTH, y or tmap.bbox.y + TILE_HEIGHT , 100
-	  self.map_point = map_point:new(level, vector2:new(x, y,z))
-	  self.map_point_2 = map_point:new(level, vector2:new(x+50, y))
-	  self.map_point_3 = map_point:new(level, vector2:new(x+50, y+50))
-	  self.map_point_4 = map_point:new(level, vector2:new(x, y+50))
+	  x, y, z = x or tmap.bbox.x + TILE_WIDTH, y or tmap.bbox.y + TILE_HEIGHT , 0
+	  self.map_point = map_point:new(level, vector2:new(x, y, z))
+	  self.map_point_2 = map_point:new(level, vector2:new(x+50, y, z))
+	  self.map_point_3 = map_point:new(level, vector2:new(x+50, y+50, z))
+	  self.map_point_4 = map_point:new(level, vector2:new(x, y+50, z))
 	  
 	  woosh = love.audio.newSource("sound/whoosh.wav", "stream")
 	  woosh:setVolume(0.3)
@@ -222,8 +222,9 @@ end
 
 function hero:grabFood(food)
 	local foodGrab = self.foodGrab
+	local rand = math.floor(math.random(0,30)/30)
 	if foodGrab < 7 then
-		local testFood = foodGrab + math.floor(food/4000)
+		local testFood = foodGrab + rand
 		if testFood < 7 then
 			self.foodGrab = testFood
 			self:set_emote('food')
@@ -559,6 +560,7 @@ function hero:_update_boid_life(dt)
 			end
 		end
 	end
+	
 end
 
 function hero:newAnimation(image, width, height, duration)
@@ -587,7 +589,7 @@ function hero:set_position(pos)
 	local block = self.block
 	if not block and self:getStateGrab()==false then
 		self.pos:set(pos.x , pos.y )
-		self:set_big_position(pos.x , pos.y,100)
+		self:set_big_position(pos.x , pos.y, 0)
 	end
   --self:set_target(pos)
 end

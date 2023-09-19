@@ -94,8 +94,24 @@ tile_map.countTree=0
 
 tile_map.mapSave = nil
 
-local nbTree = 20
-local nbBush = 20
+local nbTree = 3
+local nbBush = 2
+
+tile_map.graph1 = love.graphics.newImage("images/env/nature-1.png")
+tile_map.graph2 = love.graphics.newImage("images/env/nature-2.png")
+tile_map.graph3 = love.graphics.newImage("images/env/nature-3.png")
+tile_map.graph4 = love.graphics.newImage("images/env/nature-4.png")
+tile_map.graph5 = love.graphics.newImage("images/env/nature-5.png")
+tile_map.graph6 = love.graphics.newImage("images/env/nature-6.png")
+tile_map.graph7 = love.graphics.newImage("images/env/nature-7.png")
+tile_map.graph8 = love.graphics.newImage("images/env/nature-8.png")
+tile_map.graph9 = love.graphics.newImage("images/env/nature-9.png")
+
+tile_map.animationPollution = love.graphics.newImage("images/env/nature-1-Green.png")
+tile_map.animationPollutionRight = love.graphics.newImage("images/env/nature-1-Green-Right.png")
+tile_map.animationPollutionDown = love.graphics.newImage("images/env/nature-1-Green-Down.png")
+tile_map.animationPollutionLeft = love.graphics.newImage("images/env/nature-1-Green-Left.png")
+tile_map.animationPollutionTop = love.graphics.newImage("images/env/nature-1-Green-Top.png")
 
 local tile_map_mt = { __index = tile_map }
 function tile_map:new(level, columns, rows, tile_width, tile_height, mapSave)
@@ -633,10 +649,10 @@ function tile_map:update_chunks_in_view()
   local mini, minj = self:get_chunk_index(topleft)
   local maxi, maxj = self:get_chunk_index(botright)
   
-  mini = math.max(mini, 1)
-  minj = math.max(minj, 1)
-  maxi = math.min(maxi, self.chunk_cols) 
-  maxj = math.min(maxj, self.chunk_rows)
+  mini = math.max(mini-1, 1)
+  minj = math.max(minj-1, 1)
+  maxi = math.min(maxi+1, self.chunk_cols) 
+  maxj = math.min(maxj+1, self.chunk_rows)
   
   local visible = true
   if mini > self.chunk_cols or maxi < 1 then 
@@ -651,9 +667,6 @@ function tile_map:update_chunks_in_view()
   local chunks_in_view_by_id = self.chunks_in_view_by_id
   table.clear(chunks_in_view)
   table.clear_hash(chunks_in_view_by_id)
-  if minj > 1 then
-	minj = minj - 1
-  end
   if self.map_isvisible then
     for j=minj,maxj do
       for i=mini,maxi do
@@ -723,6 +736,10 @@ function tile_map:get_chunk_index(point)
   else
     return i, j, false
   end
+end
+
+function tile_map:get_chunk(j,i)
+	return self.chunks[j][i]
 end
 
 --##########################################################################--
@@ -861,7 +878,7 @@ function tile_map:_generate_chunk(i, j)
 		rand = math.random(1,2)
 	end
   end
-  chunk:init(rand)
+  chunk:init(rand, self.graph1, self.graph2, self.graph3, self.graph4, self.graph5, self.graph6, self.graph7, self.graph8, self.graph9, self.animationPollution, self.animationPollutionRight, self.animationPollutionDown, self.animationPollutionLeft, self.animationPollutionTop)
   
   -- calculate boundaries for which tiles fit into this chunk
   local t_per_c, t_per_r = self.tiles_per_chunk_col, self.tiles_per_chunk_row
@@ -932,7 +949,7 @@ function tile_map:_generate_chunk(i, j)
 		  
 			local newX = x
 			local newY = y
-			if x > 40 and x<480 and y > 40 and y<400 and countTree<nbTree and element==false and self.level:canILandHere(newX,newY,20)==true and math.random(1,5500)==1 then
+			if x > 40 and x<400 and y > 40 and y<400 and countTree<nbTree and element==false and self.level:canILandHere(newX,newY,20)==true then--and math.random(1,5500)==1 then
 				map[newX][newY] = self.level:addTree(newX,newY)
 				map[newX][newY]:add(nil)
 				map[newX][newY]:setNumEmits(0)
@@ -947,7 +964,7 @@ function tile_map:_generate_chunk(i, j)
 				print("ajout dun arbrre en")
 				self.map = map
 				self.level:setTreeMap(map)
-			elseif x > 40 and x<480 and y > 40 and y<400 and count<nbBush and element==false and self.level:canILandHere(newX,newY,20)==true and math.random(1,2500)==1 then
+			elseif x > 40 and x<400 and y > 40 and y<400 and count<nbBush and element==false and self.level:canILandHere(newX,newY,20)==true and math.random(1,2500)==1 then
 				local path = 0
 				local startX =  newX-5 
 				local startY =  newY-5

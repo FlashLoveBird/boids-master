@@ -25,7 +25,7 @@ local startTime = os.time()
 local endTime = startTime+10
 tw.animations = {}
 tw.animation1 = nil
-
+tw.chunkWoods = nil
 local tw_mt = { __index = tw }
 function tw:new(level, flock)
   local tw = setmetatable({}, tw_mt)
@@ -46,8 +46,9 @@ function tw:new(level, flock)
 end
 
 function tw:initTown(x, y, radius)
-	self.animation1 = self:newAnimation(love.graphics.newImage("images/env/town.png"), 524, 351, 2)
+	self.animation1 = self:newAnimation(love.graphics.newImage("images/env/town.png"), 574, 351, 2)
     table.insert(self.animations, self.animation1)
+	self.chunkWoods = {}
 end
 
 function tw:newAnimation(image, width, height, duration)
@@ -188,6 +189,9 @@ end
 
 function tw:add_wood(wood)
 	self.wood = wood + self.wood
+	local chunkWood = love.graphics.newImage("images/env/wood_chunk.png")
+    table.insert(self.chunkWoods, chunkWood)
+	print('+++++++ADD WOOD')
 end
 
 function tw:get_wood()
@@ -266,7 +270,7 @@ function tw:update(dt)
   self:_calculate_total_area()
   self:_update_polygonizer()
   
-  self.animations[1].currentTime = 1
+  self.animations[1].currentTime = 0
   
 end
 
@@ -275,6 +279,7 @@ function tw:draw()
   if not self.debug then return end
   
   local sources = self.sources
+  local chunkWoods = self.chunkWoods
   for i=1,#sources do
     local s = sources[i]
     lg.setColor(255, 255, 255, 255)
@@ -289,6 +294,16 @@ function tw:draw()
     local r = s.radius
     local pct = math.floor(((r * r) / (sr * sr)) * 100)
     lg.print(pct.."%", s.x, s.y)
+	
+	for i=1,#chunkWoods do
+		if i<4 then
+			love.graphics.draw(chunkWoods[i], s.x-220-i*50, s.y+100)
+		elseif i<6 then
+			love.graphics.draw(chunkWoods[i], s.x-180-i*50, s.y)
+		else
+			love.graphics.draw(chunkWoods[i], s.x-160-i*50, s.y-100)
+		end
+	end
   end
   
 end

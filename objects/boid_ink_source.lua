@@ -1,58 +1,56 @@
 
 --##########################################################################--
 --[[----------------------------------------------------------------------]]--
--- boid_food_source object
+-- boid_ink_source object
 --[[----------------------------------------------------------------------]]--
 --##########################################################################--
-local bfs = {}
-bfs.table = 'bfs'
-bfs.debug = true
-bfs.level = nil
-bfs.level_map = nil
-bfs.flock = nil
-bfs.sources = nil
-bfs.depletion_rate = 100000
-bfs.surface_threshold = 0.5
-bfs.area = 20
-bfs.unit_area = TILE_WIDTH * TILE_HEIGHT
-bfs.area_changed = false
-bfs.boid_hash = nil
-bfs.collision_table = nil
-bfs.polygonizer_update_rate = 1.5   -- updates per second
-bfs.min_radius = 20
-bfs.bushParent = nil
-bfs.food = nil
-bfs.animationExtend = nil
-bfs.animationDecrease = nil
-bfs.x = 0
-bfs.y = 0
-bfs.index = nil
+local bis = {}
+bis.table = 'bis'
+bis.debug = true
+bis.level = nil
+bis.level_map = nil
+bis.flock = nil
+bis.sources = nil
+bis.depletion_rate = 100000
+bis.surface_threshold = 0.5
+bis.area = 20
+bis.unit_area = TILE_WIDTH * TILE_HEIGHT
+bis.area_changed = false
+bis.boid_hash = nil
+bis.collision_table = nil
+bis.polygonizer_update_rate = 1.5   -- updates per second
+bis.min_radius = 20
+bis.food = nil
+bis.animationExtend = nil
+bis.animationDecrease = nil
+bis.x = 0
+bis.y = 0
+bis.index = nil
 
-local bfs_mt = { __index = bfs }
-function bfs:new(level, flock, bushParent, index)
-  local bfs = setmetatable({}, bfs_mt)
-  bfs.level = level
-  bfs.level_map = level:get_level_map()
-  bfs.flock = flock
-  bfs.sources = {}
-  bfs.boid_hash = {}
-  bfs.collision_table = {}
-  bfs.update_timer = timer:new(level:get_master_timer(), 1/bfs.polygonizer_update_rate)
-  bfs.update_timer:start()
+local bis_mt = { __index = bis }
+function bis:new(level, flock, index)
+  local bis = setmetatable({}, bis_mt)
+  bis.level = level
+  bis.level_map = level:get_level_map()
+  bis.flock = flock
+  bis.sources = {}
+  bis.boid_hash = {}
+  bis.collision_table = {}
+  bis.update_timer = timer:new(level:get_master_timer(), 1/bis.polygonizer_update_rate)
+  bis.update_timer:start()
   foodGraphic = love.graphics.newImage("images/env/seeds.png")
-  bfs:init(index, bushParent)
-  return bfs
+  bis:init(index)
+  return bis
 end
 
-function bfs:init(index, bushParent)
+function bis:init(index)
 
 self.animationExtend = self:newAnimation(love.graphics.newImage("images/env/seeds.png"), 280, 249, 5)
 self.animationDecrease = self:newAnimation(love.graphics.newImage("images/env/seeds.png"), 280, 249, 5)
 self.index = index
-self.bushParent = bushParent
 end
 
-function bfs:newAnimation(image, width, height, duration)
+function bis:newAnimation(image, width, height, duration)
     local animation = {}
     animation.spriteSheet = image;
     animation.quads = {};
@@ -69,11 +67,11 @@ function bfs:newAnimation(image, width, height, duration)
     return animation
 end
 
-function bfs:setFlock(flock)
+function bis:setFlock(flock)
 	self.flock = flock
 end
 
-function bfs:add_food(x, y, radius)
+function bis:add_food(x, y, radius)
   local p = self.level_map:add_point_to_source_polygonizer(x, y, radius)
   self.sources[#self.sources + 1] = self:_new_food_source(x, y, radius, p)
   self:_calculate_total_area()
@@ -81,23 +79,23 @@ function bfs:add_food(x, y, radius)
   return p
 end
 
-function bfs:force_polygonizer_update()
+function bis:force_polygonizer_update()
   self.level_map:update_source_polygonizer()
 end
 
-function bfs:set_depletion_rate(r)
+function bis:set_depletion_rate(r)
   self.depletion_rate = r
 end
 
-function bfs:set_update_rate(r)
+function bis:set_update_rate(r)
   self.polygonizer_update_rate = r
 end
 
-function bfs:set_surface_threshold(thresh)
+function bis:set_surface_threshold(thresh)
   self.surface_threshold = thresh
 end
 
-function bfs:remove_food_source(primitive)
+function bis:remove_food_source(primitive)
   self.level_map.source_polygonizer:remove_primitive(primitive)
   for i=#self.sources,1,-1 do
     if self.sources[i].primitive == primitive then
@@ -108,7 +106,7 @@ function bfs:remove_food_source(primitive)
   end
 end
 
-function bfs:_new_food_source(x, y, radius, primitive)
+function bis:_new_food_source(x, y, radius, primitive)
   local source = {}
   source.x, source.y = x, y
   source.radius = radius
@@ -119,19 +117,19 @@ function bfs:_new_food_source(x, y, radius, primitive)
   return source
 end
 
-function bfs:get_food()
+function bis:get_food()
   return self.food
 end
 
 -- for fairness when attaching boids to a food source
-function bfs:_shuffle_food_sources()
+function bis:_shuffle_food_sources()
   for i=1,#self.sources do
     local r = math.random(1,#self.sources)
     self.sources[r], self.sources[i] = self.sources[i], self.sources[r]
   end
 end
 
-function bfs:_calculate_total_area()
+function bis:_calculate_total_area()
   local pi = math.pi
   local area = 0
   for i=1,#self.sources do
@@ -147,7 +145,7 @@ function bfs:_calculate_total_area()
   end
 end
 
-function bfs:_update_area(dt)
+function bis:_update_area(dt)
   local sources = self.sources
   local bhash = self.boid_hash
   local objects = self.collision_table
@@ -214,7 +212,6 @@ function bfs:_update_area(dt)
 		elseif pct < 20 then
 			local index = self.index
 			self:force_polygonizer_update()
-			self.bushParent:resetFood()
 			self.food = false
 			self.level_map:remove_primitive_from_source_polygonizer(s.primitive)
 			table.remove(self.sources, i)
@@ -222,7 +219,7 @@ function bfs:_update_area(dt)
 	end
 end
 
-function bfs:_update_polygonizer()
+function bis:_update_polygonizer()
   if self.update_timer:isfinished() then
     if self.area_changed then
       self:force_polygonizer_update()
@@ -235,7 +232,7 @@ function bfs:_update_polygonizer()
 end
 
 ------------------------------------------------------------------------------
-function bfs:update(dt)
+function bis:update(dt)
   self:_shuffle_food_sources()
   self:_update_area(dt)
   self:_calculate_total_area()
@@ -243,7 +240,7 @@ function bfs:update(dt)
 end
 
 ------------------------------------------------------------------------------
-function bfs:draw(x, y)
+function bis:draw(x, y)
   if not self.debug then return end
   local sources = self.sources
   for i=1,#sources do
@@ -262,7 +259,7 @@ function bfs:draw(x, y)
   
 end
 
-return bfs
+return bis
 
 
 

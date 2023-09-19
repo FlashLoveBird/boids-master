@@ -208,7 +208,7 @@ function fi:mousereleased(x, y, button)
       --self.flock:get_boids_in_radius(x, y, r, storage)
       local boid = storage[1]
       if boid then
-		 if boid.boidType~=10 then
+		 if boid.boidType~=10 and boid.boidType~=7 then
 			if selected[boid] then
 			  selected[boid] = nil
 			else
@@ -222,7 +222,7 @@ function fi:mousereleased(x, y, button)
       local bbox = self.select_boid_bbox
       self.flock:get_boids_in_bbox(bbox, storage)
       for i=1,#storage do
-		if storage[i].boidType~=10 then
+		if storage[i].boidType~=10 and storage[i].boidType~=7 then
 			selected[storage[i]] = storage[i]
 			storage[i]:sing(1)
 			self.nb_boids_selected = self.nb_boids_selected + 1
@@ -487,13 +487,22 @@ function fi:_draw_selected_boids()
 		--lg.print(b.objectiv, tableX+120, tableY+70)
 		
 		love.graphics.draw(objectiv, tableX+150, tableY+10)
-		
 		if b.objectiv=="sleep" or b.objectiv=="goFloor" then
 			love.graphics.draw(sleepIcon, tableX+215, tableY+15)
 		elseif b.objectiv=="fly" then
 			love.graphics.draw(flyIcon, tableX+215, tableY+15)
 		else
 			love.graphics.draw(searchIcon, tableX+215, tableY+15)
+			love.graphics.push()   -- stores the coordinate system
+		    love.graphics.scale(0.5, 0.5)   -- reduce everything by 50% in both X and Y coordinates
+			if b.objectiv=="goOnSeekHome" or b.objectiv=="seekHome" then
+				love.graphics.draw(homeIcon, tableX*2+245, tableY*2+15)
+			elseif b.objectiv=="goOnSeekFood" or b.objectiv=="seekFood" then
+				love.graphics.draw(foodIcon, tableX*2+245, tableY*2+15)
+			elseif b.objectiv=="goOnSeekWood" or b.objectiv=="seekWood" then
+				love.graphics.draw(woodIcon, tableX*2+245, tableY*2+15)
+			end
+		    love.graphics.pop()   -- return to stored coordinated
 		end
 		
 		--love.graphics.draw(homeIcon, tableX+170, tableY+100)

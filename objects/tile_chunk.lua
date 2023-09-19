@@ -39,15 +39,21 @@ tile_chunk.max_chunk_id = 0
 tile_chunk.diagonal_count = 0
 tile_chunk.chunkGraphic = nil
 
-graph1 = love.graphics.newImage("images/env/nature-1.png")
-graph2 = love.graphics.newImage("images/env/nature-2.png")
-graph3 = love.graphics.newImage("images/env/nature-3.png")
-graph4 = love.graphics.newImage("images/env/nature-4.png")
-graph5 = love.graphics.newImage("images/env/nature-5.png")
-graph6 = love.graphics.newImage("images/env/nature-6.png")
-graph7 = love.graphics.newImage("images/env/nature-7.png")
-graph8 = love.graphics.newImage("images/env/nature-8.png")
-graph9 = love.graphics.newImage("images/env/nature-9.png")
+tile_chunk.graph1 = nil
+tile_chunk.graph2 = nil
+tile_chunk.graph3 = nil
+tile_chunk.graph4 = nil
+tile_chunk.graph5 = nil
+tile_chunk.graph6 = nil
+tile_chunk.graph7 = nil
+tile_chunk.graph8 = nil
+tile_chunk.graph9 = nil
+
+tile_chunk.animationPollution = nil
+tile_chunk.animationPollutionRight = nil
+tile_chunk.animationPollutionDown = nil
+tile_chunk.animationPollutionLeft = nil
+tile_chunk.animationPollutionTop = nil
 
 local tile_chunk_mt = { __index = tile_chunk }
 function tile_chunk:new()
@@ -59,7 +65,7 @@ function tile_chunk:new()
 		type_list.count[t_type] = 0
 	end
   
-  
+    
   
 
   return setmetatable({ tiles = {},
@@ -69,8 +75,25 @@ function tile_chunk:new()
                         update_list = {}}, tile_chunk_mt)
 end
 
+function tile_chunk:newAnimation(image, width, height, duration)
+    local animation = {}
+    animation.spriteSheet = image;
+    animation.quads = {};
 
-function tile_chunk:init(grAph)
+    for y = 0, image:getHeight() - height, height do
+        for x = 0, image:getWidth() - width, width do
+            table.insert(animation.quads, love.graphics.newQuad(x, y, width, height, image:getDimensions()))
+        end
+    end
+
+    animation.duration = duration or 1
+    animation.currentTime = 0
+
+    return animation
+end
+
+
+function tile_chunk:init(grAph, graph1, graph2, graph3, graph4, graph5, graph6, graph7, graph8, graph9, animationPollution, animationPollutionRight, animationPollutionDown, animationPollutionLeft, animationPollutionTop)
 	if grAph==1 then
 		self.chunkGraphic = graph1
 	elseif grAph==2 then
@@ -90,6 +113,20 @@ function tile_chunk:init(grAph)
 	elseif grAph==9 then
 		self.chunkGraphic = graph9
 	end
+	self.animationPollution = self:newAnimation(animationPollution, 260, 260, 9)
+	self.animationPollution.currentTime = 8
+	
+	self.animationPollutionRight = self:newAnimation(animationPollutionRight, 260, 260, 9)
+	self.animationPollutionRight.currentTime = 8
+	
+	self.animationPollutionDown = self:newAnimation(animationPollutionDown, 260, 260, 9)
+	self.animationPollutionDown.currentTime = 8
+	
+	self.animationPollutionLeft = self:newAnimation(animationPollutionLeft, 260, 260, 9)
+	self.animationPollutionLeft.currentTime = 8
+	
+	self.animationPollutionTop = self:newAnimation(animationPollutionTop, 260, 260, 9)
+	self.animationPollutionTop.currentTime = 8
 end
 
 -- position of top left corner
@@ -270,6 +307,36 @@ function tile_chunk:update(dt)
   end
 end
 
+function tile_chunk:addPollution(pollution)
+	if self.animationPollution.currentTime > -2 then
+		self.animationPollution.currentTime = self.animationPollution.currentTime - pollution
+	end
+end
+
+function tile_chunk:addPollutionRight(pollution)
+	if self.animationPollutionRight.currentTime > 0 then
+		self.animationPollutionRight.currentTime = self.animationPollutionRight.currentTime - pollution
+	end
+end
+
+function tile_chunk:addPollutionDown(pollution)
+	if self.animationPollutionDown.currentTime > 0 then
+		self.animationPollutionDown.currentTime = self.animationPollutionDown.currentTime - pollution
+	end
+end
+
+function tile_chunk:addPollutionTop(pollution)
+	if self.animationPollutionTop.currentTime > 0 then
+		self.animationPollutionTop.currentTime = self.animationPollutionTop.currentTime - pollution
+	end
+end
+
+function tile_chunk:addPollutionLeft(pollution)
+	if self.animationPollutionLeft.currentTime > 0 then
+		self.animationPollutionLeft.currentTime = self.animationPollutionLeft.currentTime - pollution
+	end
+end
+
 ------------------------------------------------------------------------------
 function tile_chunk:draw() 
 	lg.setColor(255, 255, 255, 255)
@@ -281,8 +348,34 @@ function tile_chunk:draw()
   lg.setColor(255, 255, 255, 255)
   local x, y = self.x, self.y
   local chunkGraphic = self.chunkGraphic
+  local animationPollution = self.animationPollution
+  local animationPollutionRight = self.animationPollutionRight
+  local animationPollutionDown = self.animationPollutionDown
+  local animationPollutionTop = self.animationPollutionTop
+  local animationPollutionLeft = self.animationPollutionLeft
   --lg.draw(chunkGraphic, x, y) 
   lg.draw(chunkGraphic, x, y)
+  --lg.draw(animationPollution, x, y)
+  if self.animationPollution.currentTime > -1 then
+	local spriteNum = math.floor(animationPollution.currentTime / animationPollution.duration * #animationPollution.quads) + 1
+	lg.draw(animationPollution.spriteSheet, animationPollution.quads[spriteNum], x, y)
+  end
+  if self.animationPollutionRight.currentTime < 9 then
+	local spriteNum = math.floor(animationPollutionRight.currentTime / animationPollutionRight.duration * #animationPollutionRight.quads) + 1
+	lg.draw(animationPollutionRight.spriteSheet, animationPollutionRight.quads[spriteNum], x, y)
+  end
+  if self.animationPollutionDown.currentTime < 9 then
+	local spriteNum = math.floor(animationPollutionDown.currentTime / animationPollutionDown.duration * #animationPollutionDown.quads) + 1
+	lg.draw(animationPollutionDown.spriteSheet, animationPollutionDown.quads[spriteNum], x, y)
+  end
+  if self.animationPollutionTop.currentTime < 9 then
+	local spriteNum = math.floor(animationPollutionTop.currentTime / animationPollutionTop.duration * #animationPollutionTop.quads) + 1
+	lg.draw(animationPollutionTop.spriteSheet, animationPollutionTop.quads[spriteNum], x, y)
+  end
+  if self.animationPollutionLeft.currentTime < 9 then
+	local spriteNum = math.floor(animationPollutionLeft.currentTime / animationPollutionLeft.duration * #animationPollutionLeft.quads) + 1
+	lg.draw(animationPollutionLeft.spriteSheet, animationPollutionLeft.quads[spriteNum], x, y)
+  end
 end
 
 function tile_chunk:draw_debug()

@@ -13,23 +13,23 @@ end
 function food_menu_state.keyreleased(key)
 end
 function food_menu_state.mousepressed(x, y, button)
-
+print("b_________________0")
+print(food_menu_state.toggle_button)
 local x = love.mouse.getX()
 local y = love.mouse.getY()
 
 for i=1,#state.buttons do
     local b = state.buttons[i]
-    if b.bbox:contains_coordinate(x, y) and food_menu_state.toggle_button then
-      food_menu_state.toggle_button(b)
-	  if b.toggle == true and state.selectItem == 20 then
-		b.toggle = false
-	  end
-      return
+    if b.bbox:contains_coordinate(x, y) then
+		if b.text == "play" then
+			BOIDS:load_next_state()
+		end
     end
 end
 
 function food_menu_state.toggle_button(b)
   --local boids = state.flock.active_boids
+  print("b_________________")
   myText = b.text
   local width, height = 1024, 768
   local xpad = 0
@@ -55,7 +55,7 @@ function food_menu_state.toggle_button(b)
         nbNidsPred = nbNidsPred - 1
       elseif b.text == "+nidPred" then
         nbNidsPred = nbNidsPred + 1
-      elseif b.text == "GO" then
+      elseif b.text == "play" then
         BOIDS:load_next_state()
       end
     --elseif b.toggle == true then
@@ -81,28 +81,21 @@ end
 function food_menu_state.load(level)
   lg.setBackgroundColor(225, 125, 214, 255)
   
-  local xX = 0.5 * SCR_WIDTH - 0.25 * SCR_WIDTH
-  local yY = 0.5 * SCR_HEIGHT - 0.25 * SCR_HEIGHT 
+  local xX = 0.5 * SCR_WIDTH
+  local yY = 0
   
   
   state.buttons = {}
-  state.buttons[1] = {text="-bush", x = xX+150-200, y = yY, toggle = false, 
-                      bbox = bbox:new(xX+150-200, yY, 100, 100)}
-  state.buttons[2] = {text="+bush", x = xX+150*2-200, y = yY, toggle = false, 
-                      bbox = bbox:new(xX+150*2-200, yY, 100, 100)}
-  state.buttons[3] = {text="-nid", x = xX+150*3, y = yY, toggle = false, 
-                      bbox = bbox:new(xX+150*3, yY, 100, 100)}
-  state.buttons[4] = {text="+nid", x = xX+150*4, y = yY, toggle = false, 
-                      bbox = bbox:new(xX+150*4, yY, 100, 100)}
-  state.buttons[5] = {text="-nidPred", x = xX+150*5+200, y = yY, toggle = false, 
-                      bbox = bbox:new(xX+150*5+200, yY, 100, 100)}
-  state.buttons[6] = {text="+nidPred", x = xX+150*6+200, y = yY, toggle = false, 
-                      bbox = bbox:new(xX+150*6+200, yY, 100, 100)}
-  state.buttons[7] = {text="GO", x = xX+525, y = yY+200, toggle = false, 
-						bbox = bbox:new(xX+525, yY+200, 100, 100)}
+  state.buttons[1] = {text="play", x = xX-150, y = yY+300, toggle = false, 
+                      bbox = bbox:new(xX-150, yY+300, 300, 300)}
+  state.buttons[2] = {text="parametre", x = xX-500, y = yY+700, toggle = false, 
+                      bbox = bbox:new(xX-500, yY+700, 100, 100)}
+  state.buttons[3] = {text="credits", x = xX+350, y = yY+700, toggle = false, 
+                      bbox = bbox:new(xX+350, yY+700, 200, 100)}
   
-  button = love.graphics.newImage("images/Jungle/upgrade/btn.png")
-  buttonpress = love.graphics.newImage("images/Jungle/upgrade/btn-push.png")
+  play = love.graphics.newImage("images/ui/play.png")
+  parametre = love.graphics.newImage("images/ui/parametre.png")
+  credits = love.graphics.newImage("images/ui/credits-bubble.png")
   
 end
 
@@ -124,53 +117,17 @@ end
 --##########################################################################--
 function food_menu_state.draw()
 
-  local x = 0.5 * SCR_WIDTH - 0.25 * SCR_WIDTH
-  local y = 0.5 * SCR_HEIGHT - 0.25 * SCR_HEIGHT
-
-  lg.setFont(FONTS.appleMedium)
-  lg.setColor(251, 121, 0, 255)
-  lg.print("Menu", x, y)
+  local x = 0.5 * SCR_WIDTH
+  local y = 0
   
-    -- intruction text
+  lg.setColor(255, 255, 255, 255)
+  love.graphics.draw(play, x-150, y+300)
+  love.graphics.draw(parametre, x-500, y+700)
+  love.graphics.draw(credits, x+350, y+700)
+  
   lg.setColor(0, 0, 0, 255)
-  lg.setFont(FONTS.muli)
-  lg.print("Nb de bush", x-100, y+300)
-  lg.print(tostring(nbBush), x-35, y+500)
-  lg.print("Nb de nids", x+400, y+300)
-  lg.print(tostring(nbNids), x+465, y+500)
-  lg.print("Nb de nids de predateurs", x+800, y+300)
-  lg.print(tostring(nbNidsPred), x+965, y+500)
-  
-  local ystep = 200
-  
-  -- draw buttons
-  for i=1,#state.buttons do
-    local b = state.buttons[i]
-	lg.setColor(255, 255, 255, 255)
-	local newX = 0
-	local newY = 0
-	if i==1 then
-		newX = x - 200
-	elseif i==2 then
-		newX = x - 200
-	elseif i==3 then
-		newX = x
-	elseif i==4 then
-		newX = x
-	elseif i==5 then
-		newX = x + 200
-	elseif i==6 then
-		newX = x + 200
-	elseif i==7 then
-		newX = x - 525
-		y = y + 200		
-	end
-	if b.toggle then
-      lg.draw(buttonpress, newX+i*150, y)
-    else
-      lg.draw(button, newX+i*150, y)
-    end
-	--lg.rectangle("fill", 200+i*60,920, 50,50)
+  for i=1, 3 do
+	--love.graphics.rectangle( "fill", state.buttons[i].x, state.buttons[i].y, 200, 200)
   end
   
 end

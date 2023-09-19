@@ -22,7 +22,7 @@ local bitser = require "bitser"
 local save = nil
 local music = nil
 local music_2 = nil
-local nbNids = 10
+local nbNids = 3
 local playIntro = false
 local tableAnimRessources = {}
 
@@ -236,9 +236,9 @@ food_demo_state.toggle_button = function(b)
         state.selectItem = 3
 		state.level:get_mouse():set_input("bird")
 	  elseif b.text == "pred" then
-        state.selectItem = 4
+        --state.selectItem = 4
 	   elseif b.text == "ep" then
-        state.selectItem = 5
+        --state.selectItem = 5
       elseif b.text == "pause" then
 		speedTime = 0
 		love.audio.pause(intro)
@@ -285,9 +285,9 @@ food_demo_state.toggle_button = function(b)
       elseif b.text == "bird" then
          state.selectItem = 3
 	  elseif b.text == "pred" then
-        state.selectItem = 4
+        --state.selectItem = 4
 	  elseif b.text == "ep" then
-        state.selectItem = 5
+        --state.selectItem = 5
       elseif b.text == "pause" then
 		speedTime = 0
 		state.selectItem = 0
@@ -325,7 +325,7 @@ food_demo_state.toggle_button = function(b)
     end
  -- end
   b.toggle = not b.toggle
-  print("state.selectItem")
+  print("state.selectItem by buton")
   print(state.selectItem)
 end
 
@@ -355,6 +355,10 @@ function food_demo_state.createTown(x, y, r)
 	local x = math.floor(x/32)
 	local y = math.floor(y/32)
 	level[x][y] = p
+	
+	print("ajout d'une ville en")
+    print(x,y)
+	
 end
 
 function food_demo_state.mousereleased(x, y, button)
@@ -409,7 +413,7 @@ function food_demo_state.load(level)
   --vx/2-350+i*120, vy-110
   state.block_actions = block_actions:new()
   state.block_actions:set_position(50,vy/2-340)
-  local actionX, actionY = state.block_actions.x, state.block_actions.y
+  local actionX, actionY = state.block_actions.x, state.block_actions.y + 10
   
   state.buttons = {}
   state.buttons[1] = {text="bush", x = actionX, y = actionY+1*90, toggle = false, 
@@ -576,7 +580,7 @@ function food_demo_state.load(level)
 local target = vector2:new(1000, 1000)
 local cam = state.level:get_camera()
 
-for x=1, 3 do
+for x=1, 1 do
 	human = state.flock:add_human()
 end
 --human2 = state.flock:add_human()
@@ -635,7 +639,7 @@ end
 				if level[caseX][caseY]~=nil then
 					if count<nbNids and level[caseX][caseY]:getNumEmits()==0 and level[caseX][caseY].table=="tree" then
 						print('ajout de nid')
-						local emit = state.level:addHome(randX-35,randY-60,10,10,0,state.flock,state.level,5,0)
+						local emit = state.level:addHome(randX-35,randY-60,10,10,0,state.flock,state.level,0,0)
 						level[caseX][caseY]:add(emit)
 						level[caseX][caseY]:setNumEmits(1)
 						count = count + 1
@@ -673,15 +677,15 @@ end
 						end	
 						
 					end
-					if caseX<160 and caseY<160 and caseX>40 and caseY>40 and countTown<1 then
-						local randX = 64*x
-						local randY = 64*y
+					if caseX<160 and caseY<160 and caseX>100 and caseY>100 and countTown<1 then
+						local randX = 32*x
+						local randY = 32*y
 						countTown = countTown + 1
 						food_demo_state.createTown(randX,randY,100)
 						--food_demo_state.createTown(randX,randY,100)
 						state.hero:set_posX(randX)
 						state.hero:set_posY(randY-200)
-						target.x, target.y = caseX*64, caseY*64-200
+						target.x, target.y = caseX*32, caseY*32-200
 						cam:set_target(target,true)
 						state.hero:goDirection(10)
 					end
@@ -818,7 +822,7 @@ function food_demo_state.resize(w, h, scale)
   local cam = state.level:get_camera()
   local x, y = cam:get_viewport()
   state.block_actions:set_position(50,h/2-340)
-  local actionX, actionY = state.block_actions.x, state.block_actions.y
+  local actionX, actionY = state.block_actions.x, state.block_actions.y + 10
   local width, height = lg.getDimensions()
   local target = vector2:new(hpos.x, hpos.y)
   local camPos = cam:get_center()
@@ -826,7 +830,12 @@ function food_demo_state.resize(w, h, scale)
   --cam:set_scale(scale)
   print("go .")
   print(target.x,target.y)
-   
+  
+  state.buttons[1].bbox:set_position(actionX, actionY+1*90) 
+  state.buttons[2].bbox:set_position(actionX, actionY+2*90) 
+  state.buttons[3].bbox:set_position(actionX, actionY+3*90) 
+  state.buttons[4].bbox:set_position(actionX, actionY+4*90)
+  state.buttons[5].bbox:set_position(actionX, actionY+5*90) 	
   
   state.buttons[6].bbox:set_position(actionX+w/2+100-200, 30) 
   state.buttons[7].bbox:set_position(actionX+w/2+150-200, 30) 
@@ -893,8 +902,15 @@ function food_demo_state.update(dt)
   newLightWorld:Update()
   --newLight:SetPosition(vx/2, vy/2)
   newStar:SetPosition(vx/2, vy/2-50)
-  
+  local targetCam = vector2:new(hpos.x, hpos.y)
   if firstDance == true and speedSpeed~=0 then
+	  --[[target2.x = (target.x + mx)/2
+	  target2.y = (target.y + my)/2
+	  target2.x = (target2.x + target.x)/2
+	  target2.y = (target2.y + target.y)/2
+	  target2.x = (target2.x + target.x)/2
+	  target2.y = (target2.y + target.y)/2
+	  cam:set_target(target2)--]]
 	  if lk.isDown("z", "up") or lk.isDown("q", "left") or lk.isDown("s", "down") or lk.isDown("d", "right") or lk.isDown("lshift") or lk.isDown("space") or lk.isDown("e") then
 		  if lk.isDown("lshift") then
 			if state.hero:get_tired()>30 then
@@ -905,18 +921,22 @@ function food_demo_state.update(dt)
 		  if lk.isDown("z", "up") then
 			ty = ty - speed
 			state.hero:goDirection(1)
+			targetCam.y = targetCam.y-200
 		  end
 		  if lk.isDown("q", "left") then
 			tx = tx - speed
 			state.hero:goDirection(2)
+			targetCam.x = targetCam.x-200
 		  end
 		  if lk.isDown("s", "down") then
 			ty = ty + speed
 			state.hero:goDirection(3)
+			targetCam.y = targetCam.y+200
 		  end
 		  if lk.isDown("d", "right") then
 			tx = tx + speed
 			state.hero:goDirection(4)
+			targetCam.x = targetCam.x+200
 		  end
 		  if lk.isDown("space") then
 			state.hero:goDirection(6)
@@ -931,8 +951,8 @@ function food_demo_state.update(dt)
 			state.hero:set_position(target,true)
 			local w, h = lg.getDimensions()
 			state.hero:set_target(target.x, target.y)
-			local target2 = vector2:new(target.x+w/2, target.y+h/2)
-			cam:set_target(target, true)
+			--local target2 = vector2:new(target.x+w/2, target.y+h/2)
+			
 			state.hero:resetBlock()
 			state.hero:showWarning(false)
 		  else
@@ -941,6 +961,7 @@ function food_demo_state.update(dt)
 	  elseif state.hero:getBreathe() == 0 then
 		state.hero:goDirection(5)
 	  end
+	  cam:set_target(targetCam)
   else
 	local radius = r-2
 	newStar:SetRadius(radius)
@@ -1318,9 +1339,9 @@ function food_demo_state.draw()
 	elseif i==3 then
 		lg.draw(birdIcon, actionX+15, actionY+i*90+20)
 	elseif i==4 then
-		lg.draw(predatorIcon, actionX, actionY+i*90)
+		--lg.draw(predatorIcon, actionX, actionY+i*90)
 	elseif i==5 then
-		lg.draw(epIcon, actionX, actionY+i*90)
+		--lg.draw(epIcon, actionX, actionY+i*90)
 	end
 	--lg.rectangle("fill", 200+i*90,920, 50,50)
   end

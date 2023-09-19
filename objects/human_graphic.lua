@@ -84,20 +84,20 @@ function hg:init_graphics()
   
   self.face = lg.newImage("images/home/face-bird.png")
   
-  
-  self.animation1 = hero:newAnimation(love.graphics.newImage("images/human_images/walk-right.png"), 480, 270, 3)
-  self.animation2 = hero:newAnimation(love.graphics.newImage("images/human_images/walk-left.png"), 480, 270, 3)
-  self.animation3 = hero:newAnimation(love.graphics.newImage("images/human_images/walk-down.png"), 480, 270, 3)
-  self.animation4 = hero:newAnimation(love.graphics.newImage("images/human_images/walk-up.png"), 480, 270, 3)
-  self.animation5 = hero:newAnimation(love.graphics.newImage("images/human_images/start-run-right.png"), 480, 270, 3)
-  self.animation6 = hero:newAnimation(love.graphics.newImage("images/human_images/start-run-left.png"), 480, 270, 3)
-  self.animation7 = hero:newAnimation(love.graphics.newImage("images/human_images/start-run-down.png"), 480, 270, 3)
-  self.animation8 = hero:newAnimation(love.graphics.newImage("images/human_images/start-run-up.png"), 480, 270, 3)
-  self.animation9 = hero:newAnimation(love.graphics.newImage("images/human_images/run-right.png"), 480, 270, 3)
-  self.animation10 = hero:newAnimation(love.graphics.newImage("images/human_images/run-left.png"), 480, 270, 3)
-  self.animation11 = hero:newAnimation(love.graphics.newImage("images/human_images/run-down.png"), 480, 270, 3)
-  self.animation12 = hero:newAnimation(love.graphics.newImage("images/human_images/run-up.png"), 480, 270, 3)
-  self.animation13 = hero:newAnimation(love.graphics.newImage("images/human_images/cut-wood.png"), 480, 405, 3)
+  self.animations = {}
+  self.animation1 = self:newAnimation(love.graphics.newImage("images/human_images/walk-right.png"), 480, 270, 3)
+  self.animation2 = self:newAnimation(love.graphics.newImage("images/human_images/walk-left.png"), 480, 270, 3)
+  self.animation3 = self:newAnimation(love.graphics.newImage("images/human_images/walk-down.png"), 480, 270, 3)
+  self.animation4 = self:newAnimation(love.graphics.newImage("images/human_images/walk-up.png"), 480, 270, 3)
+  self.animation5 = self:newAnimation(love.graphics.newImage("images/human_images/start-run-right.png"), 480, 270, 3)
+  self.animation6 = self:newAnimation(love.graphics.newImage("images/human_images/start-run-left.png"), 480, 270, 3)
+  self.animation7 = self:newAnimation(love.graphics.newImage("images/human_images/start-run-down.png"), 480, 270, 3)
+  self.animation8 = self:newAnimation(love.graphics.newImage("images/human_images/start-run-up.png"), 480, 270, 3)
+  self.animation9 = self:newAnimation(love.graphics.newImage("images/human_images/run-right.png"), 480, 270, 3)
+  self.animation10 = self:newAnimation(love.graphics.newImage("images/human_images/run-left.png"), 480, 270, 3)
+  self.animation11 = self:newAnimation(love.graphics.newImage("images/human_images/run-down.png"), 480, 270, 3)
+  self.animation12 = self:newAnimation(love.graphics.newImage("images/human_images/run-up.png"), 480, 270, 3)
+  self.animation13 = self:newAnimation(love.graphics.newImage("images/human_images/cut-wood.png"), 480, 405, 1)
   table.insert(self.animations, self.animation1)
   table.insert(self.animations, self.animation2)
   table.insert(self.animations, self.animation3)
@@ -617,8 +617,9 @@ function hg:update(dt)
   
   local panic = self.panic
   local run = self.run
+  local i = self.i
   
-  for i=1, #self.animations do
+  --for i=1, #self.animations do
 		self.animations[i].currentTime = self.animations[i].currentTime + dt
 		if panic == true and self.animations[i].currentTime >= self.animations[i].duration then
 			self.animations[i].currentTime = self.animations[i].currentTime - self.animations[i].duration
@@ -626,7 +627,7 @@ function hg:update(dt)
 		elseif self.animations[i].currentTime >= self.animations[i].duration then
 			self.animations[i].currentTime = self.animations[i].currentTime - self.animations[i].duration
 		end
-	end
+	--end
 	self.delay = self.delay + 1
 	
 	if self.delay > 20 then
@@ -760,7 +761,7 @@ lg.line(p18.x + x, p18 .y + y, p1.x + x, p1.y + y)
   love.graphics.push()
   love.graphics.scale(0.5, 0.5)   -- reduce everything by 50% in both X and Y coordinates
   local spriteNum = math.floor( self.animations[i].currentTime /  self.animations[i].duration * #self.animations[i].quads) + 1
-  love.graphics.draw(self.animations[i].spriteSheet,  self.animations[i].quads[spriteNum], (p1.x+x-135)*2, (p1.y+y-70)*2)
+  love.graphics.draw(self.animations[i].spriteSheet,  self.animations[i].quads[spriteNum], (p1.x+x-135)*2, (p1.y+y)*2)
   --love.graphics.rectangle( "fill", (x+55)*2, (y+55)*2, 32, 32 )
   love.graphics.pop()
 

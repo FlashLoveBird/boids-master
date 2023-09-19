@@ -108,6 +108,7 @@ function tree:cutMe(value, human)
 		local emmiter = self.emmiter
 		if emmiter~=nil then
 			emmiter:removeAllBoid()
+			--table.remove(self.active_boids, i)
 			--self.emmiter = nil
 		end
 		self.level:deleteTree(self.x, self.y, self.index)

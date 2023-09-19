@@ -28,10 +28,9 @@ end
 --[[----------------------------------------------------------------------]]--
 --##########################################################################--
 function food_screen_state.load(level)
-  lg.setBackgroundColor(0, 0, 0, 255)
+  lg.setBackgroundColor(255, 255, 255, 255)
   
-  
-  
+  title = lg.newImage("images/ui/intro.png")
 end
 
 
@@ -61,6 +60,8 @@ function food_screen_state.draw()
   lg.setFont(FONTS.muliBig)
   lg.setColor(255, 255, 255, 255)
   lg.print("Paper life", x, y)
+  
+  lg.draw(title, x, y)
   
 end
 

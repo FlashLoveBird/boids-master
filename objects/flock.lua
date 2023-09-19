@@ -367,6 +367,8 @@ function fk:_update_boids(dt)
   self.collider:get_objects_at_bbox(bbox, objects)
   
   table.sort(objects, function(a, b) 
+									--print(a.boidType)
+									--print(b.boidType)
                                   return a.position.z < b.position.z
                                 end)
 

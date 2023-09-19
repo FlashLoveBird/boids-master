@@ -19,12 +19,10 @@ local y = love.mouse.getY()
 
 for i=1,#state.buttons do
     local b = state.buttons[i]
-    if b.bbox:contains_coordinate(x, y) and food_config_state.toggle_button then
-      food_config_state.toggle_button(b)
-	  if b.toggle == true and state.selectItem == 20 then
-		b.toggle = false
-	  end
-      return
+    if b.bbox:contains_coordinate(x, y) then
+      if b.text == "GO" then
+        BOIDS:load_next_state()
+      end
     end
 end
 

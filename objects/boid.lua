@@ -914,18 +914,17 @@ end
 function bd:destructHome()
 	if self.is_initialized == false then
 		self:activate()
+		self.path=nil
+		self.seeker:set_position(self.position.x+math.random(-10,10), self.position.y+math.random(-10,10), self.position.z+math.random(-10,10))
+		self:setObjectiv("fly")
 	else
 	
 	end
-	self.path=nil
-	self.seeker:set_position(self.position.x+math.random(-10,10), self.position.y+math.random(-10,10), self.position.z+math.random(-10,10))
-	self:setObjectiv("fly")
 	self:setHome(false)
 	--self.body_graphic:set_color1(255)
 	--self.rule_weights[self.separation_vector] = 3
 	self.treeFound=nil
 	self.needHome = true
-	self.objectiv = "fly"
 	self.originX,self.originY,self.originZ = nil, nil, nil
 	self.free=true
 	self.countPath = 1
@@ -1222,7 +1221,7 @@ function bd:_update_rules(dt)
   self:_update_separation_rule(dt)
   self:_update_separation_predator_rule(dt)
   self:_update_boundary_rule(dt)
-  self:_update_waypoint_rule(dt/10)
+  self:_update_waypoint_rule(dt/50)
   self:_update_obstacle_rule(dt)
   --self:draw_debug()
   

@@ -114,7 +114,7 @@ function egg:update(dt, journeyTime, player)
 	local animationEclose = self.animationEclose
 	local animationBird = self.animationBird
 	local speed = self.speed
-	if hour_birth>100 and eclose==false and (timeLoc<70 or timeLoc>100) then --hour_birth>math.random(3000,10000) and eclose==false then
+	if hour_birth>100 and eclose==false then--and (timeLoc<70 or timeLoc>100) then --hour_birth>math.random(3000,10000) and eclose==false then
 		if self.crackSound == false then
 			local pos = player
 			local volume = self:distance(pos.x, pos.y, x, y)

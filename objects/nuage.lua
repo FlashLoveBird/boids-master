@@ -34,7 +34,7 @@ nuage.field_of_view = 1.8 * math.pi
 nuage.sight_radius = 400
 nuage.separation_radius = 0.2 * nuage.sight_radius
 nuage.separation_predator_radius = 0.2 * nuage.sight_radius
-nuage.boundary_zpad = 200
+nuage.boundary_zpad = 0
 nuage.boundary_ypad = 200
 nuage.boundary_xpad = 200
 nuage.boundary_vector_mix_ratio = 0.25           -- mixes normal to reflected projection
@@ -89,7 +89,7 @@ nuage.myIdTable = nil
 nuage.seekTree = nil
 nuage.seekingHome = false
 nuage.seekingWood = false
-nuage.boidType = 1
+nuage.boidType = 7
 nuage.predatorInView = false
 nuage.searchObjRad = 5
 love.frame = 0
@@ -235,7 +235,7 @@ function nuage:init(level, parent_flock, x, y, z, dirx, diry, dirz)
   print('parent_flock2')
   print(parent_flock)
   self.flock = parent_flock
-  self.boidType=1
+  self.boidType=7
   self.originX = x
   self.originY = y
   self.originZ = z
@@ -1345,6 +1345,34 @@ function nuage:_update_boid_life(dt)
 	if searchObjRad > 800 then
 		self.searchObjRad = 1
 	end
+	
+	if math.random(1,10)==1 then
+		local tile_map = self.level:get_level_map():get_tile_map()
+		local i, j , chunk = tile_map:get_chunk_index(self.position)
+		chunk:addPollution(1)
+			
+		local newPosition = vector2:new(0, 0, 0)
+		newPosition.x = chunk.x-200
+		newPosition.y = chunk.y
+		local i, j , chunkLeft = self.level:get_level_map():get_tile_map():get_chunk_index(newPosition)
+		chunkLeft:addPollutionRight(1)
+		
+		newPosition.x = chunk.x+300
+		newPosition.y = chunk.y
+		local i, j , chunkRight = self.level:get_level_map():get_tile_map():get_chunk_index(newPosition)
+		chunkRight:addPollutionLeft(1)
+		
+		newPosition.x = chunk.x
+		newPosition.y = chunk.y-200
+		local i, j , chunkTop = self.level:get_level_map():get_tile_map():get_chunk_index(newPosition)
+		chunkTop:addPollutionDown(1)
+		
+		newPosition.x = chunk.x
+		newPosition.y = chunk.y+300
+		local i, j , chunkDown = self.level:get_level_map():get_tile_map():get_chunk_index(newPosition)
+		chunkDown:addPollutionTop(1)--]]
+	end
+	
 end
 
 function nuage:goHome()
@@ -1552,6 +1580,8 @@ function nuage:sing(length)
 	else
 		love.audio.play(self.sing_sound_2)
 	end--]]
+	print('va y chante')
+	print(self.boidType)
 end
 
 function nuage:distance ( x1, y1, x2, y2 )

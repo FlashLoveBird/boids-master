@@ -60,6 +60,9 @@ function be:init(level, flock, x, y, z, dirx, diry, dirz, radius, nbEgg, boidTyp
 	self.active_boids = {}
 	self.eggs = {}
 	self.i = i
+	
+	print("Je suis l'emitter numero")
+	print(i)
 	  
 	  if level then
 		  local t = poisson_interval(self.rate)
@@ -323,12 +326,16 @@ function be:removeAllBoid()
 	self.active_boids = {}
 end
 
---[[function be:add_boid(boid)
+function be:add_boid(boid)
 	self.active_boids[#self.active_boids+1] = boid
 	self.boid_count = self.boid_count + 1
 	 print('++++++++++++++++++++++++++++111111111111111111111')
      print(#self.active_boids)
-end--]]
+end
+
+function be:getIndex()
+  return self.i
+end
 
 function be:_destroy_boid(b)
   self.flock:remove_boid(b)
