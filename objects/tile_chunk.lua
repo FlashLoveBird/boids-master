@@ -308,31 +308,36 @@ function tile_chunk:update(dt)
 end
 
 function tile_chunk:addPollution(pollution)
-	if self.animationPollution.currentTime > -2 then
+	local i = self.animationPollution.currentTime - pollution
+	if i > -1 and i < 9 then
 		self.animationPollution.currentTime = self.animationPollution.currentTime - pollution
 	end
 end
 
 function tile_chunk:addPollutionRight(pollution)
-	if self.animationPollutionRight.currentTime > 0 then
+	local i = self.animationPollutionRight.currentTime - pollution
+	if i > -1 and i < 9 then
 		self.animationPollutionRight.currentTime = self.animationPollutionRight.currentTime - pollution
 	end
 end
 
 function tile_chunk:addPollutionDown(pollution)
-	if self.animationPollutionDown.currentTime > 0 then
+	local i = self.animationPollutionDown.currentTime - pollution
+	if i > -1 and i < 9 then
 		self.animationPollutionDown.currentTime = self.animationPollutionDown.currentTime - pollution
 	end
 end
 
 function tile_chunk:addPollutionTop(pollution)
-	if self.animationPollutionTop.currentTime > 0 then
+	local i = self.animationPollutionTop.currentTime - pollution
+	if i > -1 and i < 9 then
 		self.animationPollutionTop.currentTime = self.animationPollutionTop.currentTime - pollution
 	end
 end
 
 function tile_chunk:addPollutionLeft(pollution)
-	if self.animationPollutionLeft.currentTime > 0 then
+	local i = self.animationPollutionLeft.currentTime - pollution
+	if i > -1 and i < 9 then
 		self.animationPollutionLeft.currentTime = self.animationPollutionLeft.currentTime - pollution
 	end
 end

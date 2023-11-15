@@ -1224,7 +1224,7 @@ function tile_map:update(dt)
   
   local update_chunks = self:update_chunks_in_active_area()
   for i=1,#update_chunks do
-    --update_chunks[i]:update(dt)
+    update_chunks[i]:update(dt)
   end
   
   local chunks_in_view, chunks_in_view_by_id = self:update_chunks_in_view()

@@ -27,7 +27,9 @@ local mouseBush = nil
 local mouseInput = nil
 local mouseImg = nil
 local mouseImgClick = nil
+local mouseImgClickInstant = nil
 mouse_input.click = nil
+mouse_input.clickInstant = nil
 
 local mouse_input_mt = { __index = mouse_input }
 function mouse_input:new(level)
@@ -50,6 +52,7 @@ function mouse_input:new(level)
   mouseBush = love.graphics.newImage("images/mouse/bigBush-mouse.png")
   mouseImg = love.graphics.newImage("images/mouse/mouse.png")
   mouseImgClick = love.graphics.newImage("images/mouse/mouse-click.png")
+  mouseImgClickInstant = love.graphics.newImage("images/mouse/mouse-click-instant.png")
   
   return setmetatable({ reference_pos = ref_pos,
                         screen_pos = scr_pos,
@@ -81,13 +84,16 @@ function mouse_input:setColor(color, color1, color2, color3)
 end
 
 function mouse_input:mousepressed(x, y, button)
-  if button == 'l' then
+  --if button == 'l' then
+  print('press ? ?')
     self.left_pressed = true
     self.left_press_timer:start()
-  end
+  --end
 end
 
 function mouse_input:mousereleased(x, y, button)
+  print('release ?')
+  self.left_pressed = false
   self.left_press_timer:reset()
 end
 
@@ -201,6 +207,7 @@ function mouse_input:draw()
   lg.setColor(self.color, self.color1, self.color2, self.color3)
   lg.setPointSize(3)
   local mouseInput = self.mouseInput
+  local left_pressed = self.left_pressed
   local x, y = love.mouse.getPosition()
   if mouseInput == nil then
       lg.setColor(self.color, self.color1, self.color2, self.color3)
@@ -210,8 +217,10 @@ function mouse_input:draw()
 	  --lg.line(x, y, x + 0.7 * len, y + len - 3)
 	  if self.click then
 	    lg.draw(mouseImgClick, x-15, y-10)
-	  else
+	  elseif left_pressed == false then
 		lg.draw(mouseImg, x-15, y-10)
+	  else
+		lg.draw(mouseImgClickInstant, x-15, y-10)
 	  end
   elseif mouseInput =="bird" then
 	lg.draw(mouseBoid, x-15, y-10)

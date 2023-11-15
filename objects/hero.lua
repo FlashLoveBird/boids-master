@@ -113,7 +113,7 @@ function hero:init(level, flock, x, y)
 	  self.level = level
 	  self.flock = flock
 	  
-	  local pos = vector2:new(600, 600, 100)
+	  local pos = vector2:new(600, 600, 1)
 	  -- for smooth movement
 	  local target = physics.steer:new(pos)
 	  target:set_dscale(1)
@@ -558,6 +558,49 @@ function hero:_update_boid_life(dt)
 				self.confuseTime=0
 				self.confuse = false
 			end
+		end
+	end
+	
+	if math.random(1,50)==1 then
+		local tile_map = self.level:get_level_map():get_tile_map()
+		local i, j , chunk = tile_map:get_chunk_index(self.position)
+		chunk:addPollution(-1)
+			
+		local newPosition = vector2:new(0, 0, 0)
+		newPosition.x = chunk.x-200
+		newPosition.y = chunk.y
+		local i, j , chunkLeft = self.level:get_level_map():get_tile_map():get_chunk_index(newPosition)
+		if chunkLeft == false then
+		
+		else
+			chunkLeft:addPollutionRight(-1)
+		end
+		
+		newPosition.x = chunk.x+300
+		newPosition.y = chunk.y
+		local i, j , chunkRight = self.level:get_level_map():get_tile_map():get_chunk_index(newPosition)
+		if chunkRight == false then
+			
+		else
+			chunkRight:addPollutionLeft(-1)
+		end
+		
+		newPosition.x = chunk.x
+		newPosition.y = chunk.y-200
+		local i, j , chunkTop = self.level:get_level_map():get_tile_map():get_chunk_index(newPosition)
+		if chunkTop == false then
+			
+		else
+			chunkTop:addPollutionDown(-1)
+		end
+		
+		newPosition.x = chunk.x
+		newPosition.y = chunk.y+300
+		local i, j , chunkDown = self.level:get_level_map():get_tile_map():get_chunk_index(newPosition)
+		if chunkDown == false then
+			
+		else
+			chunkDown:addPollutionTop(-1)
 		end
 	end
 	

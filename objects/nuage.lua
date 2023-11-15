@@ -1203,150 +1203,7 @@ function nuage:_update_boid_life(dt)
 	
 	self.sight_radius = 200 --- pollution
 	
-	if inHome == true then
-		if tired<101 then
-			self.tired = tired + dt
-		end
-		local randomNum = 1 --math.random(1,5000)
-		if tired > 50 and objectiv == "sleep" and myTime<40 and myTime>3.9 and randomNum == 1 then
-			self:activate()
-			self.path=nil
-			self.seeker:set_position(self.position.x+math.random(-10,10), self.position.y+math.random(-10,10), self.position.z+math.random(-10,10))
-			self:setObjectiv("fly")
-			self:setHome(false)
-			--self.body_graphic:set_color1(255)
-			--self.rule_weights[self.separation_vector] = 3
-			self.treeFound=nil
-		end
-	else
-		if needHome and active==false then
-			self:seekHome(10)
-			print("continue de chrcher maison")
-		end
-		if self.objectiv~="goFloor" then
-			--self.tired = tired - dt*20
-			--self.hunger = hunger - dt*25
-		else
-			if tired < 99 then
-				self.tired = tired + dt/3
-			else
-				self:activate()
-				self.path=nil
-				self.seeker:set_position(self.position.x+math.random(-10,10), self.position.y+math.random(-10,10), self.position.z+math.random(-10,10))
-				self:setObjectiv("fly")
-				self:setHome(false)
-				--self.body_graphic:set_color1(255)
-				--self.rule_weights[self.separation_vector] = 3
-				self.treeFound=nil
-			end
-			if hunger < 99 then
-				self.hunger = hunger + dt/4
-			else
-				self:activate()
-				self.path=nil
-				self.seeker:set_position(self.position.x+math.random(-10,10), self.position.y+math.random(-10,10), self.position.z+math.random(-10,10))
-				self:setObjectiv("fly")
-				self:setHome(false)
-				--self.body_graphic:set_color1(255)
-				--self.rule_weights[self.separation_vector] = 3
-				self.treeFound=nil
-			end
-		end
-		if hunger < 55 and foodGrab > 0 then 
-			self:feed(50)
-			self:minusFood(1)
-		elseif hunger < 50 and self.emit and active==false then
-			if self.emit:get_food() > 0 then
-				self:goHome()
-			else
-				self:seekFood(searchObjRad)
-				self:set_emote('hungry')
-			end
-		elseif hunger < 50 and foodGrab == 0 and active==false then 
-			self:seekFood(searchObjRad)
-		end
-		if hunger < 0 then 
-			self.dead = true
-			if self.lover then
-				self:resetLove(self.lover)
-			end
-			self.body_graphic:set_color4(0)
-			if self.emit then
-				self.emit:remove_boid(self)
-			end
-			flock:remove_boid(self)
-		end
-		if tired < 40 then 
-			if tired > 20 and math.random(1,300) == 3 and self.objectiv~="goFloor" then
-				self:seekTreeFroSleep(searchObjRad)
-			elseif tired < 20 then 
-				local x = math.floor((self.position.x+math.random(-200,200))/32)
-				local y = math.floor((self.position.y+math.random(-200,200))/32)
-				if self.level:canILandHere(x,y,10) then
-					self:set_waypoint(self.position.x+math.random(-200,200), self.position.y+math.random(-200,200),50 ,20 ,50)
-					self:setObjectiv("goFloor")
-				else
-				
-				end
-			elseif tired < 0 then 
-				self.dead = true
-				if self.lover then
-					self:resetLove(self.lover)
-				end
-				self.body_graphic:set_color4(0)
-				if self.emit then
-					self.emit:remove_boid(self)
-				end
-				flock:remove_boid(self)
-			end
-		end
-		if emote~=nil then
-			self.emoteTime = emoteTime + dt*10
-			if emoteTime>2 then
-				self:set_emote(nil)
-				self.emoteTime=0
-			end
-		end
-		if confuse then
-			self.confuseTime = confuseTime + dt
-			if confuseTime>1000 then
-				self:unconfuse()
-				self.confuseTime=0
-				self.confuse = false
-			end
-		end
-		
-		if hadKid then
-			self.hadKidTime = hadKidTime + dt
-			if hadKidTime>10 then
-				self.hadKidTime=0
-				self.hadKid = false
-			end
-		end
-		
-		if predatorInView then
-			self.predatorInViewTime = predatorInViewTime + dt
-			if predatorInViewTime>10 then
-				self.predatorInView=false
-				self:set_emote("faceHappy")
-				local acc = self:get_acceleration()
-			    acc.x = acc.x/3
-				acc.y = acc.y/3
-				acc.z = acc.z/3
-				self:set_acceleration(acc)
-				local vel = self:get_velocity()
-				vel.x = vel.x/3
-				vel.y = vel.y/3
-				vel.z = vel.z/3
-				self:set_velocity(vel)
-			end
-		end
-	end
-	if searchObjRad > 800 then
-		self.searchObjRad = 1
-	end
-	
-	if math.random(1,10)==1 then
+	if math.random(1,50)==1 then
 		local tile_map = self.level:get_level_map():get_tile_map()
 		local i, j , chunk = tile_map:get_chunk_index(self.position)
 		chunk:addPollution(1)
@@ -1355,22 +1212,38 @@ function nuage:_update_boid_life(dt)
 		newPosition.x = chunk.x-200
 		newPosition.y = chunk.y
 		local i, j , chunkLeft = self.level:get_level_map():get_tile_map():get_chunk_index(newPosition)
-		chunkLeft:addPollutionRight(1)
+		if chunkLeft == false then
+		
+		else
+			chunkLeft:addPollutionRight(1)
+		end
 		
 		newPosition.x = chunk.x+300
 		newPosition.y = chunk.y
 		local i, j , chunkRight = self.level:get_level_map():get_tile_map():get_chunk_index(newPosition)
-		chunkRight:addPollutionLeft(1)
+		if chunkRight == false then
+			
+		else
+			chunkRight:addPollutionLeft(1)
+		end
 		
 		newPosition.x = chunk.x
 		newPosition.y = chunk.y-200
 		local i, j , chunkTop = self.level:get_level_map():get_tile_map():get_chunk_index(newPosition)
-		chunkTop:addPollutionDown(1)
+		if chunkTop == false then
+			
+		else
+			chunkTop:addPollutionDown(1)
+		end
 		
 		newPosition.x = chunk.x
 		newPosition.y = chunk.y+300
 		local i, j , chunkDown = self.level:get_level_map():get_tile_map():get_chunk_index(newPosition)
-		chunkDown:addPollutionTop(1)--]]
+		if chunkDown == false then
+			
+		else
+			chunkDown:addPollutionTop(1)
+		end
 	end
 	
 end
@@ -2336,6 +2209,11 @@ function nuage:update(dt)
     self:_update_graphic_orientation(dt/10)
     self:_update_boid_orientation(dt/10)
 	self:_update_boid_life(dt/30)	
+	
+	local animationNuage = self.animationNuage
+	if animationNuage.currentTime + dt < animationNuage.duration then
+		animationNuage.currentTime = animationNuage.currentTime + dt
+	end
 	
 end
 

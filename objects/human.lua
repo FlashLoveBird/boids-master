@@ -1425,7 +1425,7 @@ function hu:_update_human_life(dt)
 		self.searchObjRad = 1
 	end
 	
-	if math.random(1,10)==1 then
+	if math.random(1,30)==1 then
 		local tile_map = self.level:get_level_map():get_tile_map()
 		local i, j , chunk = tile_map:get_chunk_index(self.position)
 		chunk:addPollution(1)

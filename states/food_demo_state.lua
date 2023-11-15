@@ -364,6 +364,7 @@ end
 function food_demo_state.mousereleased(x, y, button)
   --if state.selectItem ==0 then
     state.flock:mousereleased(x, y, button)
+	state.level:mousereleased(x, y, button)
   --end
 end
 
@@ -1304,11 +1305,14 @@ function food_demo_state.draw()
   --if masterTimer > 45 then
 	
   --end
+  if firstDance == false then
+	  lg.draw(showEmoteCriImg, actionX+950, actionY+250)
+	  lg.setColor(0, 0, 0, 255)
+	  lg.setFont(FONTS.muli)
+	  lg.print("Get out !", actionX+1100, actionY+330)
+  end
   if firstDance == false then return end
-  lg.draw(showEmoteCriImg, x, y)
-  lg.setColor(0, 0, 0, 255)
-  lg.setFont(FONTS.muli)
-  lg.print("Get out !", x*2+400, y*2+210)
+  
   
   -- intruction text
   lg.setColor(255, 255, 255, 255)

@@ -130,7 +130,7 @@ function level:new()
   level.imageAnimationOmbre = love.graphics.newImage("images/ombreTree.png")
   level.imageAnimationOmbreBirth = love.graphics.newImage("images/ombreTreeBirth.png")
   
-  level.imageAnimationNuage = love.graphics.newImage("images/nuage.png")
+  level.imageAnimationNuage = love.graphics.newImage("images/env/nuage-anim.png")
   
   level:init()
   
@@ -644,7 +644,7 @@ self.nbNuage = self.nbNuage + 1
 local imageAnimationNuage = self.imageAnimationNuage
 
 
-local animationNuage = self:newAnimation(imageAnimationNuage, 427, 292, 1)
+local animationNuage = self:newAnimation(imageAnimationNuage, 500, 416, 1)
 
 local nua = nouage:new(self,self.nbNuage,flock,animationNuage, x*32, y*32, z)
 --nua:init(flock, x*32, y*32, 500)
@@ -675,7 +675,9 @@ function level:keyreleased(key)
 end
 
 function level:mousereleased(x, y, button)
+	print('bah ?')
   if self.mouse then
+	print('bah ? Oui ?')
     self.mouse:mousereleased(x, y, button)
   end
 end
