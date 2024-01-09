@@ -23,7 +23,8 @@ tree.drawInfo = false
 tree.x = 0
 tree.y = 0
 tree.state = false
-tree.emmiter = nil
+tree.emiter = nil
+tree.emiterIndex = nil
 tree.graphic = 0
 tree.treeGraphic = nil
 tree.animationExpire = nil
@@ -48,6 +49,8 @@ tree.woodPrim = nil
 tree.food = 0
 tree.index = nil
 tree.life = 0
+tree.boids = {}
+tree.typeOfBoid = ""
 
 local tree_mt = { __index = tree }
 function tree:new(level,i,flock, x, y, animationTreeInspire,animationTreeExpire,animationTreeBirth,animationBigTreeInspiree,animationBigTreeExpiree,animationOmbree,animationOmbreBirthe)
@@ -74,7 +77,12 @@ function tree:new(level,i,flock, x, y, animationTreeInspire,animationTreeExpire,
   tree.x = x
   tree.y = y
   treeGroSound = love.audio.newSource("sound/tree_gro.wav", "stream")
+  tree:initTabBoids()
   return tree
+end
+
+function tree:initTabBoids(dt)
+	self.boids={}
 end
 
 function tree:_update_map_point(dt)
@@ -102,16 +110,27 @@ function tree:getIndex()
 	return self.index
 end
 
+function tree:add_boid(boid)
+	table.insert(self.boids, boid)
+end
+
 function tree:cutMe(value, human)
 	self.life = self.life - value
 	if self.life < 1 then
-		local emmiter = self.emmiter
-		if emmiter~=nil then
-			emmiter:removeAllBoid()
+		local emiter = self.emiter
+		print('la je suis bien la')
+		print(emiter)
+		if emiter~=nil then
+			emiter:removeAllBoid()
 			--table.remove(self.active_boids, i)
-			--self.emmiter = nil
+			--self.emiter = nil
+			print('la je suis bien la')
+			self.emiter = nil
 		end
-		self.level:deleteTree(self.x, self.y, self.index)
+		for x=1, #self.boids do
+			self.boids[x]:destructHome()
+		end
+		self.level:deleteTree(self.x, self.y, self.index, self.emiterIndex)
 		human.body_graphic:set_cutWood(false)
 		human.seekTree = nil
 		human:grabWood(50)
@@ -139,6 +158,12 @@ function tree:getTableVersion()
 	 return tree
 end
 
+function tree:update_typeOfBoid()
+	if #self.boids==0 then
+		self.typeOfBoid=""
+	end
+end
+
 ------------------------------------------------------------------------------
 function tree:update(dt)
 
@@ -158,6 +183,8 @@ local timeBigExpire = self.timeBigExpire
 local timeBirth = self.timeBirth
 local tronc = self.tronc
 
+
+self:update_typeOfBoid(dt/60)
 
 if timeInspire == true and timeBirth <= 100 then
 	animationInspire.currentTime = animationInspire.currentTime + dt
@@ -310,12 +337,13 @@ function tree:getState()
 	return self.state
 end
 
-function tree:add(emit)
-	self.emmiter = emit
+function tree:add(emit, i)
+	self.emiter = emit
+	self.emiterIndex = i
 end
 
 function tree:getEmit()
-	return self.emmiter
+	return self.emiter
 end
 
 function tree:getTree()
@@ -340,9 +368,9 @@ function tree:newAnimation(image, width, height, duration)
 end
 
 function tree:getNumBoids()
-local emmiter = self.emmiter
-	if emmiter~=nil then
-		return emmiter:get_boids()
+local emiter = self.emiter
+	if emiter~=nil then
+		return emiter:get_boids()
 	else
 		return 0
 	end
@@ -353,9 +381,9 @@ function tree:setState(bol)
 end
 
 function tree:getFood()
-	local emmiter = self.emmiter
-	if emmiter~=nil then
-		return emmiter:get_food()
+	local emiter = self.emiter
+	if emiter~=nil then
+		return emiter:get_food()
 	else
 		return 0
 	end
@@ -391,6 +419,14 @@ function tree:unselect()
   self.level:set_select(nil)
 end
 
+function tree:set_typeOfBoid(typeOfBoid)
+  self.typeOfBoid = typeOfBoid
+end
+
+function tree:get_typeOfBoid()
+  return self.typeOfBoid
+end
+
 function tree:mousepressed(mx, my, button)
 	local x, y = self.x , self.y
 	if mx/32>x-5 and mx/32<x+5 and my/32>y-5 and my/32<y+5 then
@@ -402,36 +438,36 @@ end
 ------------------------------------------------------------------------------
 function tree:draw()
 	local drawInfo = self.drawInfo
-	local mx, my = self.x , self.y
+	local mX, mY = self.x + 2 , self.y
 	local cx, cy = self.level:get_camera():get_viewport()
-	mx, my = mx*32-cx-100, my*32-cy
-	--local mpos = level:get_mouse():get_position()
-	--local mxx, myy = x + mpos.x, y + mpos.y
-	--local numBoids = self:getNumBoids()
-	--local cam = self.level:get_camera()
+	local mX, mY = mX*32-cx-100, mY*32-cy
+	local mpos = self.level:get_mouse():get_position()
+	local numBoids = self.boids
+	local cam = self.level:get_camera()
+    local camWi, camHe = cam:get_size()
 	local food = self:getFood()
-	--if drawInfo==true then
-		--lg.draw(treeGraphicSelect, mx-50, my-64)
-	--end
-	
-	--[[if drawInfo==true then
-		lg.setColor(255, 255, 255, 255)
-		lg.draw(treeGraphicSelect, mx-50, my-64)
-		lg.setColor(255, 255, 255, 255)
-		--lg.draw(bg, mx-50, my-64)
-		--lg.draw(tableImg, mx-50, my-64)
-		lg.setColor(0, 0, 0, 255)
-		lg.print(self.numEmits, mx, my)
-		--lg.print(numBoids, 1600, 300)
-		lg.print(food, 1600, 300)
-	else
-		
-	end--]]
+	if drawInfo==true then
+		lg.draw(treeGraphicSelect, mX-50, mY-64)
+	end
 	
 	love.graphics.push()
 	love.graphics.scale(0.5, 0.5)   -- reduce everything by 50% in both X and Y coordinates
-	local mx = mx*2
-	local my = my*2
+	local mx = mX*2
+	local my = mY*2
+	
+	
+	if drawInfo==true then
+		lg.setColor(255, 255, 255, 255)
+		--love.graphics.draw(bg, mx-400, cy+cam.pos.y+200)
+		--love.graphics.draw(tableImg, mx-350, cy+cam.pos.y+220)
+		lg.setColor(0, 0, 0, 255)
+		lg.print(self.numEmits, mx+450, my+220)
+		lg.print(#numBoids, mx+450, my+270)
+		lg.print(food, mx+450, my+320)
+		lg.print(self.typeOfBoid, mx+450, my+350)
+	else
+		
+	end
 	
 	--lg.setColor(255, 255, 255, 255)
 	--lg.draw(self.treeGraphic, mx-50, my-64)
@@ -525,6 +561,10 @@ function tree:draw()
 	
 	--lg.draw(birdSleep, mx+50, my-100)
 	love.graphics.pop()
+	
+	if self.emiter then
+		self.emiter:draw(mX-10, mY+45)
+	end
 	
 end
 

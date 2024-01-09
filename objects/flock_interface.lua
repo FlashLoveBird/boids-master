@@ -24,8 +24,10 @@ fi.select_boid_bbox = nil
 fi.selected_boids = nil
 fi.temp_collision_table = nil
 fi.is_camera_tracking = false
-
+fi.buttonsSelected = {}
 fi.nb_boids_selected = 0
+fi.selectBoidsByPanel = false
+fi.boidSelectByPanel = nil
 
 local fi_mt = { __index = fi }
 function fi:new(level, parent_flock)
@@ -58,7 +60,9 @@ function fi:new(level, parent_flock)
   objectiv = love.graphics.newImage("images/ui/objectiv.png")
   sleepIcon = love.graphics.newImage("images/ui/sleepIcon.png")
   searchIcon = love.graphics.newImage("images/ui/search.png")
-  flyIcon = love.graphics.newImage("images/ui/flyIcon.png")  
+  flyIcon = love.graphics.newImage("images/ui/flyIcon.png")
+
+  birdSleepIcon = love.graphics.newImage("images/ui/select_bird.png")  
   
   panelInset_brown = love.graphics.newImage("images/PNG/panelInset_beigeLight.png")
   searchBigIcon = love.graphics.newImage("images/Colored/genericItem_color_111.png")
@@ -66,6 +70,7 @@ function fi:new(level, parent_flock)
   selectBoid = love.graphics.newImage("images/ui/selectBoid.png")
   
   fi.buttons = {}
+  
   local cam = level:get_camera()
   local tableX = 100
   local tableY = 100
@@ -116,15 +121,39 @@ function fi:mousepressed(x, y, button)
 	  end
       return
     end
-  end
-  
+  end  
   --print(x, y)
 
   -- Add boids
-  if button == 1 then
-    
-	self.left_click_mode = SELECT_MODE
-    self.left_click_x, self.left_click_y = x, y
+  if button == 1 then	
+	if self.buttonsSelected then
+		if #self.buttonsSelected > 0 then
+		  for i=1,#self.buttonsSelected do
+			local buttonSelected = self.buttonsSelected[i]
+			if #self.buttonsSelected > 0 then
+				if buttonSelected.bbox:contains_coordinate(x,  y) then
+				local count = 1
+				  for _,b in pairs(self.selected_boids) do
+					if b.name == buttonSelected.text then
+						self.boidSelectByPanel = b
+						self.buttonsSelected = {}
+						self.selectBoidsByPanel = true
+					end
+				  count = count + 1
+				  end
+				else
+					self.selectBoidsByPanel = false
+				end
+			end
+		  end
+		else
+			self.left_click_mode = SELECT_MODE
+			self.left_click_x, self.left_click_y = x, y
+			self.selectBoidsByPanel = false
+		end		
+	end
+	--self.left_click_mode = SELECT_MODE
+    --self.left_click_x, self.left_click_y = x, y
 	
 	-- dont add boid if boids are selected
     --[[local n = 0
@@ -135,9 +164,6 @@ function fi:mousepressed(x, y, button)
       self.left_click_x, self.left_click_y = x, y
     end--]]
   -- Select boids
-  elseif button == 1 then
-    self.left_click_mode = SELECT_MODE
-    self.left_click_x, self.left_click_y = x, y
   end
   
   -- Clear selected boids
@@ -148,10 +174,19 @@ function fi:mousepressed(x, y, button)
   
   -- set waypoint for selected boids
   if button == 2 then
+	print('gogo mon poto-----------------')
     self:_set_waypoint_for_selected_boids(x, y)
   end
   
-  if button == 1 and self.selectItem == 1 then
+  if self.buttonsSelected then
+	if #self.buttonsSelected > 0 then
+		self.selectBoidsByPanel = false
+		self.buttonsSelected = {}
+		print('vider bouton---------------------------------------------------------------------------------')
+	end
+  end
+  
+  --[[if button == 1 and self.selectItem == 1 then
 	local treeMap = self.level:getTreeMap()
 	local x = math.floor(x/32)
 	local y = math.floor(y/32)
@@ -165,17 +200,21 @@ function fi:mousepressed(x, y, button)
 			end
 		end
 	  end
-  end
+  end--]]
   
 end
 function fi:mousereleased(x, y, button)
   local x, y = self.level:get_mouse():get_coordinates()
   local cx, cy = self.level:get_camera():get_viewport()
   local x, y = x + cx, y + cy
-  self.nb_boids_selected = 0
-
+  
+  
+  if self.selectBoidsByPanel==false then
+	self.nb_boids_selected = 0
+  end
+	
   -- add boid on release
-  if button == 1 and self.left_click_mode == ADD_MODE then
+  if button == 1 and self.left_click_mode == ADD_MODE and self.selectBoidsByPanel==false then
     if not self.left_click_x or not self.left_click_y then return end
     
     local dx, dy, dz
@@ -199,7 +238,6 @@ function fi:mousereleased(x, y, button)
     local bbox = self.select_boid_bbox
     local dx, dy = bbox.width, bbox.height
     local bbox_size = math.sqrt(dx * dx, dy * dy)
-    
     local storage = self.temp_collision_table
     local selected = self.selected_boids
     table.clear(storage)
@@ -228,11 +266,11 @@ function fi:mousereleased(x, y, button)
 			self.nb_boids_selected = self.nb_boids_selected + 1
 		end
 	  end
-    end
-    
+    end    
     --self.left_click_mode = false
     self.left_click_x, self.left_click_y = nil, nil
   end
+  
 end
 
 function fi:add_boid(x, y, z, dx, dy, dz)
@@ -259,19 +297,62 @@ function fi:set_camera_tracking_off()
   self.is_camera_tracking = false
 end
 
+function fi:createBattle(boids, human)
+	human:doWaitForBattle(true)
+	human:deactivate()
+	for _,b in pairs(boids) do
+		b:prepareBattle(human)
+	end
+end
+
 function fi:_set_waypoint_for_selected_boids(x, y)
-  -- calculate z as average z of selected boids
-  local z = 0
-  local count = 0
-  for _,b in pairs(self.selected_boids) do
-    z = z + b.position.z
-    count = count + 1
-  end
-  if count == 0 then return end
-  z = z / count
   
-  for _,b in pairs(self.selected_boids) do
-    b:set_waypoint(x, y, z)
+  local boids = self.flock:get_active_boids()
+  for i=1, #boids do
+	if boids[i].boidType==5 and #self.selected_boids>5 then
+		
+	end
+  end
+  
+  if self.selectBoidsByPanel == false then
+	  -- calculate z as average z of selected boids
+	  local z = 0
+	  local count = 0
+	  for _,b in pairs(self.selected_boids) do
+		z = z + b.position.z
+		count = count + 1
+	  end
+	  if count == 0 then return end
+	  z = z / count
+	  for _,b in pairs(self.selected_boids) do
+		if b.boidType==1 then
+			b:set_waypoint(x,y, z , 25, 50)
+		end
+		if count > 0 then
+			local boids = self.flock:get_active_boids()
+			for i=1, #boids do
+				if boids[i].boidType==5 and boids[i].battle==false then
+					local mx, my , mz = boids[i]:get_position()
+					if mx>x-100 and mx<x+100 and my>y-100 and my<y+100 then
+						self:createBattle(self.selected_boids, boids[i])
+					break
+					end
+				end
+			end
+		end
+	  end
+  else
+	local b = self.boidSelectByPanel
+	-- calculate z as average z of selected boids
+	  local z = 0
+	  local count = 0
+	  z = z + b.position.z
+	  count = count + 1
+	  if count == 0 then return end
+	  z = z / count
+      if b.boidType==1 then
+	 	 b:set_waypoint(x, y, z)
+		end
   end
 end
 
@@ -425,7 +506,7 @@ function fi:_draw_select_boid_preview()
 	if b.boidType~=10 then
 		love.graphics.draw(selectBoid, x-25, y-25)
 	end
-  end
+  end 
   
   
 end
@@ -435,7 +516,8 @@ function fi:_draw_selected_boids()
   lg.setLineWidth(1)
   local cam = self.level:get_camera()
   local camWi, camHe = cam:get_size()
-  lg.setFont(FONTS.appleLight)
+  lg.setFont(FONTS.rubikMin)
+  local count = 1
   
   for _,b in pairs(self.selected_boids) do
 	if self.nb_boids_selected == 1 then
@@ -464,43 +546,43 @@ function fi:_draw_selected_boids()
 		--love.graphics.draw(sexIcon, tableX+120, tableY)
 		
 		if b.needHome == true then
-			love.graphics.draw(nohomeIcon, tableX+150, tableY+70)
+			love.graphics.draw(nohomeIcon, tableX+135, tableY+40)
 		else
-			love.graphics.draw(homeIcon, tableX+150, tableY+70)
+			love.graphics.draw(homeIcon, tableX+135, tableY+40)
 		end
 		
 		lg.setColor(0, 0, 0, 255)
 		--lg.circle("line", x, y, r)
-		lg.print(b.name, tableX+70, tableY-30)
+		lg.print(b.name, tableX, tableY-30)
 		--lg.print(hunger, tableX+50, tableY+10)
 		--lg.print(tired, tableX+50, tableY+60)
 		--lg.print(b.age, tableX+50, tableY+110)
 		lg.setColor(255, 255, 255, 255)
 		if b.sex == true then
 			--lg.print("Mâle", tableX+170, tableY+10)
-			love.graphics.draw(sexMIcon, tableX+220, tableY+95)
+			love.graphics.draw(sexMIcon, tableX+220, tableY-30)
 		else
-			love.graphics.draw(sexFIcon, tableX+220, tableY+95)
+			love.graphics.draw(sexFIcon, tableX+220, tableY-30)
 		end
 		--lg.setColor(0, 0, 0, 255)
 		--lg.print("Objectif :", tableX+120, tableY+50)
 		--lg.print(b.objectiv, tableX+120, tableY+70)
 		
-		love.graphics.draw(objectiv, tableX+150, tableY+10)
+		love.graphics.draw(objectiv, tableX+130, tableY+10)
 		if b.objectiv=="sleep" or b.objectiv=="goFloor" then
 			love.graphics.draw(sleepIcon, tableX+215, tableY+15)
 		elseif b.objectiv=="fly" then
 			love.graphics.draw(flyIcon, tableX+215, tableY+15)
 		else
-			love.graphics.draw(searchIcon, tableX+215, tableY+15)
+			love.graphics.draw(searchIcon, tableX+200, tableY+15)
 			love.graphics.push()   -- stores the coordinate system
 		    love.graphics.scale(0.5, 0.5)   -- reduce everything by 50% in both X and Y coordinates
 			if b.objectiv=="goOnSeekHome" or b.objectiv=="seekHome" then
-				love.graphics.draw(homeIcon, tableX*2+245, tableY*2+15)
+				love.graphics.draw(homeIcon, tableX*2+470, tableY*2+15)
 			elseif b.objectiv=="goOnSeekFood" or b.objectiv=="seekFood" then
-				love.graphics.draw(foodIcon, tableX*2+245, tableY*2+15)
+				love.graphics.draw(foodIcon, tableX*2+470, tableY*2+25)
 			elseif b.objectiv=="goOnSeekWood" or b.objectiv=="seekWood" then
-				love.graphics.draw(woodIcon, tableX*2+245, tableY*2+15)
+				love.graphics.draw(woodIcon, tableX*2+470, tableY*2+15)
 			end
 		    love.graphics.pop()   -- return to stored coordinated
 		end
@@ -511,6 +593,16 @@ function fi:_draw_selected_boids()
 			lg.print("A ete enceinte", tableX+50, tableY+140)
 		end
 		
+		if b.lover then
+				love.graphics.draw(loveIcon, tableX+140, tableY+100)
+				--lg.print("En couple avec :", tableX, tableY)
+				lg.setColor(0, 0, 0, 255)
+				lg.setFont(FONTS.rubikMini)
+				lg.print(b.lover.name, tableX+190, tableY+115)
+		else
+				--lg.print("Pas de relation", tableX, tableY)
+		end
+		lg.setFont(FONTS.rubikMin)
 		if b.boidType == 1 then
 			lg.setColor(255, 255, 255, 255)
 			love.graphics.draw(bg, cam.pos.x+camWi-400, cam.pos.y+500)
@@ -519,13 +611,6 @@ function fi:_draw_selected_boids()
 			
 			lg.setColor(0, 0, 0, 255)
 			--lg.circle("line", x, y, r)
-			if b.lover then
-				love.graphics.draw(loveIcon, tableX, tableY+20)
-				--lg.print("En couple avec :", tableX, tableY)
-				lg.print(b.lover.name, tableX, tableY+20)
-			else
-				--lg.print("Pas de relation", tableX, tableY)
-			end
 			--lg.print("is_initialized ?", tableX, tableY+60)
 			--lg.print(tostring(b.is_initialized), tableX, tableY+80)
 			
@@ -546,10 +631,18 @@ function fi:_draw_selected_boids()
 			
 			--lg.print(tostring(b.needHome), cam.pos.x+1500, cam.pos.y+620)
 			
-			
+			lg.setColor(0, 0, 0, 255)
 			lg.print(b.foodGrab, x+100, y+50)
 			lg.print(b.woodGrab, x+100, y+30)
-		end
+		end	
+	elseif count<12 then
+		lg.setColor(255, 255, 255, 255)
+		local x, y = math.floor(b.position.x), math.floor(b.position.y)
+		love.graphics.draw(birdSleepIcon, cam.pos.x+270+count*140, cam.pos.y+camHe-170)
+		lg.setColor(0, 0, 0, 255)
+		lg.print(b.name, cam.pos.x+300+count*140, cam.pos.y+camHe-70)
+		self.buttonsSelected[count] = {text=b.name, x = cam.pos.x+270+count*140, y = cam.pos.y+camHe-170, toggle = false, bbox = bbox:new(cam.pos.x+270+count*140, cam.pos.y+camHe-170, 150, 150)}
+		count = count + 1
 	end
 	
     if self.debug then
@@ -584,6 +677,134 @@ function fi:draw()
   
   --love.graphics.draw(panelInset_brown, cx+vx-250, cy+vy-150)
   --love.graphics.draw(heroIcon, cx+vx-230, cy+vy-140)
+  
+  if self.buttonsSelected then
+	  for i=1,#self.buttonsSelected do 
+		local button = self.buttonsSelected[i]
+		--button.bbox:draw()
+	  end
+  end
+  
+  if self.selectBoidsByPanel == true then
+	local b = self.boidSelectByPanel
+	local cam = self.level:get_camera()
+	local camWi, camHe = cam:get_size()
+	lg.setFont(FONTS.rubikMin)
+	local x, y = math.floor(b.position.x), math.floor(b.position.y)
+		local r = self.select_boid_radius
+		local tableX = cam.pos.x+camWi-320
+		local tableY = cam.pos.y+280
+		local hunger = math.floor(b.hunger)
+		local tired = math.floor(b.tired)
+		local social = math.floor(b.social)
+		lg.setColor(255, 255, 255, 255)
+		love.graphics.draw(bg, cam.pos.x+camWi-400, cam.pos.y+200)
+		love.graphics.draw(tableImg, cam.pos.x+camWi-350, cam.pos.y+220)
+		lg.setColor(0, 0, 0, 255)
+		love.graphics.rectangle("fill", tableX+10,tableY+10, hunger,25)
+		love.graphics.rectangle("fill", tableX+10,tableY+60, tired,25)
+		love.graphics.rectangle("fill", tableX+10,tableY+100, social,25)
+		lg.setColor(255, 255, 255, 255)
+		love.graphics.draw(barre, tableX, tableY-10)
+		love.graphics.draw(barre, tableX, tableY+40)
+		love.graphics.draw(barre, tableX, tableY+80)
+		
+		love.graphics.draw(energyIcon, tableX-10, tableY+50)
+		love.graphics.draw(foodIcon, tableX, tableY)
+		love.graphics.draw(socialIcon, tableX-10, tableY+90)
+		--love.graphics.draw(sexIcon, tableX+120, tableY)
+		
+		if b.needHome == true then
+			love.graphics.draw(nohomeIcon, tableX+135, tableY+40)
+		else
+			love.graphics.draw(homeIcon, tableX+135, tableY+40)
+		end
+		
+		lg.setColor(0, 0, 0, 255)
+		--lg.circle("line", x, y, r)
+		lg.print(b.name, tableX, tableY-30)
+		--lg.print(hunger, tableX+50, tableY+10)
+		--lg.print(tired, tableX+50, tableY+60)
+		--lg.print(b.age, tableX+50, tableY+110)
+		lg.setColor(255, 255, 255, 255)
+		if b.sex == true then
+			--lg.print("Mâle", tableX+170, tableY+10)
+			love.graphics.draw(sexMIcon, tableX+220, tableY-30)
+		else
+			love.graphics.draw(sexFIcon, tableX+220, tableY-30)
+		end
+		--lg.setColor(0, 0, 0, 255)
+		--lg.print("Objectif :", tableX+120, tableY+50)
+		--lg.print(b.objectiv, tableX+120, tableY+70)
+		
+		love.graphics.draw(objectiv, tableX+130, tableY+10)
+		if b.objectiv=="sleep" or b.objectiv=="goFloor" then
+			love.graphics.draw(sleepIcon, tableX+215, tableY+15)
+		elseif b.objectiv=="fly" then
+			love.graphics.draw(flyIcon, tableX+215, tableY+15)
+		else
+			love.graphics.draw(searchIcon, tableX+200, tableY+15)
+			love.graphics.push()   -- stores the coordinate system
+		    love.graphics.scale(0.5, 0.5)   -- reduce everything by 50% in both X and Y coordinates
+			if b.objectiv=="goOnSeekHome" or b.objectiv=="seekHome" then
+				love.graphics.draw(homeIcon, tableX*2+470, tableY*2+15)
+			elseif b.objectiv=="goOnSeekFood" or b.objectiv=="seekFood" then
+				love.graphics.draw(foodIcon, tableX*2+470, tableY*2+25)
+			elseif b.objectiv=="goOnSeekWood" or b.objectiv=="seekWood" then
+				love.graphics.draw(woodIcon, tableX*2+470, tableY*2+15)
+			end
+		    love.graphics.pop()   -- return to stored coordinated
+		end
+		
+		--love.graphics.draw(homeIcon, tableX+170, tableY+100)
+		
+		if b.hadKid == true then
+			lg.print("A ete enceinte", tableX+50, tableY+140)
+		end
+		if b.lover then
+			love.graphics.draw(loveIcon, tableX+140, tableY+100)
+			--lg.print("En couple avec :", tableX, tableY)
+			lg.setColor(0, 0, 0, 255)
+			lg.setFont(FONTS.rubikMini)
+			lg.print(b.lover.name, tableX+190, tableY+115)
+		else
+			--lg.print("Pas de relation", tableX, tableY)
+		end
+		lg.setFont(FONTS.rubikMin)
+		if b.boidType == 1 then
+			lg.setColor(255, 255, 255, 255)
+			love.graphics.draw(bg, cam.pos.x+camWi-400, cam.pos.y+500)
+			love.graphics.draw(tableImg, cam.pos.x+camWi-350, cam.pos.y+520)
+			local tableY = cam.pos.y+560
+			
+			lg.setColor(0, 0, 0, 255)
+			--lg.circle("line", x, y, r)
+			--lg.print("is_initialized ?", tableX, tableY+60)
+			--lg.print(tostring(b.is_initialized), tableX, tableY+80)
+			
+			--lg.print("is_inHome ?", tableX, tableY+100)
+			--lg.print(tostring(b.inHome), tableX, tableY+120)
+			lg.setColor(255, 255, 255, 255)
+			--love.graphics.rectangle("fill", tableX+10,tableY+10, hunger,25)
+			--love.graphics.draw(barre, tableX, tableY+10)
+			love.graphics.draw(barre2, tableX+30, tableY+30)
+			love.graphics.draw(rondBlanc, tableX+150, tableY+25)
+			love.graphics.draw(turtleIcon, tableX-10, tableY)
+			love.graphics.draw(rabbitIcon, tableX+180, tableY-10)
+			
+			love.graphics.draw(barre2, tableX+30, tableY+110)
+			love.graphics.draw(rondBlanc, tableX+150, tableY+105)
+			love.graphics.draw(sablePleinIcon, tableX, tableY+80)
+			love.graphics.draw(sableVideIcon, tableX+200, tableY+80)
+			
+			--lg.print(tostring(b.needHome), cam.pos.x+1500, cam.pos.y+620)
+			
+			
+			lg.setColor(0, 0, 0, 255)
+			lg.print(b.foodGrab, x+100, y+50)
+			lg.print(b.woodGrab, x+100, y+30)
+		end
+  end
   
 end
 

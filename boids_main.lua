@@ -50,7 +50,7 @@ function love.mousereleased(x, y, button)
 end
 
 function love.resize(w, h)
-  print(("Fenêtre redimensionnée à la largeur : %d et la hauteur : %d."):format(w, h))
+  print(("Fenêtre redimensionnéeeeee à la largeur : %d et la hauteur : %d."):format(w, h))
   SCR_WIDTH  = w
   SCR_HEIGHT = h
   BOIDS:resize(w, h)
@@ -80,7 +80,8 @@ function love.load(args)
   ACTIVE_AREA_WIDTH = 12800--6400 -- 32*8*25 
   ACTIVE_AREA_HEIGHT= 12800--6400
   RED, GREEN, BLUE, ALPHA = 1, 2, 3, 4
-  
+  MUSIC = 1
+  LANGUE = "FR"
   nbBush = 0
   nbNids = 0
   nbNidsPred = 0
@@ -125,9 +126,12 @@ function love.load(args)
   --]]
   BOIDS:add_state(states.food_screen_state, "food_screen_state")
   BOIDS:add_state(states.food_menu_state, "food_menu_state")
+  BOIDS:add_state(states.food_demo_param_state, "food_demo_param_state")
+  BOIDS:add_state(states.food_demo_credits_state, "food_demo_credits_state")
   BOIDS:add_state(states.food_config_state, "food_config_state")
   BOIDS:add_state(states.food_demo_load_state, "food_demo_load_state")
   BOIDS:add_state(states.food_demo_state, "food_demo_state")
+  
   --[[
   BOIDS:add_state(states.emitter_screen_state, "emitter_screen_state")
   BOIDS:add_state(states.emitter_demo_load_state, "emitter_demo_load_state")
@@ -204,7 +208,7 @@ function love.draw()
   BOIDS:draw()
   MOUSE_INPUT:draw()
   
-  lg.setFont(FONTS.courier_small)
+  lg.setFont(FONTS.rubik)
   --if DEBUG then
     lg.setColor(255, 0, 0, 255)
     lg.print("FPS "..love.timer.getFPS(), 0, 0)

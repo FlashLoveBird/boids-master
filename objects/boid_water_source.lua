@@ -42,6 +42,10 @@ function bws:new(level, flock)
   return bws
 end
 
+function bws:setFlock(flock)
+	self.flock = flock
+end
+
 function bws:add_water(x, y, radius)
   local p = self.level_map:add_point_to_source_polygonizer(x, y, radius)
   self.sources[#self.sources + 1] = self:_new_water_source(x, y, radius, p)

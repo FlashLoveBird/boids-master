@@ -25,6 +25,8 @@ states.obstacle_demo_state = require('states/obstacle_demo_state')
 --]]
 states.food_screen_state = require('states/food_screen_state')
 states.food_menu_state = require('states/food_menu_state')
+states.food_demo_param_state = require('states/food_demo_param_state')
+states.food_demo_credits_state = require('states/food_demo_credits_state')
 states.food_config_state = require('states/food_config_state')
 states.food_demo_load_state = require('states/food_demo_load_state')
 states.food_demo_state = require('states/food_demo_state')

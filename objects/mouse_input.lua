@@ -24,6 +24,7 @@ mouse_input.color3 = 1
 local mouseBoid = nil
 local mouseTree = nil
 local mouseBush = nil
+local mousePred = nil
 local mouseInput = nil
 local mouseImg = nil
 local mouseImgClick = nil
@@ -49,6 +50,7 @@ function mouse_input:new(level)
   
   mouseBoid = love.graphics.newImage("images/mouse/bird-mouse.png")
   mouseTree = love.graphics.newImage("images/mouse/bigTree-mouse.png")
+  mousePred = love.graphics.newImage("images/mouse/predator-mouse.png")
   mouseBush = love.graphics.newImage("images/mouse/bigBush-mouse.png")
   mouseImg = love.graphics.newImage("images/mouse/mouse.png")
   mouseImgClick = love.graphics.newImage("images/mouse/mouse-click.png")
@@ -228,6 +230,8 @@ function mouse_input:draw()
 	lg.draw(mouseTree, x-100, y-180)
   elseif mouseInput =="bush" then
 	lg.draw(mouseBush, x-100, y-80)
+  elseif mouseInput =="pred" then
+	lg.draw(mousePred, x-100, y-80)
   end
 end
 

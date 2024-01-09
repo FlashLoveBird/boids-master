@@ -8,6 +8,7 @@ local Vector = require( "vector" )
 --##########################################################################--
 local hero = {}
 local woosh = nil
+local grabFoodSound = nil
 hero.table = 'hero'
 hero.pos = nil
 hero.target = nil
@@ -142,22 +143,22 @@ function hero:init(level, flock, x, y)
 	  
 	  local tmap = level:get_level_map().tile_maps[10]
 	  x, y, z = x or tmap.bbox.x + TILE_WIDTH, y or tmap.bbox.y + TILE_HEIGHT , 0
-	  self.map_point = map_point:new(level, vector2:new(x, y, z))
-	  self.map_point_2 = map_point:new(level, vector2:new(x+50, y, z))
-	  self.map_point_3 = map_point:new(level, vector2:new(x+50, y+50, z))
-	  self.map_point_4 = map_point:new(level, vector2:new(x, y+50, z))
+	  self.map_point = map_point:new(level, vector2:new(x, y, -100))
+	  self.map_point_2 = map_point:new(level, vector2:new(x+50, y, 0))
+	  self.map_point_3 = map_point:new(level, vector2:new(x+50, y+50, 0))
+	  self.map_point_4 = map_point:new(level, vector2:new(x, y+50, 0))
 	  
-	  woosh = love.audio.newSource("sound/whoosh.wav", "stream")
+	  woosh = love.audio.newSource("sound/whoosh.wav", "static")
 	  woosh:setVolume(0.3)
 	  
-	  walk = love.audio.newSource("sound/steps-through-the-forest.mp3", "stream")
-	  running = love.audio.newSource("sound/running.mp3", "stream")
-	  breath1 = love.audio.newSource("sound/breath-1.mp3", "stream")
-	  breath2 = love.audio.newSource("sound/breath-2.mp3", "stream")
-	  breath3 = love.audio.newSource("sound/breath-3.mp3", "stream")
+	  walk = love.audio.newSource("sound/steps-through-the-forest.mp3", "static")
+	  running = love.audio.newSource("sound/running.mp3", "static")
+	  breath1 = love.audio.newSource("sound/breath-1.mp3", "static")
+	  breath2 = love.audio.newSource("sound/breath-2.mp3", "static")
+	  breath3 = love.audio.newSource("sound/breath-3.mp3", "static")
 	  
-	  eatFood = love.audio.newSource("sound/eat-food.mp3", "stream")
-	  stomach = love.audio.newSource("sound/stomach.mp3", "stream")
+	  eatFood = love.audio.newSource("sound/eat-food.mp3", "static")
+	  stomach = love.audio.newSource("sound/stomach.mp3", "static")
 	  
 	  walk:setVolume(0.2)
 	  running:setVolume(0.3)
@@ -165,18 +166,20 @@ function hero:init(level, flock, x, y)
 	  breath2:setVolume(0.3)
 	  breath3:setVolume(0.3)
 	  
+	  grabFoodSound = love.audio.newSource("sound/kenney/select_006.ogg", "static")
+	  
 	  --level:set_player(hero)
 	  -- collider
 	  self.collider = flock:get_collider()
-	  self.map_point:update_position(vector2:new(x,y))
+	  self.map_point:update_position(vector2:new(x,y,-100))
 	  self.collider:add_object(self.map_point, self)
 	  
-	  inspiration = love.audio.newSource("sound/inspiration_forte.mp3", "stream")
-	  expiration = love.audio.newSource("sound/expiration.mp3", "stream")
-	  appeau = love.audio.newSource("sound/chouette.wav", "stream")
-	  vol = love.audio.newSource("sound/vol.wav", "stream")
-	  fuite = love.audio.newSource("sound/sing-4.mp3", "stream")
-	  lookForFoodSound = love.audio.newSource("sound/looking_in_bushes.mp3", "stream")
+	  inspiration = love.audio.newSource("sound/inspiration_forte.mp3", "static")
+	  expiration = love.audio.newSource("sound/expiration.mp3", "static")
+	  appeau = love.audio.newSource("sound/chouette.wav", "static")
+	  vol = love.audio.newSource("sound/vol.wav", "static")
+	  fuite = love.audio.newSource("sound/sing-4.mp3", "static")
+	  lookForFoodSound = love.audio.newSource("sound/looking_in_bushes.mp3", "static")
 	  
 	  eggHeroImg = love.graphics.newImage("images/solo-egg.png")
 	
@@ -247,7 +250,7 @@ end
 
 function hero:_update_map_point(dt)
   local x, y = self.target.pos.x , self.target.pos.y
-  self.map_point:set_position_coordinates(x, y)
+  self.map_point:set_position_coordinates(x, y, -100)
   self.map_point:update(dt)
   self.map_point_2:set_position_coordinates(x+50, y)
   self.map_point_2:update(dt)
@@ -855,8 +858,10 @@ return end
 				end
 				for i=1,maxI do
 					local boid = objects[i]
-					boid:activate()
-					boid:setObjectiv("fly")
+					if boidType == 1 then
+						boid:activate()
+						boid:setObjectiv("fly")
+					end
 				end
 			end
 	  end

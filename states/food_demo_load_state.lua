@@ -72,8 +72,7 @@ function food_demo_load.construct_level_map(level)
   local map_directory = "images/menu"
   local back = "background2.png"
   local wall = "wall1.png"
-  local map_data = require(map_directory.."/menu_map_data")
-  
+  local map_data = require(map_directory.."/menu_map_data") 
   -- source images
   local imgdata_layers = {}
   imgdata_layers[back] = li.newImageData(map_directory.."/"..back)
@@ -174,9 +173,13 @@ function food_demo_load.draw()
   local sy = SCR_HEIGHT / height
   
   love.graphics.setBackgroundColor(255, 255, 255, 255)
-  love.graphics.setColor(255, 255, 255, 255)
-  love.graphics.draw(loaderImg, SCR_WIDTH/2-width/2, 0, 0, math.min(sx,sy))
-  love.graphics.print("Chargement...", 500, 200)
+  love.graphics.setColor(0, 0, 0, 255)
+  --love.graphics.draw(loaderImg, SCR_WIDTH/2-width/2, 0, 0, math.min(sx,sy))
+  if LANGUE == "FR" then
+	love.graphics.print("Chargement...", SCR_WIDTH/2-300, SCR_HEIGHT/2)
+  else
+	love.graphics.print("Loading...", SCR_WIDTH/2-300, SCR_HEIGHT/2)
+  end
 end
 
 return food_demo_load

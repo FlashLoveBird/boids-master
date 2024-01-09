@@ -761,7 +761,11 @@ lg.line(p18.x + x, p18 .y + y, p1.x + x, p1.y + y)
   love.graphics.push()
   love.graphics.scale(0.5, 0.5)   -- reduce everything by 50% in both X and Y coordinates
   local spriteNum = math.floor( self.animations[i].currentTime /  self.animations[i].duration * #self.animations[i].quads) + 1
-  love.graphics.draw(self.animations[i].spriteSheet,  self.animations[i].quads[spriteNum], (p1.x+x-135)*2, (p1.y+y)*2)
+  if i == 13 then
+	love.graphics.draw(self.animations[i].spriteSheet,  self.animations[i].quads[spriteNum], (p1.x+x)*2, (p1.y+y)*2)
+  else
+	love.graphics.draw(self.animations[i].spriteSheet,  self.animations[i].quads[spriteNum], (p1.x+x+10)*2, (p1.y+y)*2)
+  end
   --love.graphics.rectangle( "fill", (x+55)*2, (y+55)*2, 32, 32 )
   love.graphics.pop()
 
@@ -777,15 +781,15 @@ lg.line(p18.x + x, p18 .y + y, p1.x + x, p1.y + y)
   lg.setColor(c)
   --lg.setColor(self.color1,self.color2,self.color3,self.color4)
   --lg.polygon("fill", p1.x + x, p1.y + y, p2.x + x, p2.y + y, p3.x + x, p3.y + y)
-  lg.setColor(0, 0, 0, 1)
+  lg.setColor(255, 255, 255, 1)
   
   --lg.polygon("fill", p4.x + x, p4.y + y, p5.x + x, p5.y + y, p6.x + x, p6.y + y, p7.x + x, p7.y + y, p8.x + x, p8.y + y, p9.x + x, p9.y + y, p10.x + x, p10.y + y, p11.x + x, p11.y + y, p12.x + x, p12.y + y, p13.x + x, p13.y + y, p14.x + x, p14.y + y, p15.x + x, p15.y + y, p16.x + x, p16.y + y, p17.x + x, p17.y + y, p18.x + x, p18.y + y)
   --lg.setColor(255, 255, 255, 1)
   if self.emoteType~=nil then 
-	local cx = (p1.x + p2.x + p3.x) / 3
-    local cy = (p1.y + p2.y + p3.y) / 3
-    local cz = (p1.z + p2.z + p3.z) / 3
-	lg.draw(self.emote, cx+x-16, cy+y-38)
+	local cx = p1.x--(p1.x + p2.x + p3.x) / 3
+    local cy = p1.y --(p1.y + p2.y + p3.y) / 3
+    local cz = p1.z --(p1.z + p2.z + p3.z) / 3
+	lg.draw(self.emote, cx+x+80, cy+y)
   end
   
   --lg.draw(aile, p10.x + x, p10.y + y, rotation, scaleX, scaleY, 50, 100)

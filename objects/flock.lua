@@ -172,6 +172,8 @@ function fk:add_predator(x, y, z, dirx, diry, dirz, free, gradient)
   else
     new_boid = predator:new(self.level)
   end
+  print("X est egale a")
+  print(x)
   new_boid:init(self.level, self, x, y, z, dirx, diry, dirz, free, false)
   if gradient then
     new_boid:set_gradient(gradient)
@@ -261,6 +263,17 @@ function fk:remove_boid(unBoid)
       unBoid:destroy()
       break
     end
+  end
+end
+
+function fk:remove_all_boid()
+  local active = self:get_active_boids()
+  for i=#active,1,-1 do
+      self.active_boids[i]:destroy()
+	  table.remove(self.active_boids, i)
+	  --self.active_boids[i] = nil
+	  self.level:setBoids(-1)
+      --
   end
 end
 
@@ -364,14 +377,12 @@ function fk:_update_boids(dt)
   bbox.width, bbox.height = w, h
   local objects = self.draw_boids
   table.clear(objects)
-  self.collider:get_objects_at_bbox(bbox, objects)
+  self.collider:get_objects_at_bbox(bbox, objects, true)
   
   table.sort(objects, function(a, b) 
-									--print(a.boidType)
-									--print(b.boidType)
-                                  return a.position.z < b.position.z
+								if a.position.z ~= nil and b.position.z ~= nil then
+								return a.position.z < b.position.z end
                                 end)
-
 end
 
 function fk:update(dt)

@@ -29,7 +29,7 @@ end
 --##########################################################################--
 function food_screen_state.load(level)
   lg.setBackgroundColor(255, 255, 255, 255)
-  
+  --love.window.setFullscreen(true, "desktop")
   title = lg.newImage("images/ui/intro.png")
 end
 
@@ -57,7 +57,7 @@ function food_screen_state.draw()
   local x = 0.5 * SCR_WIDTH - 0.5 * width + xpad
   local y = 0.5 * SCR_HEIGHT - 0.5 * height + ypad
 
-  lg.setFont(FONTS.muliBig)
+  lg.setFont(FONTS.rubik)
   lg.setColor(255, 255, 255, 255)
   lg.print("Paper life", x, y)
   

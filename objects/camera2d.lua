@@ -23,7 +23,7 @@ camera2d.scale = 1
 camera2d.scale_up_vel = 1
 camera2d.scale_down_vel = 1
 
-camera2d.mass = 0.1
+camera2d.mass = 0.2
 
 camera2d.shake_curves = nil
 camera2d.free_shake_data = nil
@@ -50,8 +50,8 @@ function camera2d:new(target_position)
   target:set_dscale(1)
   target:set_target(pos)
   target:set_mass(camera2d.mass)  
-  target:set_max_speed(1500)
-  target:set_force(1600)
+  target:set_max_speed(1000)
+  target:set_force(1000)
   target:set_radius(300)
   
   -- for smooth scaling

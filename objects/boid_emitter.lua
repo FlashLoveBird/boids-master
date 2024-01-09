@@ -72,7 +72,10 @@ function be:init(level, flock, x, y, z, dirx, diry, dirz, radius, nbEgg, boidTyp
 	self.dead_zone_bbox = bbox:new(0, 0, 0, 0)
 	self:initEgg(nbEgg)
 	  
-	nid = love.graphics.newImage("images/home/nid.png")
+	nid1 = love.graphics.newImage("images/home/nid-1.png")
+	nid2 = love.graphics.newImage("images/home/nid-2.png")
+	nid3 = love.graphics.newImage("images/home/nid-3.png")
+	nid4 = love.graphics.newImage("images/home/nid-4.png")
 	emptyNid = love.graphics.newImage("images/home/empty-nid.png")
 	  
 	click = love.audio.newSource("sound/click1.mp3", "stream")
@@ -88,6 +91,19 @@ function be:initEgg(nbEgg)
   for i=1, nbEgg do
 	self.eggs[i] = egg:new(self,i,flock,false,false,x,y,z,level,boidType) --boidEmit,index,flock,needHome,free,x,y,z,level,boidType
   end
+end
+
+function be:addEgg(nbEgg)
+  local x, y, z = self.position.x, self.position.y, self.position.z
+  for i=1, nbEgg do
+	self.nbEgg = self.nbEgg + 1
+	self.eggs[i] = egg:new(self,i,flock,false,false,x,y,z,level,boidType) --boidEmit,index,flock,needHome,free,x,y,z,level,boidType
+  end
+end
+
+
+function be:getEgg()
+  return self.nbEgg
 end
 
 function be:reset()
@@ -428,9 +444,9 @@ function be:update(dt)
 end
 
 ------------------------------------------------------------------------------
-function be:draw()
+function be:draw(mX, mY)
   if not self.is_active then return end
-  local x, y = self.position.x-20, self.position.y-50
+  --local x, y = self.position.x-20, self.position.y-50
   --[[lg.setColor(255, 0, 0, 255)
   lg.setPointSize(5)
   lg.points(x, y)
@@ -466,9 +482,17 @@ function be:draw()
 	  local cx, cy = self.level:get_camera():get_viewport()
 	  lg.setColor(255, 255, 255, 255)
 	  if self.nbEgg > 0 then
-		love.graphics.draw(nid, x-cx, y-cy)
+		if self.nbEgg == 1 then
+			love.graphics.draw(nid1, mX, mY)
+		elseif self.nbEgg == 2 then
+			love.graphics.draw(nid2, mX, mY)
+		elseif self.nbEgg == 3 then
+			love.graphics.draw(nid3, mX, mY)
+		elseif self.nbEgg == 4 then
+			love.graphics.draw(nid4, mX, mY)
+		end
 	  else
-		love.graphics.draw(emptyNid, x-cx, y-cy)
+		love.graphics.draw(emptyNid, mX, mY)
 	  end
   end
   

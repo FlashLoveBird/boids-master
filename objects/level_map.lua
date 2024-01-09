@@ -174,6 +174,7 @@ end
 
 --#############################################################################
 -- Polygonizer methods
+
 function level_map:_init_polygonizer()
   local b = self.bbox
   self.polygonizer = polygonizer:new(self.level, b.x, b.y, b.width, b.height,

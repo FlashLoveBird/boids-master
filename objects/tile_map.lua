@@ -94,8 +94,8 @@ tile_map.countTree=0
 
 tile_map.mapSave = nil
 
-local nbTree = 3
-local nbBush = 2
+local nbTree = 50
+local nbBush = 50
 
 tile_map.graph1 = love.graphics.newImage("images/env/nature-1.png")
 tile_map.graph2 = love.graphics.newImage("images/env/nature-2.png")
@@ -949,7 +949,7 @@ function tile_map:_generate_chunk(i, j)
 		  
 			local newX = x
 			local newY = y
-			if x > 40 and x<400 and y > 40 and y<400 and countTree<nbTree and element==false and self.level:canILandHere(newX,newY,20)==true then--and math.random(1,5500)==1 then
+			if x > 40 and x<360 and y > 40 and y<360 and countTree<nbTree and element==false and self.level:canILandHere(newX,newY,20)==true and math.random(1,5500)==1 then
 				map[newX][newY] = self.level:addTree(newX,newY)
 				map[newX][newY]:add(nil)
 				map[newX][newY]:setNumEmits(0)
@@ -964,7 +964,7 @@ function tile_map:_generate_chunk(i, j)
 				print("ajout dun arbrre en")
 				self.map = map
 				self.level:setTreeMap(map)
-			elseif x > 40 and x<400 and y > 40 and y<400 and count<nbBush and element==false and self.level:canILandHere(newX,newY,20)==true and math.random(1,2500)==1 then
+			elseif x > 40 and x<360 and y > 40 and y<360 and count<nbBush and element==false and self.level:canILandHere(newX,newY,20)==true and math.random(1,2500)==1 then
 				local path = 0
 				local startX =  newX-5 
 				local startY =  newY-5
@@ -990,6 +990,32 @@ function tile_map:_generate_chunk(i, j)
 					self.map = map
 				    self.level:setTreeMap(map)
 				end
+			--[[elseif x > 40 and x<360 and y > 40 and y<360 and count<nbLake and element==false and self.level:canILandHere(newX,newY,20)==true then
+				local path = 0
+				local startX =  newX-5 
+				local startY =  newY-5
+				local maxX =  newX+5 
+				local maxY =  newY+5
+				element = true
+				for caseX = startX, maxX do
+					for caseY = startY, maxY do
+						if map[caseX] then
+							if map[caseX][caseY]~=nil then
+								path = 1
+							end
+						end
+					end
+				end
+				if path==0 then 
+					map[newX][newY] = self.level:addLake(newX,newY)
+					map[newX][newY]:setState(true)
+					map[newX][newY]:set_position(newX,newY)
+					self.count = count + 1
+					print("ajout dun lake en ---------------------------------------------------------- LAKZ")
+					print(newX,newY)
+					self.map = map
+				    self.level:setTreeMap(map)
+				end--]]
 			end
 		elseif self.mapSave[x]~=nil then
 			if self.mapSave[x][y]~=nil then

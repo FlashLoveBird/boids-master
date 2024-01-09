@@ -20,6 +20,7 @@ hu.target = nil
 hu.default_direction = {x = 1, y = 0, z = 0}
 hu.collider = nil
 hu.map = nil
+hu.battle = false
 
 
 local rand = math.random(1,1)
@@ -35,7 +36,7 @@ hu.field_of_view = 1.3 * math.pi
 hu.sight_radius = 200
 hu.separation_radius = 0.2 * hu.sight_radius
 hu.separation_predator_radius = 0.2 * hu.sight_radius
-hu.boundary_zpad = 200
+hu.boundary_zpad = 0
 hu.boundary_ypad = 200
 hu.boundary_xpad = 200
 hu.boundary_vector_mix_ratio = 0.25           -- mixes normal to reflected projection
@@ -98,7 +99,9 @@ love.frame = 0
 hu.countPath = 1
 hu.step = 0
 hu.bigPath = 1
-                                                                  -- if angle between boundary normal
+hu.waitForBattle = false
+hu.timeToFinishBattle = 0  
+hu.listOfBoidBattle = {}                                                                -- if angle between boundary normal
                                              -- and human direction is less than this
                                              -- angle.
                                              -- helps humans steer away from boundary
@@ -278,6 +281,10 @@ function hu:init(level, parent_flock, x, y, z, dirx, diry, dirz, free, sing1, si
   end--]]
   
   self.chop_sound = love.audio.newSource("sound/chop.mp3", "stream")
+  self.battleImg = love.graphics.newImage("images/baston.png")
+  self.waitForBattleImg = love.graphics.newImage("images/human_images/waitForBattle.png")
+  self.animationBattleAnim = self:newAnimation(self.battleImg, 333, 258, 1)
+  self.battleSound = love.audio.newSource("sound/brawl.wav", "static")
   
   self.boidType=5
   self.free = free
@@ -422,6 +429,23 @@ function hu:set_acceleration(acc)
   self.seeker.acceleration = acc
 end
 
+function hu:newAnimation(image, width, height, duration)
+    local animation = {}
+    animation.spriteSheet = image;
+    animation.quads = {};
+
+    for y = 0, image:getHeight() - height, height do
+        for x = 0, image:getWidth() - width, width do
+            table.insert(animation.quads, love.graphics.newQuad(x, y, width, height, image:getDimensions()))
+        end
+    end
+
+    animation.duration = duration or 1
+    animation.currentTime = 0
+
+    return animation
+end
+
 function hu:set_newHome(tree,caseNewTreeX,caseNewTreeY)
   self.needHome = false
   self.objectiv = "fly"
@@ -519,6 +543,17 @@ end
 
 function hu:activate()
 	self.is_initialized=true
+end
+
+function hu:doWaitForBattle(bool)
+	self.waitForBattle = bool
+end
+
+function hu:prepareBattle(boid)
+	self.battle = true
+	self.waitForBattle = false
+	self.battleSound:play()
+	self.listOfBoidBattle[#self.listOfBoidBattle + 1] = boid
 end
 
 function hu:deactivate()
@@ -640,8 +675,12 @@ function hu:_update_neighbours_in_view()
   local sex = self.sex
   for i=1,#nbs do
     local b = nbs[i]
+	local countBoids = 0
+	if b.boidType == 1 then
+		countBoids = countBoids + 1
+	end
     if b ~= self and i<10 then
-		if b.boidType==1 then
+		if b.boidType==5 then
 			if relationWith[b.id] and relationWith[b.id]<101 and lover==nil and relationWith[b.lover]==nil and sex==not(b.sex) then
 				self.relationWith[b.id] = relationWith[b.id] + math.random(0,0.1)
 				if relationWith[b.id] > 50 and relationWith[b.id] < 52 then
@@ -1216,8 +1255,7 @@ love.frame = love.frame + 1
   --love.report = love.profiler.report(50)
   --love.profiler.reset()
   --love.profiler.stop()
---end
-  
+--end 
 end
 
 function hu:_update_target(dt)
@@ -1449,7 +1487,38 @@ function hu:_update_human_life(dt)
 		newPosition.x = chunk.x
 		newPosition.y = chunk.y+300
 		local i, j , chunkDown = self.level:get_level_map():get_tile_map():get_chunk_index(newPosition)
-		chunkDown:addPollutionTop(1)--]]
+		chunkDown:addPollutionTop(1)
+	end
+	
+	
+	local timeToFinishBattle = self.timeToFinishBattle
+	if self.battle == true then
+		self.timeToFinishBattle = timeToFinishBattle + 1
+	else
+		self.timeToFinishBattle = 0
+	end
+	
+	if timeToFinishBattle > 1500 then
+		self.battle = false
+		if #self.listOfBoidBattle > 5 then
+			flock:remove_human(self)
+			for i = 1, #self.listOfBoidBattle do
+				self.listOfBoidBattle[i]:deactivateBattle()
+			end
+		else
+			self:activate()
+			for i = 1, #self.listOfBoidBattle do
+				self.listOfBoidBattle[i].dead = true
+				if self.listOfBoidBattle[i].lover then
+					self.listOfBoidBattle[i]:resetLove(self.listOfBoidBattle[i].lover)
+				end
+				self.listOfBoidBattle[i].body_graphic:set_color4(0)
+				if self.listOfBoidBattle[i].emit then
+					self.listOfBoidBattle[i].emit:remove_boid(self.listOfBoidBattle[i])
+				end
+				flock:remove_boid(self.listOfBoidBattle[i])
+			end
+		end
 	end
 end
 
@@ -1578,7 +1647,6 @@ if inHome == false and active == false then
 			self:set_waypoint(posX, posY,z,50,100)
 			--self.seeker:add_force(posX,posY,100)
 			self:setObjectiv("goOnHomeWith")
-			self.path = nil
 		else
 			self:backHome()
 			--local posX = math.floor( self.path[#self.path].x * h ) + 1
@@ -1594,6 +1662,9 @@ function hu:backHome()
 	local foodGrab = self.foodGrab
 	local woodGrab = self.woodGrab
 	local waterGrab = self.waterGrab
+	print(foodGrab)
+	print(woodGrab)
+	print(waterGrab)
 	self.countPath = 1
 	self:set_position(self.originX,self.originY,self.originZ)
 	seeker:set_velocity({x = 0, y = 0, z = 0})
@@ -1717,31 +1788,23 @@ self.seekingHome = true
 
 if caseX-radius>5 then
 	startX = caseX-radius
-elseif caseX-20>5 then
+elseif caseX-radius<5 then
 	startX = caseX-20
-else
-	startX = caseX-5
 end
 if caseY-radius>5 then
 	startY = caseY-radius
-elseif caseY-20>5 then
+elseif caseY-radius<5 then
 	startY = caseY-20
-else
-	startY = caseY-5
 end
 if caseX+radius<Poly.cols-5 then
 	maxX = caseX+radius
-elseif caseX+20<Poly.cols-5 then
+elseif caseX+radius>Poly.cols-5 then
 	maxX = caseX+20
-else
-	maxX = caseX+5
 end
 if caseY+radius<Poly.rows-5 then
 	maxY = caseY+radius
-elseif caseY+20<Poly.rows-5 then
+elseif caseY+radius<Poly.rows-5 then
 	maxY = caseY+20
-else
-	maxY = caseY+5
 end
 
 local mapTrees = self.level:getTreeMap()
@@ -1933,31 +1996,23 @@ self.seekingHome = true
 
 if caseX-radius>5 then
 	startX = caseX-radius
-elseif caseX-20>5 then
+elseif caseX-radius<5 then
 	startX = caseX-20
-else
-	startX = caseX-5
 end
 if caseY-radius>5 then
 	startY = caseY-radius
-elseif caseY-20>5 then
+elseif caseY-radius<5 then
 	startY = caseY-20
-else
-	startY = caseY-5
 end
 if caseX+radius<Poly.cols-5 then
 	maxX = caseX+radius
-elseif caseX+20<Poly.cols-5 then
+elseif caseX+radius>Poly.cols-5 then
 	maxX = caseX+20
-else
-	maxX = caseX+5
 end
 if caseY+radius<Poly.rows-5 then
 	maxY = caseY+radius
-elseif caseY+20<Poly.rows-5 then
+elseif caseY+radius<Poly.rows-5 then
 	maxY = caseY+20
-else
-	maxY = caseY+5
 end
 
 if self.treeFound==nil then
@@ -2075,7 +2130,7 @@ if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 				selfBody:set_cutWood(true)
 				love.audio.play(self.chop_sound)
 				self.treeFound = nil
-				self:set_position(destinationX*32+120, destinationY*32+140, 100)
+				self:set_position(destinationX*32+100, destinationY*32+200, 100)
 			else
 				self:setObjectiv("seekHome")
 			end
@@ -2129,23 +2184,23 @@ local tree = self.treeFound
 
 if caseX-radius>5 then
 	startX = caseX-radius
-else
-	startX = caseX-5
+elseif caseX-radius<5 then
+	startX = caseX-20
 end
 if caseY-radius>5 then
 	startY = caseY-radius
-else
-	startY = caseY-5
+elseif caseY-radius<5 then
+	startY = caseY-20
 end
 if caseX+radius<Poly.cols-5 then
 	maxX = caseX+radius
-else
-	maxX = caseX+5
+elseif caseX+radius>Poly.cols-5 then
+	maxX = caseX+20
 end
 if caseY+radius<Poly.rows-5 then
 	maxY = caseY+radius
-else
-	maxY = caseY+5
+elseif caseY+radius<Poly.rows-5 then
+	maxY = caseY+20
 end
 
 local mapTrees = self.level:getTreeMap()
@@ -2269,23 +2324,23 @@ self.seekingWood = true
 
 if caseX-radius>5 then
 	startX = caseX-radius
-else
-	startX = caseX-5
+elseif caseX-radius<5 then
+	startX = caseX-20
 end
 if caseY-radius>5 then
 	startY = caseY-radius
-else
-	startY = caseY-5
+elseif caseY-radius<5 then
+	startY = caseY-20
 end
 if caseX+radius<Poly.cols-5 then
 	maxX = caseX+radius
-else
-	maxX = caseX+5
+elseif caseX+radius>Poly.cols-5 then
+	maxX = caseX+20
 end
 if caseY+radius<Poly.rows-5 then
 	maxY = caseY+radius
-else
-	maxY = caseY+5
+elseif caseY+radius<Poly.rows-5 then
+	maxY = caseY+20
 end
 
 local mapTrees = self.level:getTreeMap()
@@ -2462,7 +2517,17 @@ function hu:set_needHome(bool)
 end
 
 function hu:update(dt)
-    if not self.is_initialized then self:_update_human_life(dt) return end
+    if not self.is_initialized and self.battle==true then
+		--self:_update_human_life(dt) 
+		local animationBattleAnim = self.animationBattleAnim
+		animationBattleAnim.currentTime = animationBattleAnim.currentTime + dt
+		if animationBattleAnim.currentTime >= animationBattleAnim.duration then
+			self.animationBattleAnim.currentTime = animationBattleAnim.currentTime - animationBattleAnim.duration
+		end
+	return end
+	if not self.is_initialized and self.battle==false then
+		self:_update_human_life(dt) 
+	return end
     self:_update_neighbours(dt/20)
 	local selfBody = self.body_graphic
 	if selfBody:get_cutWood() == false then
@@ -2629,7 +2694,7 @@ function hu:draw_debug()
 end
 
 function hu:draw()
-  if not self.is_initialized then
+  if not self.is_initialized and self.waitForBattle==false then
 	local inHome = self.inHome
 	love.graphics.push()
 	love.graphics.scale(0.5, 0.5)   -- reduce everything by 50% in both X and Y coordinates
@@ -2639,12 +2704,27 @@ function hu:draw()
 		lg.draw(self.illuFloor, (x-25)*2, (y-25)*2)
 	end
 	love.graphics.pop()
+	  if self.battle == true then
+		  lg.setColor(255, 255, 255, 255)
+		  local x, y, z = self:get_position()
+		  local animationBattleAnim = self.animationBattleAnim
+		  local spriteNum = math.floor(animationBattleAnim.currentTime / animationBattleAnim.duration * #animationBattleAnim.quads) + 1
+		  love.graphics.draw(animationBattleAnim.spriteSheet, animationBattleAnim.quads[spriteNum], x-130, y-125)
+	  end
+  return end
+  if not self.is_initialized and self.waitForBattle==true then
+	local x, y, z = self:get_position()
+	lg.setColor(255, 255, 255, 255)
+	love.graphics.push()
+	love.graphics.scale(0.5, 0.5)
+	lg.draw(self.waitForBattleImg, (x-25)*2, (y-25)*2)
+	love.graphics.pop()
+	--love.graphics.rectangle( "fill", x+55, y-25, 100, 100 )
   return end
   debugText = self.rule_weights[self.separation_vector]
   local x, y, z = self:get_position()
   --love.graphics.rectangle( "fill", x+55, y-25, 32, 32 )
-  self.body_graphic:draw(x, y)
-  
+  self.body_graphic:draw(x-100, y-55)
   --self.animation:draw(x, y)
   
   lg.setColor(0, 100, 255, 255)
@@ -2670,7 +2750,6 @@ function hu:draw()
         end
         love.graphics.setColor( 0, 0, 0 )
   end]]--
-  
 end
 
 return hu

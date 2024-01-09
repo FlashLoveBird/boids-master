@@ -10,6 +10,7 @@ state_manager.current_state = nil
 state_manager.states = nil
 state_manager.states_by_key = nil
 state_manager.loaded_states_by_key = nil
+local bitser = require 'bitser'
 
 local state_manager_mt = { __index = state_manager }
 function state_manager:new()
@@ -26,6 +27,7 @@ function state_manager:add_state(state_obj, key)
   self.states_by_key[key] = state_obj
   state_obj:set_key(key)
 end
+
 
 --------------------------------------------------------------------------------
 function state_manager:load_state(key, ...)

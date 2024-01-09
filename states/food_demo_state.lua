@@ -22,7 +22,7 @@ local bitser = require "bitser"
 local save = nil
 local music = nil
 local music_2 = nil
-local nbNids = 3
+local nbNids = 1
 local playIntro = false
 local tableAnimRessources = {}
 
@@ -92,6 +92,8 @@ function food_demo_state.wheelmoved(x, y)
 end
 
 function food_demo_state.mousepressed(x, y, button)
+
+  
   if state.selectItem ==0 then
 	state.flock:mousepressed(x, y, button)
 	state.level:mousepressed(x, y, button, state.flock)
@@ -144,7 +146,7 @@ function food_demo_state.mousepressed(x, y, button)
   cmx = math.floor(mx /32)
   cmy = math.floor(my /32)
  
-	  if button == 1 and state.selectItem == 3 then
+	  if button == 1 and state.selectItem == 3 and speedTime ~= 0 then
 		if mx > 5 and mx < 25600 and my > 5 and my < 25600 then
 			if state.level:canILandHere(cmx,cmy,10) then
 				--state.hero:putEgg(mx-25,my-25,0)
@@ -157,7 +159,7 @@ function food_demo_state.mousepressed(x, y, button)
 		end
 		
 	  end
-	  if cmx > 5 and cmx < 800 and cmy > 5 and cmy < 800 and state.level:canILandHere(cmx,cmy,10) then
+	  if cmx > 5 and cmx < 800 and cmy > 5 and cmy < 800 and state.level:canILandHere(cmx,cmy,10) and speedTime ~= 0 then
 		  if button == 1 and state.selectItem == 1 then
 			--map[cmx][cmy] = state.level:addBush(cmx,cmy,state.flock)
 			--map[cmx][cmy]:setState(true)
@@ -179,7 +181,7 @@ function food_demo_state.mousepressed(x, y, button)
 			--local instance = bitser.loads(data)
 			--map[mx][my]:setFlock(state.flock)
 		  end
-		   if button == 1 and state.selectItem == 2 then   
+		   if button == 1 and state.selectItem == 2 and speedTime ~= 0 then   
 			cmx = math.floor(mx /32)
 			cmy = math.floor(my /32)
 			--state.hero:setRandomPoints(mx,my,2)		
@@ -187,7 +189,7 @@ function food_demo_state.mousepressed(x, y, button)
 			inkReserve = inkReserve - boidCostInk * 2
 			--state.level:spawn_cube_explosion(200, 200, 200, 300, 300)
 		  end
-		  if button == 1 and state.selectItem == 5 then
+		  if button == 1 and state.selectItem == 5 and speedTime ~= 0 then
 			cmx = math.floor(mx /32)
 			cmy = math.floor(my /32)
 			--state.hero:putEgg(mx-25,my-25,0)
@@ -202,13 +204,13 @@ function food_demo_state.mousepressed(x, y, button)
 			  --state.start_fade()
 			end
 		  end
-		  if button == 1 and state.selectItem == 4 then
+		  if button == 1 and state.selectItem == 4 and speedTime ~= 0 then
 			cmx = math.floor(mx /32)
 			cmy = math.floor(my /32)
 			if state.level:canILandHere(cmx,cmy,10) then
 				--state.hero:putEgg(mx-25,my-25,0)
 				--state.hero:setRandomPoints(mx,my,0) -- 0 = boid
-				state.hero:goDirection(7,mx,my,0)
+				state.hero:goDirection(7,mx,my,1)
 			end
 		  end  
 	  end
@@ -236,7 +238,8 @@ food_demo_state.toggle_button = function(b)
         state.selectItem = 3
 		state.level:get_mouse():set_input("bird")
 	  elseif b.text == "pred" then
-        --state.selectItem = 4
+        state.selectItem = 4
+		state.level:get_mouse():set_input("pred")
 	   elseif b.text == "ep" then
         --state.selectItem = 5
       elseif b.text == "pause" then
@@ -248,7 +251,7 @@ food_demo_state.toggle_button = function(b)
 		intro:setPitch(2)
 		state.selectItem = 50
 	  elseif b.text == "recommencer" and escape then
-		BOIDS:load_state("food_menu_state")
+		state.level:reload(state.flock)
 	  elseif b.text == "quitter" and escape then
 		love.event.quit() 
        elseif b.text == "play" then
@@ -265,6 +268,7 @@ food_demo_state.toggle_button = function(b)
 			SCR_HEIGHT = height
 			SRC_WIDTH = width
 			state.resize(width, height)
+			FULLSCREEN = 0
 		else
 			lw.setFullscreen(true)
 			local width = lg.getWidth()
@@ -273,8 +277,27 @@ food_demo_state.toggle_button = function(b)
 			SCR_HEIGHT = height
 			SRC_WIDTH = width
 			state.resize(width, height)
+			FULLSCREEN = 1
 		end
-      end
+      elseif b.text == "music" and escape then
+		if MUSIC == 1 then
+			love.audio.stop()
+			MUSIC = 0
+		else
+			src1 = love.audio.newSource("sound/Magic_Escape_Room.mp3", "stream")
+			src2 = love.audio.newSource("sound/Revival.mp3", "stream")
+			src3 = love.audio.newSource("sound/Perspectives.mp3", "stream")
+			MUSIC = 1
+			local i = math.random(1,3)
+			  if i == 1 then
+				src1:play()
+			  elseif i == 2 then
+				src2:play()
+			  elseif i == 3 then
+				src3:play()
+			  end
+		end
+	  end
     elseif b.toggle == true then
 	  state.level:get_mouse():set_input(nil)
 	  
@@ -285,7 +308,7 @@ food_demo_state.toggle_button = function(b)
       elseif b.text == "bird" then
          state.selectItem = 3
 	  elseif b.text == "pred" then
-        --state.selectItem = 4
+        state.selectItem = 4
 	  elseif b.text == "ep" then
         --state.selectItem = 5
       elseif b.text == "pause" then
@@ -298,7 +321,7 @@ food_demo_state.toggle_button = function(b)
 		state.selectItem = 0
 		--love.audio.play(intro)
 	   elseif b.text == "recommencer" and escape then
-		BOIDS:load_state("food_menu_state")
+		state.level:reload(state.flock)
 	   elseif b.text == "quitter" and escape then
 		love.event.quit() 
       elseif b.text == "fastforward" then
@@ -313,6 +336,7 @@ food_demo_state.toggle_button = function(b)
 			newLightWorld:Resize(width, height)
 			SCR_HEIGHT = height
 			SRC_WIDTH = width
+			FULLSCREEN = 0
 		else
 			lw.setFullscreen(true)
 			local width = lg.getWidth()
@@ -320,8 +344,26 @@ food_demo_state.toggle_button = function(b)
 			newLightWorld:Resize(width, height)
 			SCR_HEIGHT = height
 			SRC_WIDTH = width
+			FULLSCREEN = 1
 		end
-      end
+      elseif b.text == "music" and escape then
+		if MUSIC == 1 then
+			love.audio.stop()
+		else
+			src1 = love.audio.newSource("sound/Magic_Escape_Room.mp3", "stream")
+			src2 = love.audio.newSource("sound/Magic_Escape_Room.mp3", "stream")
+			src3 = love.audio.newSource("sound/Magic_Escape_Room.mp3", "stream")
+			MUSIC = 1
+			local i = math.random(1,3)
+			  if i == 1 then
+				src1:play()
+			  elseif i == 2 then
+				src2:play()
+			  elseif i == 3 then
+				src3:play()
+			  end
+	    end
+	  end
     end
  -- end
   b.toggle = not b.toggle
@@ -442,8 +484,8 @@ function food_demo_state.load(level)
   -- Set the light's color to white
   --newLight:SetColor(255, 255, 255, 255)
   
-  newStar = Star:new(newLightWorld, 500)
-
+  newStar = Star:new(newLightWorld, 500)	
+	
   -- Set the light's position
   --newLight:SetPosition(400, 400)
   
@@ -481,9 +523,8 @@ function food_demo_state.load(level)
   --state.emitter:start_emission()
   --state.start_fade()
   
-  state.food_source = boid_food_source:new(state.level, state.flock)
+  --state.food_source = boid_food_source:new(state.level, state.flock)
   --state.wood_source = boid_wood_source:new(state.level, state.flock)
-  state.water_source = boid_water_source:new(state.level, state.flock)
   state.town = town:new(state.level, state.flock)
   
   state.hero = hero:new(state.level, state.flock, 100, 100)
@@ -543,11 +584,15 @@ function food_demo_state.load(level)
   pause = lg.newImage("images/Black/1x/pause.png")
   play = lg.newImage("images/Black/1x/forward.png")
   fastforward = lg.newImage("images/Black/1x/fastForward.png")
-  fullscreen = lg.newImage("images/ui/fullscreen.png")
+  fullscreenOn = lg.newImage("images/ui/fullscreenOn-min.png")
+  fullscreen = lg.newImage("images/ui/fullscreen-min.png")
   exitIcon = lg.newImage("images/ui/exit.png")
   retryIcon = lg.newImage("images/ui/retry.png")
   width = pause:getWidth()
   height = pause:getHeight()
+  
+  musicImg = love.graphics.newImage("images/ui/music-min.png")
+  musicOff = love.graphics.newImage("images/ui/musicOff-min.png")
   
   voiceImg = lg.newImage("images/env/voice.png")
   
@@ -564,7 +609,9 @@ function food_demo_state.load(level)
   state.buttons[10] = {text="recommencer", x = actionX+vx/2-200, y = vy/3+100, toggle = true, 
                       bbox = bbox:new(actionX+vx/2-200, vy/3+100, 100, 100)}
   state.buttons[11] = {text="quitter", x = actionX+vx/2-200, y = vy/3+200, toggle = true, 
-                      bbox = bbox:new(actionX+vx/2-200, vy/3+200, 100, 100)}					  
+                      bbox = bbox:new(actionX+vx/2-200, vy/3+200, 100, 100)}
+  state.buttons[12] = {text="music", x = actionX+vx/2+200, y = vy/3, toggle = true, 
+                      bbox = bbox:new(actionX+vx/2+200, vy/3, 100, 100)}					  
 	
 	local level = state.level:getTreeMap()
 	local level_map = state.level:get_level_map()	
@@ -581,8 +628,30 @@ function food_demo_state.load(level)
 local target = vector2:new(1000, 1000)
 local cam = state.level:get_camera()
 
-for x=1, 1 do
-	human = state.flock:add_human()
+if DIFFICULTY == "easy" then
+	for x=1, 1 do
+		human = state.flock:add_human()
+	end
+	for i = 1, 100 do
+		state.flock:add_boid(math.random(500,12500), math.random(500,12500), 100, 10, 10, 10, true)
+	end
+	for i = 1, 50 do
+		state.flock:add_predator(math.random(500,12500), math.random(500,12500), 100, 10, 10, 10, true)
+	end
+elseif DIFFICULTY == "moy" then
+	for x=1, 2 do
+		human = state.flock:add_human()
+	end
+	for i = 1, 50 do
+		state.flock:add_boid(math.random(500,12500), math.random(500,12500), 100, 10, 10, 10, true)
+	end
+elseif DIFFICULTY == "hard" then
+	for x=1, 3 do
+		human = state.flock:add_human()
+	end
+	for i = 1, 20 do
+		state.flock:add_boid(math.random(500,12500), math.random(500,12500), 100, 10, 10, 10, true)
+	end
 end
 --human2 = state.flock:add_human()
 	
@@ -629,20 +698,40 @@ end
 					init=true
 					print('OKKKKKKK4')
 					--state.level:setFlock(state.flock)
-					state.level:addNuage(50, 50, 50, state.flock)
-					state.level:addNuage(50+1,50, 50, state.flock)
-					state.level:addNuage(50-1,50+1, 50, state.flock)
-					state.level:addNuage(50-1,50+1, 50, state.flock)
-					state.level:addNuage(50-1,50+1, 50, state.flock)
-					state.level:addNuage(50-1,50+1, 50, state.flock)
-					state.level:addNuage(50+2,50+1, 50, state.flock)
+					--[[state.level:addNuage(math.random(50,50), math.random(50,50), 50, state.flock)
+					state.level:addNuage(math.random(50,50),math.random(50,50), 50, state.flock)
+					state.level:addNuage(math.random(50,50),math.random(50,50), 50, state.flock)
+					state.level:addNuage(math.random(50,50),math.random(50,50), 50, state.flock)
+					state.level:addNuage(math.random(50,50),math.random(50,50), 50, state.flock)
+					state.level:addNuage(math.random(50,50),math.random(50,50), 50, state.flock)
+					state.level:addNuage(math.random(50,50),math.random(50,50), 50, state.flock)--]]
+				end
+				if state.level:canILandHere(caseX,caseY,20) then
+					if caseX<160 and caseY<160 and caseX>100 and caseY>100 and countTown<1 then
+						local randX = 32*x
+						local randY = 32*y
+						countTown = countTown + 1
+						food_demo_state.createTown(randX,randY,100)
+						--food_demo_state.createTown(randX,randY,100)
+						state.hero:set_posX(randX)
+						state.hero:set_posY(randY-200)
+						target.x, target.y = caseX*32, caseY*32-200
+						cam:set_target(target,true)
+						state.hero:goDirection(10)
+					end
 				end
 				if level[caseX][caseY]~=nil then
 					if count<nbNids and level[caseX][caseY]:getNumEmits()==0 and level[caseX][caseY].table=="tree" then
 						print('ajout de nid')
-						local emit = state.level:addHome(randX-35,randY-60,10,10,0,state.flock,state.level,0,0)
-						level[caseX][caseY]:add(emit)
-						level[caseX][caseY]:setNumEmits(1)
+						if DIFFICULTY == "easy" then
+							--local emit = state.level:addHome(randX-35,randY-60,10,10,0,state.flock,state.level,9,0)
+						elseif DIFFICULTY == "moy" then
+							--local emit = state.level:addHome(randX-35,randY-60,10,10,0,state.flock,state.level,5,0)
+						elseif DIFFICULTY == "hard" then
+							--local emit = state.level:addHome(randX-35,randY-60,10,10,0,state.flock,state.level,2,0)
+						end
+						--level[caseX][caseY]:add(emit)
+						--level[caseX][caseY]:setNumEmits(1)
 						count = count + 1
 						--map[caseX][caseY] = state.level:addTree(0)
 						--map[caseX][caseY]:set_position(randX,randY)
@@ -663,8 +752,8 @@ end
 						
 						
 					end
-				elseif state.level:canILandHere(caseX,caseY,30) then
-					if caseX<190 and caseY<190 and caseX>10 and caseY>10 and countRock<10 then
+				elseif state.level:canILandHere(caseX,caseY,20) then
+					--[[if caseX<190 and caseY<190 and caseX>10 and caseY>10 and countRock<10 then
 						local randX = 32*x
 						local randY = 32*y
 						countRock = countRock + 1
@@ -677,19 +766,7 @@ end
 						  state.start_fade()
 						end	
 						
-					end
-					if caseX<160 and caseY<160 and caseX>100 and caseY>100 and countTown<1 then
-						local randX = 32*x
-						local randY = 32*y
-						countTown = countTown + 1
-						food_demo_state.createTown(randX,randY,100)
-						--food_demo_state.createTown(randX,randY,100)
-						state.hero:set_posX(randX)
-						state.hero:set_posY(randY-200)
-						target.x, target.y = caseX*32, caseY*32-200
-						cam:set_target(target,true)
-						state.hero:goDirection(10)
-					end
+					end--]]
 				end	
 				if level[caseX][caseY] then
 					--if level[caseX][caseY].name>50 then
@@ -728,11 +805,6 @@ end
 	level_map:update_polygonizer()
 	state.level:setTreeMap(level)--]]
 	state.nbHome = state.nbHome -1	
-	
-	music = love.audio.newSource("sound/airtone_-_peaceOut.mp3", "stream")
-	music_2 = love.audio.newSource("sound/airtone_-_bluenotes_6.mp3", "stream")
-	music:setVolume(0.7)
-	--love.audio.play(music)
 	
 	level_map:setWallMap()
 	
@@ -843,7 +915,8 @@ function food_demo_state.resize(w, h, scale)
   state.buttons[8].bbox:set_position(actionX+w/2+200-200, 30) 
   state.buttons[9].bbox:set_position(actionX+w/2-200, h/3)
   state.buttons[10].bbox:set_position(actionX+w/2-200, h/3+100) 	
-  state.buttons[11].bbox:set_position(actionX+w/2-200, h/3+200) 	  
+  state.buttons[11].bbox:set_position(actionX+w/2-200, h/3+200)
+  state.buttons[12].bbox:set_position(actionX+w/2+200, h/3)   
   
   --if w > 1920 then
     --camPos.x = hpos.x
@@ -900,6 +973,17 @@ function food_demo_state.update(dt)
 	speed = 10
   end
   
+  if src1:isPlaying()==false and src2:isPlaying()==false and src3:isPlaying()==false and MUSIC == 1 then
+	local i = math.random(1,3)
+	if i == 1 then
+		src1:play()
+	elseif i == 2 then
+		src2:play()
+	elseif i == 3 then
+		src3:play()
+	 end
+  end
+  
   newLightWorld:Update()
   --newLight:SetPosition(vx/2, vy/2)
   newStar:SetPosition(vx/2, vy/2-50)
@@ -912,19 +996,19 @@ function food_demo_state.update(dt)
 	  target2.x = (target2.x + target.x)/2
 	  target2.y = (target2.y + target.y)/2
 	  cam:set_target(target2)--]]
-	  if lk.isDown("z", "up") or lk.isDown("q", "left") or lk.isDown("s", "down") or lk.isDown("d", "right") or lk.isDown("lshift") or lk.isDown("space") or lk.isDown("e") then
+	  if lk.isDown("z", "up", "w") or lk.isDown("q", "left", "a") or lk.isDown("s", "down") or lk.isDown("d", "right") or lk.isDown("lshift") or lk.isDown("space") or lk.isDown("e") then
 		  if lk.isDown("lshift") then
-			if state.hero:get_tired()>30 then
+			if state.hero:get_tired()>30 and state.hero:get_hunger()>30 then
 				state.hero:set_run(true)
 				speed = speed + 10
 			end
 		  end
-		  if lk.isDown("z", "up") then
+		  if lk.isDown("z", "up", "w") then
 			ty = ty - speed
 			state.hero:goDirection(1)
 			targetCam.y = targetCam.y-200
 		  end
-		  if lk.isDown("q", "left") then
+		  if lk.isDown("q", "left", "a") then
 			tx = tx - speed
 			state.hero:goDirection(2)
 			targetCam.x = targetCam.x-200
@@ -948,7 +1032,7 @@ function food_demo_state.update(dt)
 		  target.x, target.y = target.x + tx, target.y + ty
 		  
 		  local block = state.hero:canIGoHere(target)
-		  if target.x>vx/2+50 and target.y>vy/2+50 and target.x<ACTIVE_AREA_WIDTH-vx/2-50 and target.y<ACTIVE_AREA_HEIGHT-vy/2-50 and block==false then
+		  if target.x>vx/2+200 and target.y>vy/2+200 and target.x<ACTIVE_AREA_WIDTH-vx/2-200 and target.y<ACTIVE_AREA_HEIGHT-vy/2-200 and block==false then
 			state.hero:set_position(target,true)
 			local w, h = lg.getDimensions()
 			state.hero:set_target(target.x, target.y)
@@ -998,9 +1082,9 @@ function food_demo_state.update(dt)
   
   state.level:update(dt)
   --state.emitter:update(dt)
-  state.food_source:update(dt)
+  --state.food_source:update(dt)
   --state.wood_source:update(dt)
-  state.water_source:update(dt)
+  --state.water_source:update(dt)
   state.town:update(dt)
   --state.emitter2:update(dt)
   state.flock:update(dt)
@@ -1051,8 +1135,6 @@ function food_demo_state.update(dt)
 		--newLightWorld:SetColor(255-local_time_color, 255-local_time_color, 255-local_time_color)
 	  elseif local_time>71 and local_time<100 then
 		journeyTime = "NUIT"
-		music:setVolume(0.7)
-		love.audio.stop(music)
 		--newLightWorld:SetColor(255-local_time_color, 255-local_time_color, 255-local_time_color)
 		--love.audio.play(music_2)
 	  elseif local_time>1 and local_time<24 then
@@ -1252,10 +1334,11 @@ end
 function food_demo_state.draw()
 
   --state.hero:draw()
-  state.level:draw(flock)
+  
+  state.level:draw()
   -- draw boids
   state.level.camera:set()
-  
+  state.town:draw()
   state.flock:draw()
   
   -- obstacle radius
@@ -1270,17 +1353,17 @@ function food_demo_state.draw()
   
   --lg.line( x, y, monX, monY)
   
-  state.food_source.debug = true
-  state.food_source:draw()
+  --state.food_source.debug = true
+  --state.food_source:draw()
   
   --state.wood_source.debug = true
   --state.wood_source:draw()
   
-  state.water_source.debug = true
-  state.water_source:draw()
+  --state.water_source.debug = true
+  --state.water_source:draw()
   
   state.town.debug = true
-  state.town:draw()
+  
   
   lg.setColor(255, 255, 255, 255)
   
@@ -1308,7 +1391,7 @@ function food_demo_state.draw()
   if firstDance == false then
 	  lg.draw(showEmoteCriImg, actionX+950, actionY+250)
 	  lg.setColor(0, 0, 0, 255)
-	  lg.setFont(FONTS.muli)
+	  lg.setFont(FONTS.rubik)
 	  lg.print("Get out !", actionX+1100, actionY+330)
   end
   if firstDance == false then return end
@@ -1316,7 +1399,6 @@ function food_demo_state.draw()
   
   -- intruction text
   lg.setColor(255, 255, 255, 255)
-  lg.setFont(FONTS.appleMedium)
   lg.draw(fondui, actionX-20, actionY-20)
   
   lg.draw(fonduiBagFond, 20, vy-170)
@@ -1326,7 +1408,6 @@ function food_demo_state.draw()
   
   
   -- draw buttons
-  lg.setFont(FONTS.appleMedium)
   for i=1,#state.buttons-6 do
     local b = state.buttons[i]
 	lg.setColor(255, 255, 255, 255)
@@ -1343,7 +1424,7 @@ function food_demo_state.draw()
 	elseif i==3 then
 		lg.draw(birdIcon, actionX+15, actionY+i*90+20)
 	elseif i==4 then
-		--lg.draw(predatorIcon, actionX, actionY+i*90)
+		lg.draw(predatorIcon, actionX+20, actionY+i*90+20)
 	elseif i==5 then
 		--lg.draw(epIcon, actionX, actionY+i*90)
 	end
@@ -1354,7 +1435,6 @@ function food_demo_state.draw()
   lg.setColor(255, 255, 255, 255)
   --lg.draw(menuBar, 250, 910)
   
-  lg.setFont(FONTS.appleMedium)
   lg.setColor(255, 255, 255, 255)
   --lg.draw(panelImg, 10, 10)
   --lg.draw(panelImg, 120, 10)
@@ -1398,14 +1478,24 @@ function food_demo_state.draw()
   if escape then
 	lg.draw(menuFond, actionX+vx/3,vy/4)
 	lg.draw(button, actionX+vx/2-210,vy/3-10)
-	lg.draw(fullscreen, actionX+vx/2-195,vy/3)
-	lg.setFont(FONTS.appleLight)
+	if FULLSCREEN == 1 then
+		lg.draw(fullscreen, actionX+vx/2-195,vy/3)
+	else
+		lg.draw(fullscreenOn, actionX+vx/2-195,vy/3)
+	end
 	--lg.setColor(0, 0, 0, 255)
 	--lg.print("Recommencer la partie", actionX+vx/2-200,vy/3+100)
 	lg.draw(button, actionX+vx/2-210,vy/3+90)
 	lg.draw(retryIcon, actionX+vx/2-195,vy/3+110)
 	lg.draw(button, actionX+vx/2-210,vy/3+190)
 	lg.draw(exitIcon, actionX+vx/2-195,vy/3+208)
+	if MUSIC == 1 then
+		lg.draw(button, actionX+vx/2+210,vy/3)
+		love.graphics.draw(musicImg, actionX+vx/2+215,vy/3+10)
+    else
+		lg.draw(button, actionX+vx/2+210,vy/3)
+		love.graphics.draw(musicOff, actionX+vx/2+215,vy/3+10)
+    end
 	--lg.print("Quitter le jeu", actionX+vx/2-200,vy/3+200)
   end
   

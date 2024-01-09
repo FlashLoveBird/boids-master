@@ -2,6 +2,7 @@ local vector3 = require("vector3")
 local profile = require( "profile" )
 local Vector = require( "vector" )
 local Luafinding = require( "luafinding" )
+local namegen = require("namegen")
 local ID = 1
 
 --##########################################################################--
@@ -21,20 +22,20 @@ nuage.collider = nil
 nuage.map = nil
 
 
-local rand = math.random(-2,2)
+local rand = math.random(1,1)
 nuage.graphic_width = 12 + rand
-nuage.graphic_height = 16 + rand
+nuage.graphic_height = 12 + rand
 nuage.min_roll_angle = 0
 nuage.max_roll_angle = math.pi / 2.4
 nuage.min_roll_speed = 1
 nuage.max_roll_speed = 10
 nuage.min_scale = 0.5
 nuage.max_scale = 1.3
-nuage.field_of_view = 1.8 * math.pi
-nuage.sight_radius = 400
+nuage.field_of_view = 1.3 * math.pi
+nuage.sight_radius = 200
 nuage.separation_radius = 0.2 * nuage.sight_radius
 nuage.separation_predator_radius = 0.2 * nuage.sight_radius
-nuage.boundary_zpad = 0
+nuage.boundary_zpad = 200
 nuage.boundary_ypad = 200
 nuage.boundary_xpad = 200
 nuage.boundary_vector_mix_ratio = 0.25           -- mixes normal to reflected projection
@@ -58,8 +59,9 @@ nuage.waterGrab = 0
 nuage.count = 0
 nuage.hunger = 100
 nuage.dead = false
-nuage.sex = true
+nuage.sex = nil
 nuage.age = 2
+nuage.social = 0
 oneSex = true 
 firstBoids = 0
 nuage.hadKid = false 
@@ -89,14 +91,13 @@ nuage.myIdTable = nil
 nuage.seekTree = nil
 nuage.seekingHome = false
 nuage.seekingWood = false
-nuage.boidType = 7
+nuage.boidType = 1
 nuage.predatorInView = false
 nuage.searchObjRad = 5
 love.frame = 0
 nuage.countPath = 1
 nuage.step = 0
-nuage.animationNuage = nil
-nuage.social = nil
+nuage.seekingNid = false
                                                                   -- if angle between boundary normal
                                              -- and boid direction is less than this
                                              -- angle.
@@ -145,21 +146,23 @@ function nuage:new(level, nbNuage, parent_flock, animationNuage, x, y, z, dirx, 
   nuage.life = 100
   nuage.predatorInView=false
   nuage.newMap = true
-  nuage.animationNuage = animationNuage
   nuage.target = {x = 0, y = 0, z = 0}
   nuage.temp_vector = {}
   nuage.neighbours = {}
   nuage.neighbours_in_view = {}
+  nuage.animationNuage = animationNuage
   nuage:_init_map_point(x, y, parent_flock)
   nuage:_init_boid_seeker()
-  nuage:_init_boid_graphic()
+  
   nuage:_init_rule_vectors()
   nuage:_init_waypoint()
   
-  
   if level and parent_flock and x and y and z then
     nuage:init(level, parent_flock, x, y, z, dirx, diry, dirz)
+	print("----------------init BOID")
   end
+  nuage:_init_boid_graphic()
+  
   return nuage
 end
 
@@ -173,8 +176,8 @@ function nuage:_init_waypoint()
   waypoint.outer_radius = 0
   waypoint._default_inner_radius = 100
   waypoint._default_outer_radius = 101
-  waypoint._min_power = 0.1
-  waypoint._max_power = 0.2
+  waypoint._min_power = 0.5
+  waypoint._max_power = 1
   self.waypoint = waypoint
   self.waypointPoint = love.graphics.newImage("images/ui/cible.png")
 end
@@ -190,13 +193,13 @@ function nuage:_init_rule_vectors()
   self:_clear_rule_vectors()
   
   local weights = {}
-  weights[self.alignment_vector]  = 5
-  weights[self.cohesion_vector]   = 5
+  weights[self.alignment_vector]  = 0.5
+  weights[self.cohesion_vector]   = 0.2
   weights[self.separation_vector] = 3
   weights[self.separation_predator_vector] = 3000000
-  weights[self.boundary_vector]   = 30
+  weights[self.boundary_vector]   = 3
   weights[self.waypoint_vector]   = 5
-  weights[self.obstacle_vector]   = 0
+  weights[self.obstacle_vector]   = 8
   self.rule_weights = weights
 end
 
@@ -227,15 +230,21 @@ function nuage:_init_map_point(x, y)
   self.map_point = map_point:new(self.level, vector2:new(x, y))
 end
 
-function nuage:init(level, parent_flock, x, y, z, dirx, diry, dirz)
-  if not x or not y then
+function nuage:init(level, parent_flock, x, y, z, dirx, diry, dirz, free, sing1, sing2, sing3, sing4, sing5, singS1, singS2, singS3, singS4, singS5, illuFloor1, illuFloor2, illuFloor3, illuFloor4, illuFloor5, illuFloor6, illuFloor7, speed)
+  if not parent_flock or not x or not y or not z then
     print("Error in boid:init() - missing parameter")
     return
   end
-  print('parent_flock2')
-  print(parent_flock)
-  self.flock = parent_flock
+  
+  love.profiler = require("profile") 
+  --love.profiler.start()
+  --if not parent_flock:contains_point(x, y, z) then
+   -- print("Error in boid:init() - point outside of flock region")
+    --return
+  --end
+  
   self.boidType=7
+  self.free = free
   self.originX = x
   self.originY = y
   self.originZ = z
@@ -248,11 +257,20 @@ function nuage:init(level, parent_flock, x, y, z, dirx, diry, dirz)
   self.age = 1
   self.nbStepPath = 0
   self.countPath = 1
+	
+  if firstBoids < 3 then
+	self.sex = oneSex
+	oneSex = not(oneSex)
+	firstBoids = firstBoids + 1
+	--self.needHome = true
+	self.age = 4
+  end
   
   self.id = ID
-  self.name = "Jean-Paul-"..ID
+  local name = namegen.generate("dwarf male")
+  self.name = name--"Jean-Paul-"..ID
   ID = ID + 1
-  self.social = 0
+  
   -- orientation
   vector3.set(self.position, x, y, z)
   if dirx and diry and dirz then
@@ -267,9 +285,7 @@ function nuage:init(level, parent_flock, x, y, z, dirx, diry, dirz)
   local dx, dy, dz = random_direction3()
   self.seeker:set_position(self.position.x+dx, self.position.y+dy, self.position.z+dz)
   self.seeker:set_bounds(b.x, b.y, b.width, b.height, b.depth)
-  
-  self:set_position(x, y, z)
-  
+  --self.seeker:set_scale(speed)
   -- collider
   self.collider = parent_flock:get_collider()
   self.map_point:update_position(vector2:new(self.position.x, self.position.y))
@@ -296,7 +312,7 @@ function nuage:init(level, parent_flock, x, y, z, dirx, diry, dirz)
   end
   
   
-  if self.sex == true then
+  if self.sex == false then
 	  local rand = math.random(1,4)
 	  if rand == 1 then
 		self.illuFloor = illuFloor1 --love.graphics.newImage("images/home/bird-sleep.png")
@@ -317,6 +333,9 @@ function nuage:init(level, parent_flock, x, y, z, dirx, diry, dirz)
 		self.illuFloor = illuFloor7
 	  end
   end
+  
+  --self.body_graphic:set_sex(self.sex)
+  
 end
 
 function nuage:set_position(x, y, z)
@@ -373,7 +392,7 @@ function nuage:set_newHome(tree,caseNewTreeX,caseNewTreeY)
 	self.emit:remove_boid(self)
   end
   self:set_emit_parent(self.seekTree:getEmit())
-  --self.emit:add_boid(self)
+  self.emit:add_boid(self)
   self.myIdTable = self.emit:get_boids()
   self.path=nil
 end
@@ -571,12 +590,12 @@ function nuage:_update_neighbours_in_view()
     if b ~= self and i<10 then
 		if b.boidType==1 then
 			if relationWith[b.id] and relationWith[b.id]<101 and lover==nil and relationWith[b.lover]==nil and sex==not(b.sex) then
-				self.relationWith[b.id] = relationWith[b.id] + math.random(0,0.1)
-				if relationWith[b.id] > 50 and relationWith[b.id] < 52 then
+				self.relationWith[b.id] = relationWith[b.id] + math.random(1,10)
+				if relationWith[b.id] > 50 and relationWith[b.id] < 82 then
 					self:set_emote("love")
 					self.lover = b
 					self:set_waypoint(p1.x,p1.y,1300)
-					self:sing(0)
+					--self:sing(0)
 				end
 			else 
 				self.relationWith[b.id] = 1
@@ -615,6 +634,11 @@ function nuage:_update_neighbours_in_view()
    --acc.y = acc.y*(1+#nbs/100)
    --acc.z = acc.z*(1+#nbs/100)
    --self:set_acceleration(acc)
+   local vel = self:get_velocity()
+   vel.x = vel.x*(1+#nbs/300)
+   vel.y = vel.y*(1+#nbs/300)
+   vel.z = vel.z*(1+#nbs/300)
+   self:set_velocity(vel)
 end
 
 function nuage:_update_neighbours()
@@ -694,7 +718,7 @@ function nuage:_update_separation_rule(dt)
 		local dx, dy, dz = p2.x - p1.x, p2.y - p1.y, p2.z - p1.z
 		local lensqr = dx*dx + dy*dy + dz*dz
 		if lensqr < rsq and lensqr > 0 then
-		  sep.x, sep.y, sep.z = sep.x - dx, sep.y - dy, sep.z - dz
+		  sep.x, sep.y, sep.z = math.random(1,3000) - dx, math.random(1,3000) - dy, math.random(1,3000) - dz
 		  count = count + 1
 		end
 	elseif boidType==4 then
@@ -835,6 +859,102 @@ function nuage:_update_boundary_rule()
   
 end
 
+function nuage:setNewHome()
+	self.needHome = false
+	self.objectiv = "fly"
+	self.woodGrab = 0
+	self.waterGrab = 0
+	--self:setHome(true)
+	self.originX,self.originY,self.originZ = self.caseNewTreeX*32,self.caseNewTreeY*32,100
+	if self.emit then
+		self.emit:remove_boid(self)
+	end
+	self:set_emit_parent(self.seekTree:getEmit())
+	if self.emit then
+		self.emit:add_boid(self)
+		self.myIdTable = self.emit:get_boids()
+	else
+		self.seekTree:add_boid(self)
+	end
+	self.path=nil
+	self.free=false
+	self.countPath = 1
+end
+
+function nuage:destructHome()
+	if self.is_initialized == false then
+		self:activate()
+		self.path=nil
+		self.seeker:set_position(self.position.x+math.random(-10,10), self.position.y+math.random(-10,10), self.position.z+math.random(-10,10))
+		self:setObjectiv("fly")
+	else
+	
+	end
+	self:setHome(false)
+	--self.body_graphic:set_color1(255)
+	--self.rule_weights[self.separation_vector] = 3
+	self.treeFound=nil
+	self.needHome = true
+	self.originX,self.originY,self.originZ = nil, nil, nil
+	self.free=true
+	self.countPath = 1
+end
+
+function nuage:backHome()
+	local foodGrab = self.foodGrab
+	local woodGrab = self.woodGrab
+	local waterGrab = self.waterGrab
+	local searchObjRad = self.searchObjRad
+	self.countPath = 1
+	self:set_position(self.originX,self.originY,self.originZ)
+	seeker:set_velocity({x = 0, y = 0, z = 0})
+	self:minusFood(foodGrab)
+	self:minusWood(woodGrab)
+	self:minusWater(waterGrab)
+	if self.emit then
+		self.emit:add_food(foodGrab)
+		self.emit:add_wood(woodGrab)
+		self.emit:add_water(waterGrab)
+	end
+	local timeLoc = self.level.master_timer:get_time()
+	if self.hunger>60 and (timeLoc<70 or timeLoc>100) then
+		self:setObjectiv("fly")
+	elseif timeLoc<70 or timeLoc>100 then
+		self:seekFood(searchObjRad)
+	else
+		self:setHome(true)
+		self:deactivate()
+		self:set_position(self.originX,self.originY,self.originZ)
+		self:setObjectiv("sleep")
+	end
+	self:clear_waypoint()
+	self.path = nil
+end
+
+function nuage:goSleep()
+local timeLoc = self.level.master_timer:get_time()
+local foodGrab = self.foodGrab
+local woodGrab = self.woodGrab
+local waterGrab = self.waterGrab
+self.countPath = 1
+self:setHome(true)
+self:deactivate()
+self:set_position(self.originX,self.originY,self.originZ)
+self:setObjectiv("sleep")
+self.path=nil
+if self.emit then
+	self.emit:add_food(foodGrab)
+	self.emit:add_wood(woodGrab)
+	self.emit:add_water(waterGrab)
+	self:minusFood(foodGrab)
+	self:minusWood(woodGrab)
+	self:minusWater(waterGrab)
+	self.emit:try_egg();
+end
+seeker:set_velocity({x = 0, y = 0, z = 0})
+self.path = nil
+end
+
 function nuage:_update_waypoint_rule()
   --debugText = tostring(self.waypoint.is_active)
   if not self.waypoint.is_active then return end
@@ -848,9 +968,6 @@ function nuage:_update_waypoint_rule()
   local waypoinTimeLocal = self.waypointTime
   local inHome = self.inHome
   local level = self.level
-  local foodGrab = self.foodGrab
-  local woodGrab = self.woodGrab
-  local waterGrab = self.waterGrab
   local is_initialized = self.is_initialized
   local seeker = self.seeker
   local flock = self.flock
@@ -862,46 +979,44 @@ function nuage:_update_waypoint_rule()
 	self:clear_waypoint()
     local prog = (dist - w.inner_radius) / (w.outer_radius - w.inner_radius)
     power = min + prog * (max - min)
-	if objectiv == "setNewHome" then 
-		self.needHome = false
-		self.objectiv = "fly"
-		self.woodGrab = 0
-		self.waterGrab = 0
-		--self:setHome(true)
-		self.originX,self.originY,self.originZ = self.caseNewTreeX*32,self.caseNewTreeY*32,100
-		if self.emit then
-			self.emit:remove_boid(self)
-		end
-		self:set_emit_parent(self.seekTree:getEmit())
-		if self.emit then
-			--self.emit:add_boid(self)
-			self.myIdTable = self.emit:get_boids()
-		end
-		self.path=nil
-		self.free=false
-		self.countPath = 1
-	elseif objectiv == "constructNewHome" then 
+	if objectiv == "constructNewHome" then 
 		self.countPath = 1
 		self.needHome = false
 		self.objectiv = "fly"
 		self.woodGrab = 0
 		self.waterGrab = 0
-		print('Apres cosntruction')
 		if self.emit then
 			self.emit:remove_boid(self)
 		end
-		local emit = self.level:addHome(self.caseNewTreeX*32-25,self.caseNewTreeY*32-55,100,0,0,flock,level,0)
-		self:set_emit_parent(emit)
-		self.myIdTable = 1
-		--self:setHome(true)
-		self.level.treeMap[self.caseNewTreeX][self.caseNewTreeY]:add(emit)
-		self.level.treeMap[self.caseNewTreeX][self.caseNewTreeY]:setNumEmits(1)
-		self.originX,self.originY,self.originZ = self.caseNewTreeX*32,self.caseNewTreeY*32,100
-		--self.emit:add_boid(self)
-		self.free=false
-		self.path=nil
-		self.free=false
-		
+		if self.level.treeMap[self.caseNewTreeX][self.caseNewTreeY] then
+			if self.level.treeMap[self.caseNewTreeX][self.caseNewTreeY].table == "tree" then
+				if self.level.treeMap[self.caseNewTreeX][self.caseNewTreeY]:getNumEmits() == 0 then
+					local emit = self.level:addHome(self.caseNewTreeX*32-25,self.caseNewTreeY*32-55,100,0,0,flock,level,1)
+					self:set_emit_parent(emit)
+					self.myIdTable = 1
+					local i = self.level:get_nb_home() + 1
+					--self:setHome(true)
+					self.level.treeMap[self.caseNewTreeX][self.caseNewTreeY]:add(emit, i)
+					self.level.treeMap[self.caseNewTreeX][self.caseNewTreeY]:setNumEmits(1)
+					self.originX,self.originY,self.originZ = self.caseNewTreeX*32,self.caseNewTreeY*32,100
+					self.emit:add_boid(self)
+					self.free=false
+					self.path=nil
+					self.free=false
+					print('AJOUT DUN NID avec un OEUF')
+				else
+					local emit = self.level.treeMap[self.caseNewTreeX][self.caseNewTreeY]:getEmit()
+					if emit:getEgg() < 4 then
+						emit:addEgg(1)
+						print('AJOUT DUN OEUF')
+					else
+						self:setObjectiv("fly")
+					end
+				end
+			end
+		else
+			self:setObjectiv("fly")
+		end
 		local timeLoc = self.level.master_timer:get_time()
 		if timeLoc>41 and timeLoc<101 then
 			self:setHome(true)
@@ -912,7 +1027,7 @@ function nuage:_update_waypoint_rule()
 		else
 			self:setObjectiv("fly")
 		end
-		self.emit:try_egg();
+		--self.emit:try_egg();
 		
 	elseif objectiv == "seekHome" then 
 		--self:seekHome()
@@ -942,50 +1057,6 @@ function nuage:_update_waypoint_rule()
 		self.rule_weights[self.obstacle_vector] = 8
 	elseif objectiv == "goConstructHomeWith" then
 		self:goConstructHomeWith()
-	elseif objectiv=="goHomeWithIn" then
-		self.countPath = 1
-		self:set_position(self.originX,self.originY,self.originZ)
-		seeker:set_velocity({x = 0, y = 0, z = 0})
-		self:minusFood(foodGrab)
-		self:minusWood(woodGrab)
-		self:minusWater(waterGrab)
-		if self.emit then
-			self.emit:add_food(foodGrab)
-			self.emit:add_wood(woodGrab)
-			self.emit:add_water(waterGrab)
-		end
-		local timeLoc = self.level.master_timer:get_time()
-		if self.hunger>60 and (timeLoc<70 or timeLoc>100) then
-			self:setObjectiv("fly")
-		elseif timeLoc<70 or timeLoc>100 then
-			self:seekFood(searchObjRad)
-		else
-			self:setHome(true)
-			self:deactivate()
-			self:set_position(self.originX,self.originY,self.originZ)
-			self:setObjectiv("sleep")
-		end
-		self:clear_waypoint()
-		self.path = nil
-	elseif objectiv == "goSleep" then
-		local timeLoc = self.level.master_timer:get_time()
-		self.countPath = 1
-		self:setHome(true)
-		self:deactivate()
-		self:set_position(self.originX,self.originY,self.originZ)
-		self:setObjectiv("sleep")
-		self.path=nil
-		if self.emit then
-			self.emit:add_food(foodGrab)
-			self.emit:add_wood(woodGrab)
-			self.emit:add_water(waterGrab)
-			self:minusFood(foodGrab)
-			self:minusWood(woodGrab)
-			self:minusWater(waterGrab)
-			self.emit:try_egg();
-		end
-		seeker:set_velocity({x = 0, y = 0, z = 0})
-		self.path = nil
 	end
 	
 	--elseif objectiv == "goHome" and inHome==false then
@@ -1016,17 +1087,15 @@ function nuage:grabFood(food)
 	if foodGrab < 5 then
 		self.foodGrab = foodGrab + math.floor(food/10000)
 		self:set_emote('food')
-		print("self.foodGrab")
-		print(self.foodGrab)
 	end
-	if self.foodGrab > 3 and self.emit then 
+	--[[if self.foodGrab > 3 and self.emit then 
 		--self:set_waypoint(self.originX,self.originY,self.originZ)
 		self:goOnHomeWith()
 		self:setObjectiv("goOnHomeWith")
 		--self.body_graphic:set_color1(0)
 		self.rule_weights[self.waypoint_vector] = 200
 		self.rule_weights[self.obstacle_vector] = 0
-	end
+	end--]]
 end
 
 function nuage:setObjectiv(obj)
@@ -1065,8 +1134,8 @@ function nuage:grabWood(wood)
 		self.originY = math.floor(self.caseNewTreeY*32)
 		self:goConstructHomeWith()
 		self:setObjectiv("goConstructHomeWith")
-		--self:set_waypoint(x,y,100)
-		--self:setObjectiv("goHomeToConstruct")
+		self:set_waypoint(x,y,100)
+		self:setObjectiv("goHomeToConstruct")
 		self.seekingWood = false
 		--self.body_graphic:set_color1(0)
 	end
@@ -1137,7 +1206,7 @@ function nuage:_update_rules(dt)
   self:_update_separation_rule(dt)
   self:_update_separation_predator_rule(dt)
   self:_update_boundary_rule(dt)
-  self:_update_waypoint_rule(dt/10)
+  self:_update_waypoint_rule(dt/50)
   self:_update_obstacle_rule(dt)
   --self:draw_debug()
   
@@ -1200,6 +1269,9 @@ function nuage:_update_boid_life(dt)
 	local pollution = self.level:get_pollution()
 	local searchObjRad = self.searchObjRad
 	local active = self.waypoint.is_active
+	local acc = self:get_acceleration()
+	local sex = self.sex
+	local seekingNid = self.seekingNid
 	
 	self.sight_radius = 200 --- pollution
 	
@@ -1246,6 +1318,167 @@ function nuage:_update_boid_life(dt)
 		end
 	end
 	
+	if inHome == true then
+		if tired<101 then
+			self.tired = tired + dt
+		end
+		local randomNum = 1 --math.random(1,5000)
+		if tired > 50 and objectiv == "sleep" and myTime<40 and myTime>3.9 and randomNum == 1 then
+			self:activate()
+			self.path=nil
+			self.seeker:set_position(self.position.x+math.random(-10,10), self.position.y+math.random(-10,10), self.position.z+math.random(-10,10))
+			self:setObjectiv("fly")
+			self:setHome(false)
+			--self.body_graphic:set_color1(255)
+			--self.rule_weights[self.separation_vector] = 3
+			self.treeFound=nil
+		end
+	else
+		if needHome and active==false then
+			self:seekHome(searchObjRad)
+			print("continue de chrcher maison")
+		end
+		if self.objectiv~="goFloor" then
+			if acc.x<0 then
+				acc.x = -acc.x
+			end
+			if acc.y<0 then
+				acc.y = -acc.y
+			end
+			if acc.z<0 then
+				acc.z = -acc.z
+			end
+			self.hunger = hunger - (((acc.x + acc.y + acc.z)*2-math.random(-2,0))*dt)
+			self.tired = tired - (((acc.x + acc.y + acc.z)*2-math.random(-1,0))*dt)
+			
+			
+			if self.lover and sex==false and seekingNid==false and needHome==false and math.random(1,10000)==1 and hadKid==false then
+				self:clear_waypoint()
+				self.path = nil
+				self:goConstructHomeWith()
+				print('je vais construire maison amour+++++++++++++')
+				self.seekingNid = true
+			end
+		else
+			if tired < 99 then
+				self.tired = tired + dt
+			else
+				self:activate()
+				self.path=nil
+				self.seeker:set_position(self.position.x+math.random(-10,10), self.position.y+math.random(-10,10), self.position.z+math.random(-10,10))
+				self:setObjectiv("fly")
+				print("GO VOLER !!")
+				self:setHome(false)
+				--self.body_graphic:set_color1(255)
+				--self.rule_weights[self.separation_vector] = 3
+				self.treeFound=nil
+			end
+			if hunger < 99 then
+				self.hunger = hunger + dt/4
+			else
+				self:activate()
+				self.path=nil
+				self.seeker:set_position(self.position.x+math.random(-10,10), self.position.y+math.random(-10,10), self.position.z+math.random(-10,10))
+				self:setObjectiv("fly")
+				self:setHome(false)
+				--self.body_graphic:set_color1(255)
+				--self.rule_weights[self.separation_vector] = 3
+				self.treeFound=nil
+			end
+		end
+		if hunger < 55 and foodGrab > 0 then 
+			self:feed(50)
+			self:minusFood(1)
+		elseif hunger < 50 and self.emit and active==false then
+			if self.emit:get_food() > 0 then
+				self:goHome()
+			else
+				self:seekFood(searchObjRad)
+				self:set_emote('hungry')
+			end
+		elseif hunger < 50 and foodGrab == 0 and active==false then 
+			self:seekFood(searchObjRad)
+		end
+		if hunger < 0 or tired < 0 then 
+			self.dead = true
+			if self.lover then
+				self:resetLove(self.lover)
+			end
+			self.body_graphic:set_color4(0)
+			if self.emit then
+				self.emit:remove_boid(self)
+			end
+			flock:remove_boid(self)
+		end
+		if tired < 40 then 
+			if tired > 20 and math.random(1,300) == 3 and self.objectiv~="goFloor" then
+				self:seekTreeFroSleep(searchObjRad)
+			elseif tired < 20 then 
+				local x = math.floor((self.position.x+math.random(-200,200))/32)
+				local y = math.floor((self.position.y+math.random(-200,200))/32)
+				if self.level:canILandHere(x,y,10) then
+					self:set_waypoint(self.position.x+math.random(-200,200), self.position.y+math.random(-200,200),50 ,20 ,50)
+					self:setObjectiv("goFloor")
+				else
+				
+				end
+			elseif tired < 0 then 
+				self.dead = true
+				if self.lover then
+					self:resetLove(self.lover)
+				end
+				self.body_graphic:set_color4(0)
+				if self.emit then
+					self.emit:remove_boid(self)
+				end
+				flock:remove_boid(self)
+			end
+		end
+		if emote~=nil then
+			self.emoteTime = emoteTime + dt*10
+			if emoteTime>2 then
+				self:set_emote(nil)
+				self.emoteTime=0
+			end
+		end
+		if confuse then
+			self.confuseTime = confuseTime + dt
+			if confuseTime>1000 then
+				self:unconfuse()
+				self.confuseTime=0
+				self.confuse = false
+			end
+		end
+		
+		if hadKid then
+			self.hadKidTime = hadKidTime + dt
+			if hadKidTime>10 then
+				self.hadKidTime=0
+				self.hadKid = false
+			end
+		end
+		
+		if predatorInView then
+			self.predatorInViewTime = predatorInViewTime + dt
+			if predatorInViewTime>10 then
+				self.predatorInView=false
+				self:set_emote("faceHappy")
+				local acc = self:get_acceleration()
+			    acc.x = acc.x/3
+				acc.y = acc.y/3
+				acc.z = acc.z/3
+				self:set_acceleration(acc)
+				local vel = self:get_velocity()
+				vel.x = vel.x/3
+				vel.y = vel.y/3
+				vel.z = vel.z/3
+				self:set_velocity(vel)
+			end
+		end
+	end
+	if searchObjRad > 800 then
+		self.searchObjRad = 1
+	end
 end
 
 function nuage:goHome()
@@ -1291,11 +1524,11 @@ if inHome == false and active==false and needHome == false then
 						self:feed(50)
 					end
 				end
-				self:setObjectiv("goSleep")
-				local posX = math.floor( self.path[#self.path].x * h ) + 1
-				local posY = math.floor( self.path[#self.path].y * w ) + 1
-				self:set_waypoint(posX, posY,500,50,100)
-				self.countPath =  1
+				self:goSleep()
+				--local posX = math.floor( self.path[#self.path].x * h ) + 1
+				--local posY = math.floor( self.path[#self.path].y * w ) + 1
+				--self:set_waypoint(posX, posY,500,50,100)
+				--self.countPath =  1
 			end
 		else
 			--self:set_waypoint(posX, posY,500,50,100)
@@ -1320,11 +1553,11 @@ if inHome == false and active==false and needHome == false then
 					self:feed(50)
 				end
 			end
-			self:setObjectiv("goSleep")
-			local posX = math.floor( self.path[#self.path].x * h ) + 1
-			local posY = math.floor( self.path[#self.path].y * w ) + 1
-			self:set_waypoint(posX, posY,500,20,50)
-			self.countPath =  1
+			self:goSleep()
+			--local posX = math.floor( self.path[#self.path].x * h ) + 1
+			--local posY = math.floor( self.path[#self.path].y * w ) + 1
+			--self:set_waypoint(posX, posY,500,20,50)
+			--self.countPath =  1
 		end
 	end
 end
@@ -1374,18 +1607,17 @@ if inHome == false and active == false then
 			self:setObjectiv("goOnHomeWith")
 			self.path = nil
 		else
-			self:setObjectiv("goHomeWithIn")
-			local posX = math.floor( self.path[#self.path].x * h ) + 1
-			local posY = math.floor( self.path[#self.path].y * w ) + 1
-			local z = math.random(200,1500)
-			self:set_waypoint(posX, posY,z,50,100)
+			self:backHome()
+			--local posX = math.floor( self.path[#self.path].x * h ) + 1
+			--local posY = math.floor( self.path[#self.path].y * w ) + 1
+			--local z = math.random(200,1500)
+			--self:set_waypoint(posX, posY,z,50,100)
 		end
 	end
 end
 end
 
 function nuage:goConstructHomeWith()
-print('je vais a la maison pour construire')
 local inHome = self.inHome
 local active = self.waypoint.is_active
 local level_map = self.level:get_level_map()
@@ -1402,18 +1634,23 @@ local waterGrab = self.waterGrab
 local countPath = self.countPath
 local nbStepPath = self.nbStepPath
 if inHome == false and active == false then
-	
 	if self.path==nil then
 		self:clear_waypoint()
 		self:updatePath(Vector(caseX,caseY),Vector(originCaseX,originCaseY))
-		self.nbStepPath = #self.path
-		if countPath < nbStepPath then
-			local posX = math.floor( self.path[countPath].x * h ) + 1
-			local posY = math.floor( self.path[countPath].y * w ) + 1
-			self:set_waypoint(posX, posY,500,50,100)
-			--self.seeker:add_force(posX,posY,100)
-			self:setObjectiv("goConstructHomeWith")
-			self.countPath = countPath + 1
+		if self.path then
+			self.nbStepPath = #self.path
+			if countPath < nbStepPath then
+				print(#self.path)
+				local posX = math.floor( self.path[countPath].x * h ) + 1
+				local posY = math.floor( self.path[countPath].y * w ) + 1
+				self:set_waypoint(posX, posY,500,50,100)
+				--self.seeker:add_force(posX,posY,100)
+				self:setObjectiv("goConstructHomeWith")
+				self.countPath = countPath + 1
+			end
+		else
+			self:setObjectiv("fly")
+			self.countPath = 1
 		end
 	else
 		local step = 1
@@ -1431,30 +1668,10 @@ if inHome == false and active == false then
 			self:set_waypoint(posX, posY,500,50,100)
 			self.countPath = 1
 			self.path = nil
+			seekingNid = false
 		end
 	end
 end
-end
-
-function nuage:sing(length)
-	--[[local x, y = self.position.x, self.position.y
-	local hero = self.level:get_player()
-	local pos = hero:get_position()
-	local volume = self:distance(pos.x, pos.y, x, y)
-	if volume > 500 then
-		self.sing_sound:setVolume(0)
-		self.sing_sound_2:setVolume(0)
-	else
-		self.sing_sound:setVolume((500-volume)/500)
-		self.sing_sound_2:setVolume((500-volume)/500)
-	end
-	if length == 0 then
-		love.audio.play(self.sing_sound)
-	else
-		love.audio.play(self.sing_sound_2)
-	end--]]
-	print('va y chante')
-	print(self.boidType)
 end
 
 function nuage:distance ( x1, y1, x2, y2 )
@@ -1477,7 +1694,6 @@ local startX = caseX
 local startY = caseY
 local maxX = 0
 local maxY= 0
-
 self.seekingHome = true
 
 if caseX-radius>5 then
@@ -1522,7 +1738,7 @@ if self.treeFound==nil then
 			if mapTrees[stepX] and self.treeFound==nil then
 				if mapTrees[stepX][stepY] then
 					if mapTrees[stepX][stepY] ~= nil then
-						if mapTrees[stepX][stepY]:getType() == 1 then
+						if mapTrees[stepX][stepY].table=="tree" then
 							if mapTrees[stepX][stepY]:getNumEmits()<1 and self.level:get_nb_home()<1 then
 								if mapTrees[stepX][stepY]:getState() == true then
 									--[[self.seekTree = mapTrees[stepX][stepY]:getTree() -- NON CEST ICI QUIL FAUT RECUP LES COORD DE WOOD VIA TREE
@@ -1565,13 +1781,13 @@ if self.treeFound ==nil and active==false then
 	if x+randX > 500 and x+randX < 12800 and y+randY > 500 and y+randY < 12800 then
 		self:set_waypoint(x+randX, y+randY,math.random(50,100),50,100)
 		self:setObjectiv("goOnSeekHome")
-		self.searchObjRad = self.searchObjRad + 10
+		self.searchObjRad = radius + 10
 	else
 		local randX = math.random(-10,10)
 		local randY = math.random(-10,10)
 		self:set_waypoint(x+randX, y+randY,math.random(50,100),50,100)
 		self:setObjectiv("goOnSeekHome")
-		self.searchObjRad = self.searchObjRad + 10
+		self.searchObjRad = radius + 10
 	end
 end
 
@@ -1588,7 +1804,7 @@ if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 			if x+randX > 500 and x+randX < 12800 and y+randY > 500 and y+randY < 12800 then
 				self:set_waypoint(x+randX, y+randY,math.random(50,100),50,100)
 				self:setObjectiv("goOnSeekHome")
-				self.searchObjRad = self.searchObjRad + 10
+				self.searchObjRad = radius + 10
 				self.treeFound = nil
 				return
 			else
@@ -1596,7 +1812,7 @@ if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 				local randY = math.random(-10,10)
 				self:set_waypoint(x+randX, y+randY,math.random(50,100),50,100)
 				self:setObjectiv("goOnSeekHome")
-				self.searchObjRad = self.searchObjRad + 10
+				self.searchObjRad = radius + 10
 				self.treeFound = nil
 				return
 			end
@@ -1614,7 +1830,7 @@ if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 		self.step = #self.path
 		if tree=="freeTree" then
 			if self.seekTree then
-				self:setObjectiv("setNewHome")
+				self:setNewHome()
 				self.free = false
 				self.countPath = 1
 				--self.seekTree:setNumEmits(1)
@@ -1626,7 +1842,7 @@ if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 			end
 		else
 			if self.seekTree:getNumBoids()<20 then
-				self:setObjectiv("setNewHome")
+				self:setNewHome()
 				self.searchObjRad = 10
 				self.free = false
 				self.countPath = 1
@@ -1638,20 +1854,17 @@ if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 					self.treeFound = nil
 					self:set_waypoint(x+randX, y+randY,z+math.random(50,100),50,100)
 					self:setObjectiv("goOnSeekHome")
-					self.searchObjRad = self.searchObjRad + 10
+					self.searchObjRad = radius + 10
 				else
 					self.treeFound = nil
 					local randX = math.random(-10,10)
 					local randY = math.random(-10,10)
 					self:set_waypoint(x+randX, y+randY,z+math.random(50,100),50,100)
 					self:setObjectiv("goOnSeekHome")
-					self.searchObjRad = self.searchObjRad + 10
+					self.searchObjRad = radius + 10
 				end
 			end
 		end
-		local posX = math.floor( self.path[self.step].x * h ) + 1
-		local posY = math.floor( self.path[self.step].y * w ) + 1
-		self:set_waypoint(posX, posY,500,50,100)
 	end		
 end
 end
@@ -1720,7 +1933,7 @@ if self.treeFound==nil then
 			if mapTrees[stepX] and self.treeFound==nil then
 				if mapTrees[stepX][stepY] then
 					if mapTrees[stepX][stepY] ~= nil then
-						if mapTrees[stepX][stepY]:getType() == 1 then
+						if mapTrees[stepX][stepY].table=="tree" then
 							if mapTrees[stepX][stepY]:getNumEmits()<1 and self.level:get_nb_home()<1 then
 								if mapTrees[stepX][stepY]:getState() == true then
 									--[[self.seekTree = mapTrees[stepX][stepY]:getTree() -- NON CEST ICI QUIL FAUT RECUP LES COORD DE WOOD VIA TREE
@@ -1809,7 +2022,7 @@ if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 		self.step = #self.path
 		if tree=="freeTree" then
 			if self.seekTree then
-				self:setObjectiv("goSleep")
+				self:goSleep()
 				self.countPath = 1
 				--self.seekTree:setNumEmits(1)
 				self.treeFound = nil
@@ -1818,7 +2031,7 @@ if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 			end
 		else
 			if self.seekTree:getNumBoids()<20 then
-				self:setObjectiv("goSleep")
+				self:goSleep()
 				self.searchObjRad = 10
 				self.countPath = 1
 			else
@@ -1906,8 +2119,6 @@ if self.treeFound==nil then
 									self.treeFound="bush"
 									tree = self.treeFound
 									self.path=nil
-									print("j'ai trouve un bush en")
-									print(stepX,stepY)
 								end
 							end
 						end
@@ -2167,10 +2378,6 @@ self:setObjectiv("goOnHero")
 end--]]
 end
 
-function nuage:setFlock(flock)
-	
-end
-
 function nuage:feed(nb)
 local myHunger = self.hunger
 	if myHunger < 100 then
@@ -2191,7 +2398,7 @@ local myHunger = self.hunger
 end
 
 function nuage:set_emote(emoteType)
-	self.body_graphic:set_emote(emoteType)
+	--self.body_graphic:set_emote(emoteType)
 	self.emoteTime = 0
 end
 
@@ -2258,31 +2465,113 @@ function nuage:_draw_debug_rule_vector(vector, label)
   
 end
 
-function nuage:mousepressed(mx, my, button)
-	local x, y = self.x , self.y
-	if mx/32>x-5 and mx/32<x+5 and my/32>y-5 and my/32<y+5 then
-		self.drawInfo = true
-		self.level:set_select(self)
-	end
-end
-
 function nuage:draw_debug()
+  lg.setColor(255, 255, 255, 255)
+
   
+  -- selection circle
+  local r = 3
+  --lg.circle("fill", self.position.x, self.position.y, r)
+  --lg.point(self.position.x, self.position.y)
+  
+  local len = 30
+  local d = self.direction
+  local x1, y1 = self.position.x, self.position.y
+  local x2, y2 = x1 + len * d.x, y1 + len * d.y
+  lg.setLineWidth(1)
+  lg.line(x1, y1, x2, y2)
+  
+  -- sight
+  lg.setColor(0, 0, 0, 255)
+  --lg.circle("line", x1, y1, self.sight_radius)
+  
+  
+  -- neigbours in view
+  local nbs = self.neighbours_in_view
+  local len = 10
+  for i=1,#nbs do
+    local b = nbs[i]
+    if b ~= self then
+      local x, y = b.position.x, b.position.y
+      lg.line(x-len, y, x+len, y)
+      lg.line(x, y-len, x, y+len)
+      lg.circle("fill", x, y, len)
+    end
+  end
+  
+  if self.path then
+        love.graphics.setColor( 0, 0, 0 )
+        for _, v in ipairs( self.path ) do
+            --lg.rectangle( "fill", ( v.x - 1 ) * 32, ( v.y - 1 ) * 32, 32, 32 )
+			lg.circle("fill", (v.x) * 32, (v.y) * 32, 5, 10)
+        end
+        love.graphics.setColor( 0, 0, 0 )
+  end
+  
+  -- field of view
+  --[[local angle = self.seeker:get_rotation_angle() + math.pi / 2
+  local fov_angle = 0.5 * self.field_of_view
+  local min_angle = angle - fov_angle
+  local max_angle = angle + fov_angle
+  local dirx1, diry1 = math.sin(min_angle), -math.cos(min_angle)
+  local dirx2, diry2 = math.sin(max_angle), -math.cos(max_angle)
+  local len = self.sight_radius
+  local p1x, p1y = x1 + len * dirx1, y1 + len * diry1
+  local p2x, p2y = x1 + len * dirx2, y1 + len * diry2
+  lg.setColor(0, 0, 0, 255)
+  lg.line(x1, y1, p1x, p1y)
+  lg.line(x1, y1, p2x, p2y)--]]
+  
+  
+  --self:_draw_debug_rule_vector(self.alignment_vector, "Align")
+  --self:_draw_debug_rule_vector(self.cohesion_vector, "Cohesion")
+  --self:_draw_debug_rule_vector(self.separation_vector, "Separation")
+  --self:_draw_debug_rule_vector(self.boundary_vector, "Boundary")
+  --self:_draw_debug_rule_vector(self.waypoint_vector, "Waypoint")
+  --self:_draw_debug_rule_vector(self.obstacle_vector, "Obstacle")
+  
+  -- target
+  --[[local t = self.target
+  local p = self.position
+  local dx, dy, dz = t.x - p.x, t.y - p.y, t.z - p.z
+  local len = math.sqrt(dx*dx + dy*dy + dz*dz)
+  if len > 0 then
+    dx, dy, dz = dx/len, dy/len, dz/len
+    local r = self.sight_radius
+    local x2, y2 = x1 + dx * r, y1 + dy * r
+    lg.setColor(0, 0, 255, 50)
+    lg.setLineWidth(3)
+    lg.line(x1, y1, x2, y2)
+    lg.print("Target", x2, y2)
+  end--]]
+  
+  -- waypoint sphere
+  if self.waypoint.is_active then
+    local w = self.waypoint
+    local x, y, z = w.x, w.y, w.z
+    local r1, r2 = w.inner_radius, w.outer_radius
+    
+    local p = self.position
+    local dx, dy, dz = x - p.x, y - p.y, z - p.z
+    local lensqr = dx*dx + dy*dy + dz*dz
+	lg.setColor(255, 255, 255, 255)
+    --lg.circle("fill", x, y, r1)
+    lg.draw(self.waypointPoint, x-10, y-60)
+    lg.setColor(255, 0, 0, 255)
+    --lg.circle("line", x, y, r1)
+    --lg.circle("line", x, y, r2)
+  end
+  
+  
+  --self.seeker:draw()
 end
 
 function nuage:draw()
-  --[[if not self.is_initialized then
-	local inHome = self.inHome
-	if inHome == false then
-		local x, y, z = self:get_position()
-		lg.setColor(255, 255, 255, 1)
-		lg.draw(self.illuFloor, x-25, y-25)
-	end
-  return end
-  debugText = self.rule_weights[self.separation_vector]
   local x, y, z = self:get_position()
-  
-  self.body_graphic:draw(x, y)
+  lg.setColor(255, 255, 255, 1)
+  local animationNuage = self.animationNuage
+  local spriteNum = math.floor(animationNuage.currentTime / animationNuage.duration * #animationNuage.quads) + 1
+  lg.draw(animationNuage.spriteSheet, animationNuage.quads[spriteNum], x-212, y-186)
   
   --self.animation:draw(x, y)
   
@@ -2293,7 +2582,7 @@ function nuage:draw()
  -- lg.print(debugText2, 100, 1100)
   --lg.print(debugText3, 100, 1200)
   
-  
+  --[[
   lg.setLineWidth(1)
   lg.setColor(0, 0, 0, 10)
   for i=1,#self.neighbours do
@@ -2309,12 +2598,6 @@ function nuage:draw()
         end
         love.graphics.setColor( 0, 0, 0 )
   end]]--
-  --local cx, cy = self.level:get_camera():get_viewport()
-  local x, y, z = self:get_position()
-  lg.setColor(255, 255, 255, 1)
-  local animationNuage = self.animationNuage
-  local spriteNum = math.floor(animationNuage.currentTime / animationNuage.duration * #animationNuage.quads) + 1
-  lg.draw(animationNuage.spriteSheet, animationNuage.quads[spriteNum], x-212, y-186)
   
 end
 

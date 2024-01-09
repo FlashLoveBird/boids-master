@@ -15,11 +15,11 @@ nu_sk.acceleration = nil
 nu_sk.target = nil
 
 nu_sk.scale = 20     -- pixels / meter
-nu_sk.mass = 20
+nu_sk.mass = 5
 nu_sk.inv_mass = 1 / nu_sk.mass
 
-nu_sk.max_speed = 1
-nu_sk.max_force = 35
+nu_sk.max_speed = 0.8
+nu_sk.max_force = 15
 
 nu_sk.current_angle = nil   -- angle on x,y plane
 nu_sk.current_zangle = nil  -- up/down angle respective to x,y plane
@@ -28,9 +28,9 @@ nu_sk.angle_speed = 0
 nu_sk.is_boundec = false
 nu_sk.boundary_bbox = nil
 
-local pd_sk_mt = { __index = nu_sk }
+local nu_sk_mt = { __index = nu_sk }
 function nu_sk:new(x, y, z)
-  local nu_sk = setmetatable({}, pd_sk_mt)
+  local nu_sk = setmetatable({}, nu_sk_mt)
   x, y, z = x or 0, y or 0, z or 0
   
   nu_sk.position = {x = x, y = y, z = z}
@@ -75,10 +75,6 @@ function nu_sk:set_mass(m)
   
   self.mass = m
   self.inv_mass = 1 / m
-end
-
-function nu_sk:set_velocity(a)
-  self.velocity = a
 end
 
 function nu_sk:set_scale(s)
@@ -248,46 +244,23 @@ end
 
 function nu_sk:draw()
   local p = self.position
-  --lg.setPointStyle("rough")
+  lg.setPointStyle("rough")
   lg.setPointSize(5)
-  lg.setColor(255, 255, 255, 255)
-  --lg.circle("line",p.x, p.y,30)
-  --lg.circle("line", p.x, p.y, 10)
+  lg.setColor(0, 0, 0, 255)
+  lg.point(p.x, p.y)
+  lg.circle("line", p.x, p.y, 10)
   
   local t = self.target
- lg.setColor(255, 0, 0, 255)
-  --lg.point(t.x, t.y)
-  --lg.circle("line", t.x, t.y, 25)
+  lg.setColor(255, 0, 0, 255)
+  lg.point(t.x, t.y)
+  lg.circle("line", t.x, t.y, 10)
   
   local len = 20
   local d = self.direction
   local px, py = p.x + len * d.x, p.y + len * d.y
-  lg.setColor(255, 255, 255, 255)
   lg.line(p.x, p.y, px, py)
-  --lg.circle("line", p.x, p.y, 20)
+  lg.circle("line", p.x, p.y, len)
   
 end
 
 return nu_sk
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

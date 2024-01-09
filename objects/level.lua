@@ -28,6 +28,7 @@ level.nbEggs = 0
 level.treeSelect = nil
 level.trees = {}
 level.bushs = {}
+level.lakes = {}
 level.nuages = {}
 
 
@@ -92,6 +93,8 @@ level.imageAnimationnuage = nil
 level.boids = 0
 level.boidPrey = 0
 level.boidPred = 0
+level.battles = {}
+level.inkSources = {}
 
 
 local level_mt = { __index = level }
@@ -138,8 +141,6 @@ function level:new()
 end
 
 function level:init()
-   --self.wood_source = boid_wood_source:new(self)
-   
 end
 
 function level:newAnimation(image, width, height, duration)
@@ -213,6 +214,7 @@ function level:addHome(x,y,width,height,depth,flock,level,nbEggs, boidType)
 	local r = 200
 	local lvl = self
 	local i = #self.emitters + 1
+	local y = y + 165
 	
 	print('AJOUT DUN OEUF EN DEBUT DE CHAINE en ')
     print(x, y ,z)
@@ -265,6 +267,40 @@ function level:get_level_map()
   return self.level_map
 end
 
+function level:createBattleAt(position)
+	local battle = position
+	self.battles[#self.battles + 1] = battle
+end
+
+function level:reload(flock)
+  for i=1,#self.bushs do
+    if self.bushs[i] ~= nil then
+		self.bushs[i] = nil
+	end
+  end
+   
+  for i=1,#self.trees do
+    if self.trees[i] ~= nil then
+		self.trees[i] = nil
+	end
+  end
+  
+  for i=1,#self.emitters do
+    if self.emitters[i] ~= nil then
+		self.emitters[i] = nil
+	end
+  end
+  
+  for i=1,#self.nuages do
+    if self.nuages[i] ~= nil then
+		self.nuages[i] = nil
+	end
+  end
+  
+  flock:remove_all_boid()
+  
+end
+
 function level:canILandHere(caseX,caseY,r)
   local treeMap = self.treeMap
   local startX =  caseX-r 
@@ -286,6 +322,16 @@ function level:canILandHere(caseX,caseY,r)
 			return false
 		end
 	end
+  end
+  
+  local position = {x=caseX*32,y=caseY*32,z=100}
+  local tile_map = self:get_level_map():get_tile_map()
+  local i, j , chunk = tile_map:get_chunk_index(position)
+  if chunk then
+	  local pollution = chunk:getPollution()
+	  if pollution < 3 then 
+	  return false 
+	  end
   end
   return true
 end
@@ -577,37 +623,17 @@ self.pollution = self.pollution - 1
 return te
 end
 
-function level:deleteTree(x, y, i)
+function level:deleteTree(x, y, i, indexEmit)
 print('mon index est')
 print(i)
 local indexTree = i
-for j = 1, #self.trees do
-	if self.trees[j]:getIndex() == i then
-		print("je suis le numero")
-		print(j)
-		print('Avant coupe il y a')
-		print(#self.emitters)
-		print('emitters')
-		print('je coupe le numero')
-		local emit = self.trees[j]:getEmit()
-		indexTree = j
-		if emit then
-			print(emit:getIndex())
-			table.remove( self.emitters, j )
-			self.trees[j].emit = nil
-			--self.emitters[i] = nil
-		end
-		print('Après coupe il y a')
-		print(#self.emitters)
-		print('emitters')
-	end
-end
+
+table.remove(self.emitters, indexEmit)
 self.nbTree = self.nbTree - 1
 self.treeMap[x][y] = nil
 table.remove(self.trees, indexTree)
 --self.trees[i] = nil
 --self.treeMap[x][y]= te
-
 self.pollution = self.pollution + 1
 end
 
@@ -637,6 +663,16 @@ self.treeMap[x][y]=bu
 self.pollution = self.pollution - 1
 self.bushs[#self.bushs + 1] = bu
 return bu
+end
+
+function level:addLake(x,y,flock)
+print('treeeeemap')
+print(x,y)
+local lake = lake:new(self,#self.lakes + 1,flock)
+self.treeMap[x][y]=lake
+self.pollution = self.pollution - 1
+self.lakes[#self.lakes + 1] = lake
+return lake
 end
 
 function level:addNuage(x, y, z, flock)
@@ -827,12 +863,20 @@ end
 
 ------------------------------------------------------------------------------
 function level:draw()
+
+  local animationBattleAnim = self.animationBattleAnim
   
   if self.level_map then self.level_map:draw() end
   
   
   for _,shard_set in pairs(self.shard_sets) do
     shard_set:draw_ground_layer()
+  end
+  
+   for i=1,#self.bushs do
+    if self.bushs[i] ~= nil then
+		self.bushs[i]:draw()
+	end
   end
   
   self.camera:set()
@@ -861,12 +905,6 @@ function level:draw()
   local treeSelect = self.treeSelect
   lg.setColor(255, 255, 255, 255)
   
-  
-  for i=1,#self.bushs do
-    if self.bushs[i] ~= nil then
-		self.bushs[i]:draw()
-	end
-  end
    
   for i=1,#self.trees do
     if self.trees[i] ~= nil then
@@ -874,11 +912,11 @@ function level:draw()
 	end
   end
   
-  for i=1,#self.emitters do
+  --[[for i=1,#self.emitters do
     if self.emitters[i] ~= nil then
 		self.emitters[i]:draw()
 	end
-  end
+  end--]]
   
   for i=1,#self.nuages do
     if self.nuages[i] ~= nil then

@@ -192,6 +192,7 @@ function tw:add_wood(wood)
 	local chunkWood = love.graphics.newImage("images/env/wood_chunk.png")
     table.insert(self.chunkWoods, chunkWood)
 	print('+++++++ADD WOOD')
+	print(wood)
 end
 
 function tw:get_wood()
@@ -269,8 +270,12 @@ function tw:update(dt)
   self:_update_area(dt)
   self:_calculate_total_area()
   self:_update_polygonizer()
-  
-  self.animations[1].currentTime = 0
+  local chunkWoods = self.chunkWoods
+  if #chunkWoods < 6 then
+	self.animations[1].currentTime = 0
+  else
+	self.animations[1].currentTime = 1
+  end
   
 end
 
@@ -293,7 +298,7 @@ function tw:draw()
     local sr = s.starting_radius
     local r = s.radius
     local pct = math.floor(((r * r) / (sr * sr)) * 100)
-    lg.print(pct.."%", s.x, s.y)
+    --lg.print(pct.."%", s.x, s.y)
 	
 	for i=1,#chunkWoods do
 		if i<4 then

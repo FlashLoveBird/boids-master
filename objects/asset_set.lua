@@ -323,7 +323,7 @@ function as:draw()
   lg.setColor(0, 255, 0, 255)
   local x, y = 40, 40
   
-  lg.setFont(courier_small)
+  lg.setFont(FONTS.rubik)
   lg.print("time_loading: "..tostring(math.floor(self.time_loading*100)/100), x, y)
   y = y + 20
   lg.print("assets_loaded: "..tostring(self.assets_loaded), x, y)

@@ -465,7 +465,7 @@ function collider:get_objects_at_position(p, storage)
   return storage
 end
 
-function collider:get_objects_at_bbox(bbox, storage)
+function collider:get_objects_at_bbox(bbox, storage, withoutHero)
 	local p1x, p1y = bbox.x, bbox.y
 	local p2x, p2y = p1x + bbox.width, p1y + bbox.height
 	
@@ -511,16 +511,29 @@ function collider:get_objects_at_bbox(bbox, storage)
 	  for _,v in pairs(cell.contents) do
       local obj = self.objects[v]
       
-      if obj.table == MAP_POINT and bbox:contains_point(obj.cdata[self]) then
-        objects[idx] = obj.cdata[self].parent
-        idx = idx + 1
-      elseif obj.table == BBOX and bbox ~= obj and bbox:intersects(obj) then
-        if  not added[obj] then
-          objects[idx] = obj.cdata[self].parent
-          idx = idx + 1
-          added[obj] = true
-        end
-      end
+	  if withoutHero == true then
+		  if obj.table == MAP_POINT and bbox:contains_point(obj.cdata[self]) and obj.cdata[self].parent.boidType~=10 then
+			objects[idx] = obj.cdata[self].parent
+			idx = idx + 1
+		  elseif obj.table == BBOX and bbox ~= obj and bbox:intersects(obj) and obj.cdata[self].parent.boidType~=10 then
+			if  not added[obj] then
+			  objects[idx] = obj.cdata[self].parent
+			  idx = idx + 1
+			  added[obj] = true
+			end
+		  end
+	  else
+		 if obj.table == MAP_POINT and bbox:contains_point(obj.cdata[self]) then
+			objects[idx] = obj.cdata[self].parent
+			idx = idx + 1
+		  elseif obj.table == BBOX and bbox ~= obj and bbox:intersects(obj) then
+			if  not added[obj] then
+			  objects[idx] = obj.cdata[self].parent
+			  idx = idx + 1
+			  added[obj] = true
+			end
+		  end
+	  end
 
 		end
 	end
@@ -553,7 +566,9 @@ end
 -- returns cell containing world point x, y
 function collider:get_cell(x, y)
 	local i, j = self:get_cell_index(x, y)
-	return self.cells[j][i]
+	if self.cells[j][i] then
+		return self.cells[j][i]
+	end
 end
 
 ------------------------------------------------------------------------------

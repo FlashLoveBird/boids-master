@@ -307,6 +307,10 @@ function tile_chunk:update(dt)
   end
 end
 
+function tile_chunk:getPollution()
+	return self.animationPollution.currentTime
+end
+
 function tile_chunk:addPollution(pollution)
 	local i = self.animationPollution.currentTime - pollution
 	if i > -1 and i < 9 then

@@ -38,15 +38,12 @@ function bis:new(level, flock, index)
   bis.collision_table = {}
   bis.update_timer = timer:new(level:get_master_timer(), 1/bis.polygonizer_update_rate)
   bis.update_timer:start()
-  foodGraphic = love.graphics.newImage("images/env/seeds.png")
+  inkGraphic = love.graphics.newImage("images/ui/ink-source.png")
   bis:init(index)
   return bis
 end
 
 function bis:init(index)
-
-self.animationExtend = self:newAnimation(love.graphics.newImage("images/env/seeds.png"), 280, 249, 5)
-self.animationDecrease = self:newAnimation(love.graphics.newImage("images/env/seeds.png"), 280, 249, 5)
 self.index = index
 end
 
@@ -71,7 +68,7 @@ function bis:setFlock(flock)
 	self.flock = flock
 end
 
-function bis:add_food(x, y, radius)
+function bis:add_ink(x, y, radius)
   local p = self.level_map:add_point_to_source_polygonizer(x, y, radius)
   self.sources[#self.sources + 1] = self:_new_food_source(x, y, radius, p)
   self:_calculate_total_area()
@@ -159,6 +156,7 @@ function bis:_update_area(dt)
 		if #objects>0 then
 			local randomNb = 1--math.random(0,1000)
 			for i=1,#objects do
+			print('je detecte un objet')
 			  if not bhash[objects[i]] and objects[i].foodGrab<50 and objects[i].boidType~=10 then
 				count = count + 1
 				bhash[objects[i]] = true
@@ -194,28 +192,6 @@ function bis:_update_area(dt)
 			table.remove(self.sources, i)
 		  end
 		end
-		local animationExtend = self.animationExtend
-		local sr = s.starting_radius
-		local r = s.radius
-		local pct = math.floor(((r * r) / (sr * sr)) * 100)
-		
-		if pct > 80 then
-			animationExtend.currentTime = 4
-		elseif pct > 60 then
-			animationExtend.currentTime = 3
-		elseif pct > 40 then
-			animationExtend.currentTime = 2
-		elseif pct > 30 then
-			animationExtend.currentTime = 1
-		elseif pct > 20 then
-			animationExtend.currentTime = 0
-		elseif pct < 20 then
-			local index = self.index
-			self:force_polygonizer_update()
-			self.food = false
-			self.level_map:remove_primitive_from_source_polygonizer(s.primitive)
-			table.remove(self.sources, i)
-		end
 	end
 end
 
@@ -241,7 +217,7 @@ end
 
 ------------------------------------------------------------------------------
 function bis:draw(x, y)
-  if not self.debug then return end
+   if not self.debug then return end
   local sources = self.sources
   for i=1,#sources do
     local s = sources[i]    
@@ -249,14 +225,10 @@ function bis:draw(x, y)
     local r = s.radius
     local pct = math.floor(((r * r) / (sr * sr)) * 100)
 	lg.setColor(255, 255, 255, 255)
-	--love.graphics.draw(foodGraphic, x, y)
-    --lg.circle("line", x, y, s.radius)
-	--lg.print(pct.."%", x, y)
-	local animationExtend = self.animationExtend
-	local spriteNum = math.floor(animationExtend.currentTime / animationExtend.duration * #animationExtend.quads) + 1
-	love.graphics.draw(animationExtend.spriteSheet, animationExtend.quads[spriteNum], x+25, y)
+	love.graphics.draw(foodGraphic, s.x-x, s.y-y)
+    lg.circle("line", s.x-x, s.y-y, s.radius)
+	lg.print(pct.."%", s.x-x, s.y-y)
   end
-  
 end
 
 return bis

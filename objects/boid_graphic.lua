@@ -634,7 +634,7 @@ lg.line(p18.x + x, p18 .y + y, p1.x + x, p1.y + y)
   lg.setColor(c)
   --lg.setColor(self.color1,self.color2,self.color3,self.color4)
   --lg.polygon("fill", p1.x + x, p1.y + y, p2.x + x, p2.y + y, p3.x + x, p3.y + y)
-  lg.setColor(0, 0, 0, 1)
+  lg.setColor(255, 255, 255, 1)
   
   lg.polygon("fill", p4.x + x, p4.y + y, p5.x + x, p5.y + y, p6.x + x, p6.y + y, p7.x + x, p7.y + y, p8.x + x, p8.y + y, p9.x + x, p9.y + y, p10.x + x, p10.y + y, p11.x + x, p11.y + y, p12.x + x, p12.y + y, p13.x + x, p13.y + y, p14.x + x, p14.y + y, p15.x + x, p15.y + y, p16.x + x, p16.y + y, p17.x + x, p17.y + y, p18.x + x, p18.y + y)
   lg.setColor(255, 255, 255, 1)

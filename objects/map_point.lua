@@ -666,7 +666,7 @@ function map_point:update(dt)
 	if change_tile and next_pos.x<32000 and next_pos.y<32000 then --TODO : 8000 ? Rendre dynamique
 		local old_tile = self.tile
 		local new_tile = self:_get_tile(next_pos)
-		local c, n, p, off = self:_check_collision(old_tile, new_tile, self.pos, next_pos)
+		if old_tile then local c, n, p, off = self:_check_collision(old_tile, new_tile, self.pos, next_pos) end
 		if c then
 			self.collided = true
 			self.cnormal = n
@@ -1093,17 +1093,18 @@ function map_point:update_position(pos)
 	self.pos:clone(pos)
 	self.next_pos:clone(pos)
 	self.tile = self:_get_tile(pos)
- if self.tile.diagonal and not self.tile.diagonal.walkable then
-    self.on_diagonal = true
-    self.diagonal_case = self.tile.diagonal.direction
-  else
-    self.on_diagonal = false
-  end
-	
-	self.tile_offset = self:_get_tile_offset(pos)
-	self.open_tiles = self:_get_open_tiles(self.tile)
-	self.neighbours = self.tile.neighbours
-	self.is_current = true
+	if self.tile then
+		if self.tile.diagonal and not self.tile.diagonal.walkable then
+			self.on_diagonal = true
+			self.diagonal_case = self.tile.diagonal.direction
+		else
+			self.on_diagonal = false
+		end
+		self.tile_offset = self:_get_tile_offset(pos)
+		self.open_tiles = self:_get_open_tiles(self.tile)
+		self.neighbours = self.tile.neighbours
+		self.is_current = true
+	end
 end
 
 return map_point

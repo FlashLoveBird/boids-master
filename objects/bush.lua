@@ -163,13 +163,10 @@ local dt = dt / 5
 
 local emitFoodTime = self.emitFoodTime
 if not self.food_source:get_food() then
-	if self.emitFood == true and timeBigInspire==true then
-		--print(self.emitFoodTime)
-		self.emitFoodTime = emitFoodTime + dt * math.random(-1,2)
-		if self.emitFoodTime>3 then
-			self.emitFoodTime=0
-			self:emiterFood()
-		end
+	self.emitFoodTime = emitFoodTime + dt * math.random(-1,2)
+	if self.emitFoodTime>3 then
+		self.emitFoodTime=0
+		self:emiterFood()
 	end
 end
 
@@ -208,6 +205,7 @@ function bush:setNumEmits(num)
 end
 
 function bush:resetFood()
+	print('RESET FOOD---------------')
 	self.emitFood = true
 	self:setGrow()
 end
@@ -225,10 +223,7 @@ function bush:getTree()
 end
 
 function bush:setGrow()
-	self.emitFoodTime = 1
-	print('----------------------REGARDE ICI')
-	print(self.emitFoodTime)
-	print(self.name)
+	self.emitFoodTime = 0
 end
 
 function bush:getGrow()
