@@ -156,7 +156,6 @@ function bis:_update_area(dt)
 		if #objects>0 then
 			local randomNb = 1--math.random(0,1000)
 			for i=1,#objects do
-			print('je detecte un objet')
 			  if not bhash[objects[i]] and objects[i].foodGrab<50 and objects[i].boidType~=10 then
 				count = count + 1
 				bhash[objects[i]] = true

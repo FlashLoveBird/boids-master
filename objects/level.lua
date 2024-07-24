@@ -216,9 +216,6 @@ function level:addHome(x,y,width,height,depth,flock,level,nbEggs, boidType)
 	local i = #self.emitters + 1
 	local y = y + 165
 	
-	print('AJOUT DUN OEUF EN DEBUT DE CHAINE en ')
-    print(x, y ,z)
-	
 	local emitter = boid_emitter:new(lvl, flock, x, y, z, dx, dy, dz, r, nbEggs, boidType, nil, i)
 	emitter:set_dead_zone( 0, 4000, 3000, 100)
 	emitter:set_type("boid")
@@ -628,11 +625,12 @@ print('mon index est')
 print(i)
 local indexTree = i
 
-table.remove(self.emitters, indexEmit)
+--table.remove(self.emitters, indexEmit)
 self.nbTree = self.nbTree - 1
 self.treeMap[x][y] = nil
-table.remove(self.trees, indexTree)
---self.trees[i] = nil
+--table.remove(self.trees, indexTree)
+self.trees[i] = nil
+self.emitters[i] = nil
 --self.treeMap[x][y]= te
 self.pollution = self.pollution + 1
 end
@@ -656,8 +654,6 @@ local animationBushExpire = self:newAnimation(imageAnimationBushExpire, 529, 373
 local animationBushBirth = self:newAnimation(imageAnimationBushBirth, 453, 371, 5)
 local animationBigBushInspire = self:newAnimation(imageAnimationBigBushInspire, 529, 373, 2)
 local animationBigBushExpire = self:newAnimation(imageAnimationBigBushExpire, 529, 373, 2)
-print('treeeeemap')
-print(x,y)
 local bu = boush:new(self,#self.bushs + 1,flock,animationBushInspire,animationBushExpire,animationBushBirth,animationBigBushInspire,animationBigBushExpire)
 self.treeMap[x][y]=bu
 self.pollution = self.pollution - 1
@@ -666,8 +662,6 @@ return bu
 end
 
 function level:addLake(x,y,flock)
-print('treeeeemap')
-print(x,y)
 local lake = lake:new(self,#self.lakes + 1,flock)
 self.treeMap[x][y]=lake
 self.pollution = self.pollution - 1
@@ -711,9 +705,7 @@ function level:keyreleased(key)
 end
 
 function level:mousereleased(x, y, button)
-	print('bah ?')
   if self.mouse then
-	print('bah ? Oui ?')
     self.mouse:mousereleased(x, y, button)
   end
 end
@@ -762,6 +754,7 @@ end
 
 ------------------------------------------------------------------------------
 function level:update(dt)
+
   self.master_timer:update(dt)
   if self.hero then
     self.hero:update(dt)
@@ -839,9 +832,9 @@ function level:update(dt)
   local bushs = self.bushs
 
   if #bushs>0 then
-		for i=#bushs,1,-1 do
+		for i=1,#self.bushs do
 			if self.bushs[i] ~= nil then
-				self.bushs[i]:update(dt/10)
+				self.bushs[i]:update(dt)
 			end
 		end
 	end

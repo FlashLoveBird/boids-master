@@ -565,6 +565,7 @@ function pg:draw(x, y)
   local p1, p2, p3,p4, p5, p6,p7, p8, p9,p10, p11, p12,p13, p14, p15, p16, p17, p18, p19, p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31 = self.draw_points[1], self.draw_points[2], self.draw_points[3], self.draw_points[4], self.draw_points[5], self.draw_points[6],self.draw_points[7], self.draw_points[8], self.draw_points[9],self.draw_points[10], self.draw_points[11], self.draw_points[12],self.draw_points[13], self.draw_points[14], self.draw_points[15],self.draw_points[16], self.draw_points[17], self.draw_points[18],self.draw_points[19],self.draw_points[20],self.draw_points[21],self.draw_points[22],self.draw_points[23],self.draw_points[24],self.draw_points[25],self.draw_points[26],self.draw_points[27],self.draw_points[28],self.draw_points[29],self.draw_points[30],self.draw_points[31]
   if inPause then
 	lg.setColor(255, 255, 255, 1)
+	print('probleme ici oui')
 	lg.draw(self.pause, p1.x + x, p1.y + y)
   return end
   

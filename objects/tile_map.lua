@@ -94,8 +94,8 @@ tile_map.countTree=0
 
 tile_map.mapSave = nil
 
-local nbTree = 50
-local nbBush = 50
+local nbTree = 0
+local nbBush = 0
 
 tile_map.graph1 = love.graphics.newImage("images/env/nature-1.png")
 tile_map.graph2 = love.graphics.newImage("images/env/nature-2.png")
@@ -949,7 +949,7 @@ function tile_map:_generate_chunk(i, j)
 		  
 			local newX = x
 			local newY = y
-			if x > 40 and x<360 and y > 40 and y<360 and countTree<nbTree and element==false and self.level:canILandHere(newX,newY,20)==true and math.random(1,5500)==1 then
+			if x > 40 and x<360 and y > 40 and y<360 and countTree<nbTree and element==false and self.level:canILandHere(newX,newY,20)==true and math.random(1,1000)==1 then
 				map[newX][newY] = self.level:addTree(newX,newY)
 				map[newX][newY]:add(nil)
 				map[newX][newY]:setNumEmits(0)

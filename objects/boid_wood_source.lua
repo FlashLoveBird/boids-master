@@ -32,8 +32,6 @@ function bws:new(level, flock ,treeParent, index)
   local bws = setmetatable({}, bws_mt)
   bws.level = level
   bws.level_map = level:get_level_map()
-  print('nouveau init bois')
-  print(flock)
   bws.flock = flock
   bws.sources = {}
   bws.boid_hash = {}

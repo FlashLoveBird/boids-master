@@ -125,6 +125,7 @@ function food_menu_state.load(level)
   parametre.currentTime = 0
   creditsFR.currentTime = 0  
   creditsEN.currentTime = 0  
+  
 end
 
 

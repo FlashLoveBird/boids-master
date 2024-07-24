@@ -67,6 +67,7 @@ hero.temp_vector = nil
 hero.stateGrab = false
 hero.canStateGrab = false
 hero.getOut = false
+hero.waypoint = nil
 
 local hero_mt = { __index = hero }
 function hero:new(level, flock, x, y)
@@ -185,6 +186,24 @@ function hero:init(level, flock, x, y)
 	
 	self.boidType=10
 	
+	self:_init_waypoint()
+	
+end
+
+function hero:_init_waypoint()
+  local waypoint = {}
+  waypoint.is_active = false
+  waypoint.x = 0
+  waypoint.y = 0
+  waypoint.z = 0
+  waypoint.inner_radius = 0
+  waypoint.outer_radius = 0
+  waypoint._default_inner_radius = 100
+  waypoint._default_outer_radius = 101
+  waypoint._min_power = 0.5
+  waypoint._max_power = 1
+  self.waypoint = waypoint
+  self.waypointPoint = love.graphics.newImage("images/ui/cible.png")
 end
 
 function hero:set_run(param)
@@ -353,6 +372,7 @@ function hero:update(dt)
 		dt = dt
 		self:_update_map_point(dt)
 		self:_update_boid_life(dt)
+		self:_update_waypoint_rule(dt/50)
 		local action = self.action
 		local launch = self.launch
 		local breathing = self.breathing
@@ -442,7 +462,7 @@ function hero:update(dt)
 	
 	if #balls>0 then
 		for i=1,#balls do
-			self.balls[i] = self.balls[i] + 0.02
+			self.balls[i] = self.balls[i] + 0.04
 			if balls[i] > 0.99 and self.activeBlast[i]==false then
 				self.balls[i] = 0
 				self.activeBlast[i]=true
@@ -744,12 +764,28 @@ function hero:getObjectiv()
   return "fly"
 end
 
-function hero:set_waypoint()
+function hero:set_waypoint(x, y, z, inner_radius, outer_radius)
+  if inner_radius and outer_radius and inner_radius <= outer_radius then
+  else
+	inner_radius = self.waypoint._default_inner_radius
+	outer_radius = self.waypoint._default_outer_radius
+  end
 
+  z = z or 0.5 * self.flock.bbox.depth
+  local w = self.waypoint
+  w.x, w.y, w.z = x, y, z
+  w.inner_radius, w.outer_radius = inner_radius, outer_radius
+  w.is_active = true
 end
 
 function hero:unObstacleMe()
+   self.obstacle = true
+   self.rule_weights[self.obstacle_vector] = 0
+end
 
+function hero:obstacle()
+   self.obstacle = false
+   self.rule_weights[self.obstacle_vector] = 3000
 end
 
 function hero:setObjectiv()
@@ -822,7 +858,7 @@ if self.breathing then
 					maxI = #objects
 				end
 				for i=1,maxI do
-					if objects[i].boidType == 1 then
+					if objects[i].boidType == 2 then
 						local boid = objects[i]
 						boid:goHero()
 						self.boidsIn = true
@@ -960,6 +996,134 @@ function hero:setRandomPoints(mx, my, element)
 		--state.level:setTreeMap(map)
 	end
 
+end
+
+function hero:_update_waypoint_rule()
+  --debugText = tostring(self.waypoint.is_active)
+  if not self.waypoint.is_active then return end
+
+  local p = self.position
+  local w = self.waypoint
+  local wv = self.waypoint_vector
+  local objectiv = self.objectiv
+  local dx, dy, dz = w.x - p.x, w.y - p.y, w.z - p.z
+  local dist = math.sqrt(dx*dx + dy*dy + dz*dz)
+  local waypoinTimeLocal = self.waypointTime
+  local inHome = self.inHome
+  local level = self.level
+  local is_initialized = self.is_initialized
+  local seeker = self.seeker
+  local flock = self.flock
+  local searchObjRad = self.searchObjRad
+  local battle = self.battle
+  
+  local min, max = w._min_power, w._max_power
+  local power = 1
+  if dist < w.outer_radius+100 and battle == false then
+	self:clear_waypoint()
+    local prog = (dist - w.inner_radius) / (w.outer_radius - w.inner_radius)
+    power = min + prog * (max - min)
+	if objectiv == "constructNewHome" then 
+		self.countPath = 1
+		self.needHome = false
+		self.objectiv = "fly"
+		self.woodGrab = 0
+		self.waterGrab = 0
+		if self.emit then
+			self.emit:remove_boid(self)
+		end
+		if self.level.treeMap[self.caseNewTreeX][self.caseNewTreeY] then
+			if self.level.treeMap[self.caseNewTreeX][self.caseNewTreeY].table == "tree" then
+				if self.level.treeMap[self.caseNewTreeX][self.caseNewTreeY]:getNumEmits() == 0 then
+					local emit = self.level:addHome(self.caseNewTreeX*32-25,self.caseNewTreeY*32-55,100,0,0,flock,level,1)
+					self:set_emit_parent(emit)
+					self.myIdTable = 1
+					local i = self.level:get_nb_home() + 1
+					--self:setHome(true)
+					self.level.treeMap[self.caseNewTreeX][self.caseNewTreeY]:add(emit, i)
+					self.level.treeMap[self.caseNewTreeX][self.caseNewTreeY]:setNumEmits(1)
+					self.originX,self.originY,self.originZ = self.caseNewTreeX*32,self.caseNewTreeY*32,100
+					self.emit:add_boid(self)
+					self.free=false
+					self.path=nil
+					self.free=false
+				else
+					local emit = self.level.treeMap[self.caseNewTreeX][self.caseNewTreeY]:getEmit()
+					if emit:getEgg() < 4 then
+						emit:addEgg(1)
+					else
+						self:setObjectiv("fly")
+					end
+				end
+			end
+		else
+			self:setObjectiv("fly")
+		end
+		local timeLoc = self.level.master_timer:get_time()
+		if timeLoc>41 and timeLoc<101 then
+			self:setHome(true)
+			self:deactivate()
+			self:set_position(self.originX,self.originY,self.originZ)
+			self:setObjectiv("sleep")
+			self.path=nil
+		else
+			self:setObjectiv("fly")
+		end
+		--self.emit:try_egg();
+		
+	elseif objectiv == "seekHome" then 
+		self:seekHome(200)
+	elseif objectiv == "goOnSeekHome" then
+		self:seekHome(searchObjRad)
+	elseif objectiv == "goOnSeekFood" then 
+		self:seekFood(searchObjRad)
+	elseif objectiv == "goOnSeekWood" then 
+		self:seekWood(searchObjRad)
+	elseif objectiv == "goOnHero" then 
+		self:goHero()
+	elseif objectiv == "goHero" then 
+		self.objectiv = "fly"
+	elseif objectiv == "goFloor" then 
+		self:deactivate()
+		self.inHome = false
+		self.countPath = 1
+		--self.objectiv = "fly"
+	elseif objectiv == "goOnHome" then 
+		self:goHome()
+	elseif objectiv == "goOnSeekTree" then 
+		self:seekTreeFroSleep(searchObjRad)
+	elseif objectiv == "goOnHomeWith" then
+		self:goOnHomeWith()
+	elseif objectiv == "goOut" then
+		self:setObjectiv("fly")
+		self.rule_weights[self.obstacle_vector] = 8
+	elseif objectiv == "goConstructHomeWith" then
+		self:goConstructHomeWith()
+	end
+	
+	--elseif objectiv == "goHome" and inHome==false then
+		--self.rule_weights[self.separation_vector] = 0.6
+		--self:goHome()		
+	--elseif objectiv == "goHomewithFood" and inHome==false then
+		--self:setHome(false)
+		--self:set_position(self.originX,self.originY,self.originZ)
+		--seeker:set_velocity({x = 0, y = 0, z = 0})
+		--level:addFood(foodGrab)
+		--self:minusFood(foodGrab)
+		--self:deactivate()
+		--self:setObjectiv("sleep")
+	--elseif objectiv == "goHero" then
+		--self.rule_weights[self.separation_vector] = 0.6
+		--self:goHero()
+	--elseif objectiv == "goHome" and inHome==true then
+		--self.path = nil
+	--self:clear_waypoint()	
+  elseif dist < w.outer_radius+50 and battle == true then
+	self.is_initialized=false
+	self.humanBattle:prepareBattle(self)
+  end
+  local factor = (1 / dist) * power
+  wv.x, wv.y, wv.z = dx * factor * power, dy * factor * power, dz * factor * power
 end
 
 function hero:draw_debug()

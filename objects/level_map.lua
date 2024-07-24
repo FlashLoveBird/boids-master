@@ -222,8 +222,6 @@ function level_map:add_point_to_polygonizer(x, y, radius)
   if map then
 	map[caseX][caseY]=false
 	self.map = map
-	print('jajoute bien un mur en ')
-	print(caseX,caseY)
   end
   return p
 end
@@ -367,7 +365,6 @@ function level_map:update_polygonizer()
   self:_reset_edited_tiles(self.polygonizer_edited_tiles)
   self:_update_polygonizer_field_values()
   self:_update_polygonizer_surface_tiles()
-  print('tes appelé tt le temps ?')
 end
 
 --#############################################################################
@@ -380,6 +377,8 @@ function level_map:_init_source_polygonizer()
   self.source_polygonizer_edited_tiles = {}
   self.is_source_polygonizer_initialized = true
   
+  
+  print('init source ?????')
   
   --[[for x=50,Poly.rows-50 do
 	for y=50,Poly.cols-50 do
@@ -412,6 +411,8 @@ function level_map:set_source_polygonizer(tile_type, tile_gradient)
     print("ERROR in level_map:set_source_polygonizer() - missing tile_gradient")
     return
   end
+  
+  print('init source ?????')
   
   self:_init_source_polygonizer()
   self.source_polygonizer_tile_type = tile_type

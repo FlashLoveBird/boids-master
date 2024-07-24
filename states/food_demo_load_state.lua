@@ -110,7 +110,7 @@ function food_demo_load.pre_level_load(level)
   state.initialize_camera(level)
   state.initialize_audio(level)
   state.construct_level_map(level)
-  loaderImg = love.graphics.newImage("images/Jungle/menu/bg.jpeg")
+  loaderImg = love.graphics.newImage("images/chaine.jpg")
 end
 
 -- POST LEVEL LOAD FUNCTIONS
@@ -172,13 +172,15 @@ function food_demo_load.draw()
   local sx = SCR_WIDTH / width
   local sy = SCR_HEIGHT / height
   
-  love.graphics.setBackgroundColor(255, 255, 255, 255)
+  --love.graphics.setBackgroundColor(255, 255, 255, 1)
+  love.graphics.setColor(255, 255, 255, 1)
+  love.graphics.draw(loaderImg, SCR_WIDTH/2-width/2, 0, 0, math.min(sx,sy))
   love.graphics.setColor(0, 0, 0, 255)
-  --love.graphics.draw(loaderImg, SCR_WIDTH/2-width/2, 0, 0, math.min(sx,sy))
+  
   if LANGUE == "FR" then
-	love.graphics.print("Chargement...", SCR_WIDTH/2-300, SCR_HEIGHT/2)
+	love.graphics.print("Chargement...", SCR_WIDTH-600, SCR_HEIGHT-100)
   else
-	love.graphics.print("Loading...", SCR_WIDTH/2-300, SCR_HEIGHT/2)
+	love.graphics.print("Loading...", SCR_WIDTH-600, SCR_HEIGHT-100)
   end
 end
 

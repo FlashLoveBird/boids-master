@@ -54,13 +54,9 @@ function bush:new(level,i, flock,animationBushInspire,animationBushExpire,animat
   bush.level_map = level:get_level_map()
   bush.level = level
   bush.flock = flock
-  print("creation bush")
-  print(flock)
   bush:initGraphics(animationBushInspire,animationBushExpire,animationBushBirth,animationBigBushInspire,animationBigBushExpire)
   bush.food_source = boid_food_source:new(level, flock, self, 1)
   bush.name=i
-  print('MON NOM EST')
-  print(i)
   return bush
 end
 
@@ -108,8 +104,9 @@ local timeExpire = self.timeExpire
 local timeBigInspire = self.timeBigInspire
 local timeBigExpire = self.timeBigExpire
 local timeBirth = self.timeBirth
+local emitFood = self.emitFood
 
-local dt = dt * 10
+--local dt = dt * 10
 
 if timeInspire == true and timeBirth <= 100 then
 	animationInspire.currentTime = animationInspire.currentTime + dt
@@ -159,17 +156,17 @@ if timeBigExpire == true then
 	end
 end
 
-local dt = dt / 5
+
 
 local emitFoodTime = self.emitFoodTime
 if not self.food_source:get_food() then
-	self.emitFoodTime = emitFoodTime + dt * math.random(-1,2)
-	if self.emitFoodTime>3 then
-		self.emitFoodTime=0
+	self.emitFoodTime = emitFoodTime + dt * 100 --* math.random(-2,3)
+	if self.emitFoodTime>10 and emitFood == true  then
+		--self.emitFoodTime=0
 		self:emiterFood()
 	end
 end
-
+--local dt = dt / 100
 if self.food_source~=nil then
 	self.food_source:update(dt) --le probleme est avec la flock
 end
@@ -185,10 +182,11 @@ function bush:emiterFood()
 	self.xFood = xFood
 	self.yFood = yFood
 	--self.food_source = boid_food_source:new(level, flock, self)
-	local p = self.food_source:add_food(x*32, y*32, 200)
+	self.food_source:add_food(x*32, y*32, 200)
     --self.food_source:force_polygonizer_update()
 	self.emitFood = false
 	self.emitFoodTime=0
+	print("---ADD FOOD---")
 end
 
 function bush:setFlock(flock)
@@ -317,27 +315,27 @@ function bush:draw()
 	lg.setColor(255, 255, 255, 255)
 	if timeInspire==true then
 		local spriteNum = math.floor(animationInspire.currentTime / animationInspire.duration * #animationInspire.quads) + 1
-		love.graphics.draw(animationInspire.spriteSheet, animationInspire.quads[spriteNum], mx*2-100, my*2-100)
+		love.graphics.draw(animationInspire.spriteSheet, animationInspire.quads[spriteNum], mx*2-200, my*2-200)
 	elseif timeExpire==true then
 		local spriteNum = math.floor(animationExpire.currentTime / animationExpire.duration * #animationExpire.quads) + 1
-		love.graphics.draw(animationExpire.spriteSheet, animationExpire.quads[spriteNum], mx*2-100, my*2-100)
+		love.graphics.draw(animationExpire.spriteSheet, animationExpire.quads[spriteNum], mx*2-200, my*2-200)
 	elseif timeBirth > 100 and timeBigExpire==false and timeBigInspire==false then
 		
 		local spriteNum = math.floor(animationBirth.currentTime / animationBirth.duration * #animationBirth.quads) + 1
-		love.graphics.draw(animationBirth.spriteSheet, animationBirth.quads[spriteNum], mx*2-50, my*2-100)
+		love.graphics.draw(animationBirth.spriteSheet, animationBirth.quads[spriteNum], mx*2-200, my*2-200)
 	elseif timeBigInspire == true then
 		--local spriteNum = math.floor(animationOmbre.currentTime / animationOmbre.duration * #animationOmbre.quads) + 1
 		--love.graphics.draw(animationOmbre.spriteSheet, animationOmbre.quads[spriteNum], mx-225, my-tronc/2-35)
 		
 		local spriteNum = math.floor(animationBigTreeInspire.currentTime / animationBigTreeInspire.duration * #animationBigTreeInspire.quads) + 1
-		love.graphics.draw(animationBigTreeInspire.spriteSheet, animationBigTreeInspire.quads[spriteNum], mx*2-100, my*2-100)
+		love.graphics.draw(animationBigTreeInspire.spriteSheet, animationBigTreeInspire.quads[spriteNum], mx*2-200, my*2-200)
 	elseif timeBigExpire == true then
 		--local spriteNum = math.floor(animationOmbre.currentTime / animationOmbre.duration * #animationOmbre.quads) + 1
 		--love.graphics.draw(animationOmbre.spriteSheet, animationOmbre.quads[spriteNum], mx-225, my-tronc/2-35)
 		
 		
 		local spriteNum = math.floor(animationBigTreeExpire.currentTime / animationBigTreeExpire.duration * #animationBigTreeExpire.quads) + 1
-		love.graphics.draw(animationBigTreeExpire.spriteSheet, animationBigTreeExpire.quads[spriteNum], mx*2-100, my*2-100)
+		love.graphics.draw(animationBigTreeExpire.spriteSheet, animationBigTreeExpire.quads[spriteNum], mx*2-200, my*2-200)
 	end
 
 	if self.food_source then

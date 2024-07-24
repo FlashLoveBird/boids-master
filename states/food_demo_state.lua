@@ -442,7 +442,7 @@ end
 --##########################################################################--
 function food_demo_state.load(level)
   state.level = level
-  
+  love.window.setVSync( 2 )
   local tpad = 2
   local x, y = state.level.level_map.bbox.x + tpad * TILE_WIDTH, 
                state.level.level_map.bbox.y + tpad * TILE_HEIGHT
@@ -629,14 +629,14 @@ local target = vector2:new(1000, 1000)
 local cam = state.level:get_camera()
 
 if DIFFICULTY == "easy" then
-	for x=1, 1 do
-		human = state.flock:add_human()
+	for x=0, 1 do
+		--human = state.flock:add_human()
 	end
-	for i = 1, 100 do
-		state.flock:add_boid(math.random(500,12500), math.random(500,12500), 100, 10, 10, 10, true)
+	for i = 0, 1 do
+		state.flock:add_boid(math.random(2500,2700), math.random(2500,2700), 100, 10, 10, 10, true)
 	end
-	for i = 1, 50 do
-		state.flock:add_predator(math.random(500,12500), math.random(500,12500), 100, 10, 10, 10, true)
+	for i = 0, 0 do
+		--state.flock:add_predator(math.random(7000,12500), math.random(7000,12500), 100, 10, 10, 10, true)
 	end
 elseif DIFFICULTY == "moy" then
 	for x=1, 2 do
@@ -646,10 +646,10 @@ elseif DIFFICULTY == "moy" then
 		state.flock:add_boid(math.random(500,12500), math.random(500,12500), 100, 10, 10, 10, true)
 	end
 elseif DIFFICULTY == "hard" then
-	for x=1, 3 do
+	for x=1, 10 do
 		human = state.flock:add_human()
 	end
-	for i = 1, 20 do
+	for i = 1, 200 do
 		state.flock:add_boid(math.random(500,12500), math.random(500,12500), 100, 10, 10, 10, true)
 	end
 end
@@ -967,10 +967,10 @@ function food_demo_state.update(dt)
 			state.level.master_timer:start()
 	  end
 	dt = math.min(dt, 1/20)
-	speed = 5
+	speed = 10
   elseif speedSpeed==2 then
 	dt = math.min(dt*5, 1/2)
-	speed = 10
+	speed = 20
   end
   
   if src1:isPlaying()==false and src2:isPlaying()==false and src3:isPlaying()==false and MUSIC == 1 then
@@ -1032,7 +1032,7 @@ function food_demo_state.update(dt)
 		  target.x, target.y = target.x + tx, target.y + ty
 		  
 		  local block = state.hero:canIGoHere(target)
-		  if target.x>vx/2+200 and target.y>vy/2+200 and target.x<ACTIVE_AREA_WIDTH-vx/2-200 and target.y<ACTIVE_AREA_HEIGHT-vy/2-200 and block==false then
+		  if target.x>vx/2+300 and target.y>vy/2+300 and target.x<ACTIVE_AREA_WIDTH-vx/2-300 and target.y<ACTIVE_AREA_HEIGHT-vy/2-300 and block==false then
 			state.hero:set_position(target,true)
 			local w, h = lg.getDimensions()
 			state.hero:set_target(target.x, target.y)
@@ -1140,7 +1140,7 @@ function food_demo_state.update(dt)
 	  elseif local_time>1 and local_time<24 then
 		journeyTime = "MATIN"
 		state.call=0
-		love.audio.stop(music_2)
+		--love.audio.stop(music_2)
 		local_time_color = local_time_color * 5
 		--newLightWorld:SetColor(local_time_color, local_time_color, local_time_color)
 		--love.audio.play(music)
@@ -1391,8 +1391,8 @@ function food_demo_state.draw()
   if firstDance == false then
 	  lg.draw(showEmoteCriImg, actionX+950, actionY+250)
 	  lg.setColor(0, 0, 0, 255)
-	  lg.setFont(FONTS.rubik)
-	  lg.print("Get out !", actionX+1100, actionY+330)
+	  lg.setFont(FONTS.rubikMed)
+	  lg.print("Get out !", actionX+1100, actionY+350)
   end
   if firstDance == false then return end
   

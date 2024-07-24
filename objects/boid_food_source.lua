@@ -20,6 +20,7 @@ bfs.boid_hash = nil
 bfs.collision_table = nil
 bfs.polygonizer_update_rate = 1.5   -- updates per second
 bfs.min_radius = 20
+bfs.max_radius = 100
 bfs.bushParent = nil
 bfs.food = nil
 bfs.animationExtend = nil
@@ -75,7 +76,8 @@ end
 
 function bfs:add_food(x, y, radius)
   local p = self.level_map:add_point_to_source_polygonizer(x, y, radius)
-  self.sources[#self.sources + 1] = self:_new_food_source(x, y, radius, p)
+  local new_food_source = self:_new_food_source(x, y, radius, p)
+  table.insert(self.sources, new_food_source)
   self:_calculate_total_area()
   self.food = true
   return p
@@ -120,7 +122,16 @@ function bfs:_new_food_source(x, y, radius, primitive)
 end
 
 function bfs:get_food()
-  return self.food
+  local source = self.sources[1]
+  if source~=nil then
+	  if source.radius > 20 then
+		return true
+	  else
+		return false
+	  end
+  else
+	return false
+  end
 end
 
 -- for fairness when attaching boids to a food source
@@ -156,12 +167,12 @@ function bfs:_update_area(dt)
 		local s = sources[1]
 		local r = s.radius
 		table.clear(objects)
-		self.flock:get_boids_in_radius(s.x, s.y, r, objects)
+		self.flock:get_boids_in_radius(s.x, s.y, r + 5, objects)
 		local count = 0 
 		if #objects>0 then
 			local randomNb = 1--math.random(0,1000)
 			for i=1,#objects do
-			  if not bhash[objects[i]] and objects[i].foodGrab<50 and objects[i].boidType~=10 then
+			  if not bhash[objects[i]] and objects[i].foodGrab<50 and objects[i].boidType~=10 and objects[i].boidType~=2 and r > 40 then
 				count = count + 1
 				bhash[objects[i]] = true
 				objects[i]:grabFood(self.depletion_rate * 10 * dt)
@@ -184,17 +195,20 @@ function bfs:_update_area(dt)
 		end
 		
 		local units_eaten = self.depletion_rate * count * dt
+		local new_radius = s.radius
 		if units_eaten > 0 and s.primitive ~= nil then
 		  local new_area = math.pi * r * r - units_eaten
 		  new_radius = math.sqrt(new_area / math.pi)
 		  new_radius = math.max(new_radius, 0)
 		  s.radius = new_radius or 1
 		  s.primitive:set_radius(new_radius)
-		  
-		  if new_radius< self.min_radius then
-			self.level_map:remove_primitive_from_source_polygonizer(s.primitive)
-			table.remove(self.sources, i)
-		  end
+		end
+		if new_radius < 200 then
+			--self.level_map:remove_primitive_from_source_polygonizer(s.primitive)
+			--table.remove(self.sources, i)
+			new_radius = s.radius + 0.1
+		    s.primitive:set_radius(new_radius)
+			s.radius = new_radius
 		end
 		local animationExtend = self.animationExtend
 		local sr = s.starting_radius
@@ -213,11 +227,12 @@ function bfs:_update_area(dt)
 			animationExtend.currentTime = 0
 		elseif pct < 20 then
 			local index = self.index
-			self:force_polygonizer_update()
-			self.bushParent:resetFood()
-			self.food = false
-			self.level_map:remove_primitive_from_source_polygonizer(s.primitive)
-			table.remove(self.sources, i)
+			animationExtend.currentTime = nil
+			--self:force_polygonizer_update()
+			--self.bushParent:resetFood()
+			--self.food = false
+			--self.level_map:remove_primitive_from_source_polygonizer(s.primitive)
+			--table.remove(self.sources, i)
 		end
 	end
 end
@@ -253,11 +268,13 @@ function bfs:draw(x, y)
     local pct = math.floor(((r * r) / (sr * sr)) * 100)
 	lg.setColor(255, 255, 255, 255)
 	--love.graphics.draw(foodGraphic, x, y)
-    --lg.circle("line", x, y, s.radius)
-	--lg.print(pct.."%", x, y)
+    lg.circle("line", x, y, s.radius)
+	lg.print(pct.."%", x, y)
 	local animationExtend = self.animationExtend
-	local spriteNum = math.floor(animationExtend.currentTime / animationExtend.duration * #animationExtend.quads) + 1
-	love.graphics.draw(animationExtend.spriteSheet, animationExtend.quads[spriteNum], x+25, y)
+	if animationExtend.currentTime then
+		local spriteNum = math.floor(animationExtend.currentTime / animationExtend.duration * #animationExtend.quads) + 1
+		love.graphics.draw(animationExtend.spriteSheet, animationExtend.quads[spriteNum], x-80, y-110)
+	end
   end
   
 end

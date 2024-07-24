@@ -1,5 +1,5 @@
 local vector3 = require("vector3")
-local profile = require( "profile" )
+--local profiler = require( "profile" )
 local Vector = require( "vector" )
 local Luafinding = require( "luafinding" )
 local namegen = require("namegen")
@@ -236,9 +236,8 @@ function bd:init(level, parent_flock, x, y, z, dirx, diry, dirz, free, sing1, si
     print("Error in boid:init() - missing parameter")
     return
   end
-  
-  love.profiler = require("profile") 
-  --love.profiler.start()
+  love.profiler = require('profile')
+  love.profiler.start()
   --if not parent_flock:contains_point(x, y, z) then
    -- print("Error in boid:init() - point outside of flock region")
     --return
@@ -660,6 +659,7 @@ function bd:_update_neighbours_in_view()
 		   vel.z = vel.z*1.3
 		   self:set_velocity(vel)
 		   self.predatorInView=true
+		   self.rule_weights[self.separation_vector] = 3000000
 		elseif b.boidType==5 then
 			
 		end
@@ -758,7 +758,7 @@ function bd:_update_separation_rule(dt)
 		  count = count + 1
 		end
 	elseif boidType==4 then
-		print('je croise un truc')
+		
 	end
   end
   
@@ -1042,12 +1042,10 @@ function bd:_update_waypoint_rule()
 					self.free=false
 					self.path=nil
 					self.free=false
-					print('AJOUT DUN NID avec un OEUF')
 				else
 					local emit = self.level.treeMap[self.caseNewTreeX][self.caseNewTreeY]:getEmit()
 					if emit:getEgg() < 4 then
 						emit:addEgg(1)
-						print('AJOUT DUN OEUF')
 					else
 						self:setObjectiv("fly")
 					end
@@ -1118,7 +1116,6 @@ function bd:_update_waypoint_rule()
   elseif dist < w.outer_radius+50 and battle == true then
 	self.is_initialized=false
 	self.humanBattle:prepareBattle(self)
-	print('go dormir dans la batayille++++++++++++++')
   end
   local factor = (1 / dist) * power
   wv.x, wv.y, wv.z = dx * factor * power, dy * factor * power, dz * factor * power
@@ -1255,9 +1252,9 @@ function bd:_update_rules(dt)
   --self:draw_debug()
   
  --generates a report every 100 frames
-love.frame = love.frame + 1
---if love.frame%50 == 0 then
-  --love.report = love.profiler.report(50)
+--love.frame = love.frame + 1
+--if love.frame%100 == 0 then
+  --love.report = love.profiler.report(20)
   --love.profiler.reset()
   --love.profiler.stop()
 --end
@@ -1335,57 +1332,6 @@ function bd:_update_boid_life(dt)
 			self.treeFound=nil
 		end
 	else
-		if needHome and active==false then
-			self:seekHome(searchObjRad)
-		end
-		if self.objectiv~="goFloor" then
-			if acc.x<0 then
-				acc.x = -acc.x
-			end
-			if acc.y<0 then
-				acc.y = -acc.y
-			end
-			if acc.z<0 then
-				acc.z = -acc.z
-			end
-			self.hunger = hunger - (((acc.x + acc.y + acc.z)*2-math.random(-2,0))*dt)/2
-			self.tired = tired - (((acc.x + acc.y + acc.z)*2-math.random(-1,0))*dt)
-			
-			
-			if self.lover and sex==false and seekingNid==false and needHome==false and math.random(1,10000)==1 and hadKid==false then
-				self:clear_waypoint()
-				self.path = nil
-				self:goConstructHomeWith()
-				print('je vais construire maison amour+++++++++++++')
-				self.seekingNid = true
-			end
-		else
-			if tired < 99 then
-				self.tired = tired + dt
-			else
-				self:activate()
-				self.path=nil
-				self.seeker:set_position(self.position.x+math.random(-10,10), self.position.y+math.random(-10,10), self.position.z+math.random(-10,10))
-				self:setObjectiv("fly")
-				print("GO VOLER !!")
-				self:setHome(false)
-				--self.body_graphic:set_color1(255)
-				--self.rule_weights[self.separation_vector] = 3
-				self.treeFound=nil
-			end
-			if hunger < 99 then
-				self.hunger = hunger + dt/4
-			else
-				self:activate()
-				self.path=nil
-				self.seeker:set_position(self.position.x+math.random(-10,10), self.position.y+math.random(-10,10), self.position.z+math.random(-10,10))
-				self:setObjectiv("fly")
-				self:setHome(false)
-				--self.body_graphic:set_color1(255)
-				--self.rule_weights[self.separation_vector] = 3
-				self.treeFound=nil
-			end
-		end
 		if hunger < 55 and foodGrab > 0 then 
 			self:feed(50)
 			self:minusFood(1)
@@ -1409,6 +1355,55 @@ function bd:_update_boid_life(dt)
 				self.emit:remove_boid(self)
 			end
 			flock:remove_boid(self)
+		end
+		if needHome and active==false then
+			self:seekHome(searchObjRad)
+		end
+		if self.objectiv~="goFloor" then
+			if acc.x<0 then
+				acc.x = -acc.x
+			end
+			if acc.y<0 then
+				acc.y = -acc.y
+			end
+			if acc.z<0 then
+				acc.z = -acc.z
+			end
+			self.hunger = hunger - (((acc.x + acc.y + acc.z)*2-math.random(-2,0))*dt)/2
+			self.tired = tired - (((acc.x + acc.y + acc.z)*2-math.random(-1,0))*dt)
+			
+			
+			if self.lover and sex==false and seekingNid==false and needHome==false and math.random(1,10000)==1 and hadKid==false then
+				self:clear_waypoint()
+				self.path = nil
+				self:goConstructHomeWith()
+				self.seekingNid = true
+			end
+		else
+			if tired < 99 then
+				self.tired = tired + dt
+			else
+				self:activate()
+				self.path=nil
+				self.seeker:set_position(self.position.x+math.random(-10,10), self.position.y+math.random(-10,10), self.position.z+math.random(-10,10))
+				self:setObjectiv("fly")
+				self:setHome(false)
+				--self.body_graphic:set_color1(255)
+				--self.rule_weights[self.separation_vector] = 3
+				self.treeFound=nil
+			end
+			if hunger < 99 then
+				self.hunger = hunger + dt/4
+			else
+				self:activate()
+				self.path=nil
+				self.seeker:set_position(self.position.x+math.random(-10,10), self.position.y+math.random(-10,10), self.position.z+math.random(-10,10))
+				self:setObjectiv("fly")
+				self:setHome(false)
+				--self.body_graphic:set_color1(255)
+				--self.rule_weights[self.separation_vector] = 3
+				self.treeFound=nil
+			end
 		end
 		if tired < 40 then 
 			if tired > 20 and math.random(1,300) == 3 and self.objectiv~="goFloor" then
@@ -1460,7 +1455,7 @@ function bd:_update_boid_life(dt)
 		
 		if predatorInView then
 			self.predatorInViewTime = predatorInViewTime + dt
-			if predatorInViewTime>10 then
+			if predatorInViewTime>5 then
 				self.predatorInView=false
 				self:set_emote("faceHappy")
 				local acc = self:get_acceleration()
@@ -1473,6 +1468,7 @@ function bd:_update_boid_life(dt)
 				vel.y = vel.y/3
 				vel.z = vel.z/3
 				self:set_velocity(vel)
+				self.rule_weights[self.separation_vector] = 3
 			end
 		end
 	end
@@ -1686,7 +1682,6 @@ function bd:prepareBattle(human)
 end
 
 function bd:deactivateBattle()
-	print('go retourner voler')
 	self.battle = false
 	self.humanBattle = nil
 	self.is_initialized = true
@@ -1790,6 +1785,7 @@ if self.treeFound==nil then
 									destinationX = math.floor(stepX/32)
 									destinationY = math.floor(stepY/32)
 									self.seekTree = mapTrees[stepX][stepY]:getTree()
+									self.seekTree:set_typeOfBoid("prey")
 								end
 							elseif mapTrees[stepX][stepY]:getNumEmits()>0 then
 								if mapTrees[stepX][stepY]:getState() == true and mapTrees[stepX][stepY]:getNumBoids()<20 and (mapTrees[stepX][stepY]:get_typeOfBoid()=="prey" or mapTrees[stepX][stepY]:get_typeOfBoid()=="") then
@@ -1809,6 +1805,18 @@ if self.treeFound==nil then
 		end
 	end
 end	
+
+if self.treeFound ~= nil then
+	if self.seekTree:get_typeOfBoid()=="predator" then
+		self.treeFound=nil
+		tree = nil
+		self.caseNewTreeX = nil
+		self.caseNewTreeY = nil
+		destinationX = nil
+		destinationY = nil
+		self.seekTree = nil
+	end
+end
 
 if self.treeFound ==nil and active==false then
 	local randX = math.random(-200,200)
@@ -1863,7 +1871,6 @@ if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 		self.countPath = countPath + 1
 	else
 		self.step = #self.path
-		print('tes bien ici installe')
 		if tree=="freeTree" then
 			if self.seekTree then
 				self:setNewHome()
@@ -1874,10 +1881,8 @@ if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 				self.treeFound = nil
 				self.homeTree = self.seekTree
 				self.seekTree:set_typeOfBoid("prey")
-				print('tes bien ici installe ?? preyyy')
 			else
 				self:setObjectiv("seekHome")
-				print('tes bien ici installe ??')
 			end
 		else
 			if self.seekTree:getNumBoids()<20 then
@@ -1888,7 +1893,6 @@ if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 				self.seekingHome = false
 				self.seekTree:set_typeOfBoid("prey")
 			else
-				print('tes bien ici installe+++')
 				local randX = math.random(-200,200)
 				local randY = math.random(-200,200)
 				if x+randX > 500 and x+randX < 12800 and y+randY > 500 and y+randY < 12800 then

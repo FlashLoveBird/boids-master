@@ -4,3 +4,13 @@
 252 243 500
 
 The Penguin Dance In Four Movements by Radioontheshelf (c) copyright 2022 Licensed under a Creative Commons Attribution Noncommercial  (3.0) license. http://dig.ccmixter.org/files/Radioontheshelf/65552 Ft: David Robinson
+
+Je ne vous secoue un peu, cher
+@Luc JACOB
+que parce que nous sommes tous, comme le relève souvent
+@Thomas Dylan
+pris dans un songe, comme dans une représentation. Nous avons été biberonnés à l'esprit de la machine, et elle nous souffle constamment à l'oreille des idées fausses. Ce n'est pas pour rendre le débat triste ou ennuyeux, mais je veux m'assurer que nous ne consentirons ici à aucun débat mainstream. Cherchons toujours la part caché, sinon, quelle serait la singularité de notre voix?
+
+
+
+copy /b "C:\Program Files\LOVE\love.exe"+"C:\Users\Dylan\Desktop\jeu EXE\main.love" main.exe (c'est envoyé dans user Dylan machin)

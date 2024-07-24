@@ -71,8 +71,6 @@ function tree:new(level,i,flock, x, y, animationTreeInspire,animationTreeExpire,
   troncImg = lg.newImage("images/home/tronc.png")
   tree.name = "Arbre"..i
   tree.index = i
-  print('Arbe ajoute')
-  print(tree.name)
   tree.life = 20
   tree.x = x
   tree.y = y
@@ -118,18 +116,18 @@ function tree:cutMe(value, human)
 	self.life = self.life - value
 	if self.life < 1 then
 		local emiter = self.emiter
-		print('la je suis bien la')
-		print(emiter)
 		if emiter~=nil then
 			emiter:removeAllBoid()
 			--table.remove(self.active_boids, i)
 			--self.emiter = nil
-			print('la je suis bien la')
 			self.emiter = nil
 		end
 		for x=1, #self.boids do
 			self.boids[x]:destructHome()
 		end
+		print('------DELETE TREE')
+		print(self.x)
+		print(self.y)
 		self.level:deleteTree(self.x, self.y, self.index, self.emiterIndex)
 		human.body_graphic:set_cutWood(false)
 		human.seekTree = nil

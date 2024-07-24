@@ -174,7 +174,6 @@ function fi:mousepressed(x, y, button)
   
   -- set waypoint for selected boids
   if button == 2 then
-	print('gogo mon poto-----------------')
     self:_set_waypoint_for_selected_boids(x, y)
   end
   
@@ -182,7 +181,6 @@ function fi:mousepressed(x, y, button)
 	if #self.buttonsSelected > 0 then
 		self.selectBoidsByPanel = false
 		self.buttonsSelected = {}
-		print('vider bouton---------------------------------------------------------------------------------')
 	end
   end
   
@@ -325,16 +323,16 @@ function fi:_set_waypoint_for_selected_boids(x, y)
 	  if count == 0 then return end
 	  z = z / count
 	  for _,b in pairs(self.selected_boids) do
-		if b.boidType==1 then
+		if b.boidType==2 then
 			b:set_waypoint(x,y, z , 25, 50)
 		end
 		if count > 0 then
-			local boids = self.flock:get_active_boids()
-			for i=1, #boids do
-				if boids[i].boidType==5 and boids[i].battle==false then
-					local mx, my , mz = boids[i]:get_position()
+			--local boids = self.selected_boids
+			for _,boids in pairs(self.selected_boids) do
+				if boids.boidType==5 and boids.battle==false and #self.selected_boids>5 then
+					local mx, my , mz = boids:get_position()
 					if mx>x-100 and mx<x+100 and my>y-100 and my<y+100 then
-						self:createBattle(self.selected_boids, boids[i])
+						self:createBattle(self.selected_boids, boids)
 					break
 					end
 				end
@@ -350,8 +348,8 @@ function fi:_set_waypoint_for_selected_boids(x, y)
 	  count = count + 1
 	  if count == 0 then return end
 	  z = z / count
-      if b.boidType==1 then
-	 	 b:set_waypoint(x, y, z)
+      if b.boidType==2 then
+	 	 b:set_waypoint(x, y, z , 25, 50)
 		end
   end
 end
@@ -603,7 +601,7 @@ function fi:_draw_selected_boids()
 				--lg.print("Pas de relation", tableX, tableY)
 		end
 		lg.setFont(FONTS.rubikMin)
-		if b.boidType == 1 then
+		if b.boidType == 52 then
 			lg.setColor(255, 255, 255, 255)
 			love.graphics.draw(bg, cam.pos.x+camWi-400, cam.pos.y+500)
 			love.graphics.draw(tableImg, cam.pos.x+camWi-350, cam.pos.y+520)
@@ -697,6 +695,7 @@ function fi:draw()
 		local hunger = math.floor(b.hunger)
 		local tired = math.floor(b.tired)
 		local social = math.floor(b.social)
+		b:draw_debug()
 		lg.setColor(255, 255, 255, 255)
 		love.graphics.draw(bg, cam.pos.x+camWi-400, cam.pos.y+200)
 		love.graphics.draw(tableImg, cam.pos.x+camWi-350, cam.pos.y+220)
@@ -771,7 +770,7 @@ function fi:draw()
 			--lg.print("Pas de relation", tableX, tableY)
 		end
 		lg.setFont(FONTS.rubikMin)
-		if b.boidType == 1 then
+		if b.boidType == 52 then
 			lg.setColor(255, 255, 255, 255)
 			love.graphics.draw(bg, cam.pos.x+camWi-400, cam.pos.y+500)
 			love.graphics.draw(tableImg, cam.pos.x+camWi-350, cam.pos.y+520)

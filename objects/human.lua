@@ -497,10 +497,12 @@ end
 function hu:unObstacleMe()
    self.obstacle = true
    self.rule_weights[self.obstacle_vector] = 0
+   print("degGAEGGEGGEGGEG")
 end
 
 function hu:obstacle()
-   self.rule_weights[self.obstacle_vector] = 3000
+   self.obstacle = false
+   self.rule_weights[self.obstacle_vector] = 8
 end
 
 function hu:set_direction(dx, dy, dz)
@@ -554,6 +556,9 @@ function hu:prepareBattle(boid)
 	self.waitForBattle = false
 	self.battleSound:play()
 	self.listOfBoidBattle[#self.listOfBoidBattle + 1] = boid
+	if self.seekTree then
+		self.seekTree:setState(true)
+	end
 end
 
 function hu:deactivate()
@@ -814,7 +819,6 @@ function hu:_update_separation_rule(dt)
 		  count = count + 1
 		end
 	elseif boidType==4 then
-		print('je croise un truc')
 	end
   end
   
@@ -958,8 +962,6 @@ function hu:setNewHome()
 	self.waterGrab = 0
 	--self:setHome(true)
 	self.originX,self.originY,self.originZ = self.caseNewTreeX*32,self.caseNewTreeY*32,100
-	print('self.originX,self.originY')
-	print(self.originX,self.originY)
 	if self.emit then
 		self.emit:remove_human(self)
 	end
@@ -1006,7 +1008,6 @@ function hu:_update_waypoint_rule()
 		self.objectiv = "fly"
 		self.woodGrab = 0
 		self.waterGrab = 0
-		print('Apres cosntruction')
 		if self.emit then
 			self.emit:remove_human(self)
 		end
@@ -1492,12 +1493,14 @@ function hu:_update_human_life(dt)
 	
 	
 	local timeToFinishBattle = self.timeToFinishBattle
-	if self.battle == true then
+	local battle = self.battle
+	if battle == true then
 		self.timeToFinishBattle = timeToFinishBattle + 1
+		print("Je vais me battre")
+		print(self.timeToFinishBattle)
 	else
 		self.timeToFinishBattle = 0
 	end
-	
 	if timeToFinishBattle > 1500 then
 		self.battle = false
 		if #self.listOfBoidBattle > 5 then
@@ -1622,8 +1625,6 @@ if inHome == false and active == false then
 	if self.path then
 		self:clear_waypoint()
 		local step = 1
-		print('#self.path')
-		print(#self.path)
 		if #self.path>10 then
 			self.rule_weights[self.waypoint_vector] = 1
 			--self:set_emote("sleep")
@@ -1690,7 +1691,6 @@ function hu:backHome()
 	end
 	self:clear_waypoint()
 	self.path = nil
-	print('videeee')
 end
 
 function hu:goConstructHomeWith()
@@ -1930,7 +1930,6 @@ if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 				self.path = nil
 				self.needHome = false
 				self.emit = self.seekTree
-				print('ON EST OU LA')
 			else
 				self:setObjectiv("seekHome")
 			end
@@ -1944,7 +1943,6 @@ if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 				self.path = nil
 				self.needHome = false
 				self.emit = self.seekTree
-				print('ON EST OU LA 2')
 			else
 				local randX = math.random(-300,300)
 				local randY = math.random(-300,300)
@@ -2123,46 +2121,19 @@ if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 		end
 	else
 		self.step = #self.path
-		if tree=="freeTree" then
-			if self.seekTree then
-				self:setObjectiv("cutTree")
-				self.countPath = 1
-				selfBody:set_cutWood(true)
-				love.audio.play(self.chop_sound)
-				self.treeFound = nil
-				self:set_position(destinationX*32+100, destinationY*32+200, 100)
-			else
-				self:setObjectiv("seekHome")
-			end
+		if self.seekTree then
+			self:setObjectiv("cutTree")
+			self.countPath = 1
+			selfBody:set_cutWood(true)
+			love.audio.play(self.chop_sound)
+			self.treeFound = nil
+			self:set_position(destinationX*32+100, destinationY*32+200, 100)
 		else
-			if self.seekTree then
-				self:setObjectiv("goSleep")
-				self.searchObjRad = 10
-				self.countPath = 1
-				selfBody:set_cutWood(true)
-				love.audio.play(self.chop_sound)
-				self:set_position(destinationX*32+100, destinationY*32+120, 100)
-			else
-				local randX = math.random(-300,300)
-				local randY = math.random(-300,300)
-				if x+randX > 500 and x+randX < 12800 and y+randY > 500 and y+randY < 12800 then
-					self.treeFound = nil
-					self:set_waypoint(x+randX, y+randY,z+math.random(50,100),50,100)
-					self:setObjectiv("goOnSeekTree")
-					self.searchObjRad = self.searchObjRad + 10
-				else
-					self.treeFound = nil
-					local randX = math.random(-10,10)
-					local randY = math.random(-10,10)
-					self:set_waypoint(x+randX, y+randY,z+math.random(50,100),50,100)
-					self:setObjectiv("goOnSeekTree")
-					self.searchObjRad = self.searchObjRad + 10
-				end
-			end
+			self:setObjectiv("goOnSeekTree")
+			local posX = math.floor( self.path[countPath].x * h ) + 1
+			local posY = math.floor( self.path[countPath].y * w ) + 1
+			self:set_waypoint(posX, posY,500,50,100)
 		end
-		local posX = math.floor( self.path[self.step].x * h ) + 1
-		local posY = math.floor( self.path[self.step].y * w ) + 1
-		self:set_waypoint(posX, posY,500,50,100)
 	end		
 end
 end
@@ -2518,7 +2489,7 @@ end
 
 function hu:update(dt)
     if not self.is_initialized and self.battle==true then
-		--self:_update_human_life(dt) 
+		self:_update_human_life(dt) 
 		local animationBattleAnim = self.animationBattleAnim
 		animationBattleAnim.currentTime = animationBattleAnim.currentTime + dt
 		if animationBattleAnim.currentTime >= animationBattleAnim.duration then
@@ -2655,7 +2626,7 @@ function hu:draw_debug()
   --self:_draw_debug_rule_vector(self.separation_vector, "Separation")
   --self:_draw_debug_rule_vector(self.boundary_vector, "Boundary")
   --self:_draw_debug_rule_vector(self.waypoint_vector, "Waypoint")
-  --self:_draw_debug_rule_vector(self.obstacle_vector, "Obstacle")
+  self:_draw_debug_rule_vector(self.obstacle_vector, "Obstacle")
   
   -- target
   --[[local t = self.target
@@ -2728,6 +2699,7 @@ function hu:draw()
   --self.animation:draw(x, y)
   
   lg.setColor(0, 100, 255, 255)
+  self:draw_debug()
   --print(love.report or "Please wait...")
   
   --lg.print(debugText, self.position.x, self.position.y)

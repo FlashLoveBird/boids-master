@@ -18,7 +18,7 @@ pd_sk.scale = 20     -- pixels / meter
 pd_sk.mass = 1
 pd_sk.inv_mass = 1 / pd_sk.mass
 
-pd_sk.max_speed = 1
+pd_sk.max_speed = 1.5
 pd_sk.max_force = 35
 
 pd_sk.current_angle = nil   -- angle on x,y plane

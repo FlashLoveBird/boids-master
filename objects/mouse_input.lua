@@ -87,14 +87,12 @@ end
 
 function mouse_input:mousepressed(x, y, button)
   --if button == 'l' then
-  print('press ? ?')
     self.left_pressed = true
     self.left_press_timer:start()
   --end
 end
 
 function mouse_input:mousereleased(x, y, button)
-  print('release ?')
   self.left_pressed = false
   self.left_press_timer:reset()
 end

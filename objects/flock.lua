@@ -132,6 +132,11 @@ function fk:set_camera_tracking_on()
   self.user_interface:set_camera_tracking_on()
 end
 
+function fk:resetBoids()
+	--serializedString = bitser.dumps(self.active_boids)
+	--self.active_boids = bitser.loads(serializedString)
+end
+
 function fk:add_boid(x, y, z, dirx, diry, dirz, free, gradient, speed)
   z = z or 0
   if not x or not y then
@@ -273,8 +278,7 @@ function fk:remove_all_boid()
 	  table.remove(self.active_boids, i)
 	  --self.active_boids[i] = nil
 	  self.level:setBoids(-1)
-      --
-  end
+  end  
 end
 
 function fk:remove_human(unBoid)
@@ -325,7 +329,7 @@ function fk:get_boids_in_radius(x, y, r, storage)
     local boid = storage[i]
     local p = boid.position
     local dx, dy, dz = p.x - x, p.y - y
-    if dx*dx + dy*dy > r * r or boid.boidType==2 then
+    if dx*dx + dy*dy > r * r then
       table.remove(storage, i)
     end
   end

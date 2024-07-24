@@ -54,15 +54,9 @@ function be:init(level, flock, x, y, z, dirx, diry, dirz, radius, nbEgg, boidTyp
 	vector3.set(self.direction, dirx, diry, dirz)
 	vector3.normalize(self.direction)
 	
-	print('AJOUT DUN OEUF EN MILIEU DE CHAINE en ')
-    print(x, y ,z)
-	  
 	self.active_boids = {}
 	self.eggs = {}
 	self.i = i
-	
-	print("Je suis l'emitter numero")
-	print(i)
 	  
 	  if level then
 		  local t = poisson_interval(self.rate)

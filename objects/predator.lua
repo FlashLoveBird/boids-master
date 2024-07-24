@@ -31,8 +31,8 @@ pd.min_roll_speed = 1
 pd.max_roll_speed = 10
 pd.min_scale = 0.5
 pd.max_scale = 1.3
-pd.field_of_view = 1.3 * math.pi
-pd.sight_radius = 200
+pd.field_of_view = 3 * math.pi
+pd.sight_radius = 400
 pd.separation_radius = 0.2 * pd.sight_radius
 pd.separation_predator_radius = 0.2 * pd.sight_radius
 pd.boundary_zpad = 200
@@ -91,7 +91,7 @@ pd.myIdTable = nil
 pd.seekTree = nil
 pd.seekingHome = false
 pd.seekingWood = false
-pd.boidType = 1
+pd.boidType = 2
 pd.predatorInView = false
 pd.searchObjRad = 5
 love.frame = 0
@@ -284,6 +284,7 @@ function pd:init(level, parent_flock, x, y, z, dirx, diry, dirz, free, sing1, si
   self.originX = x
   self.originY = y
   self.originZ = z
+  self.hunger = 30
   self.dead = false
   self.confuse = false
   --self.needHome = false
@@ -621,6 +622,8 @@ function pd:_update_neighbours_in_view()
   local dir = self.direction
   local max_angle = 0.5 * self.field_of_view
   local sex = self.sex
+  local hunger = self.hunger
+  local inHome = self.inHome
   for i=1,#nbs do
     local b = nbs[i]
     if b ~= self and i<10 then
@@ -636,23 +639,26 @@ function pd:_update_neighbours_in_view()
 			else 
 				self.relationWith[b.id] = 1
 			end
+		end
+		if b.boidType==1 or b.boidType==2 then
 			local p2 = b.position
 			local dx, dy, dz = p2.x - p1.x, p2.y - p1.y, p2.z - p1.z
 			if not (dx == 0 or dy == 0 or dz == 0) then
 				local invlen = 1 / math.sqrt(dx*dx + dy*dy + dz*dz)
 				dx, dy, dz = invlen * dx, invlen * dy, invlen * dz
 				local angle = math.acos(dx*dir.x + dy*dir.y + dz*dir.z)
-				if angle < max_angle then
+				--if angle < max_angle then
 				  view[idx] = b
 				  idx = idx + 1
-				end
+				--end
 			end
-		elseif boidType==1 and hunger<50 and inHome==false then
+		end
+		if b.boidType==1 and hunger<70 and inHome==false then
 		    self.objectiv = "chase"
 			self.chase=true
 			self.preyInView = true
-			self.rule_weights[self.cohesion_vector] = 20
-			self.sight_radius = 600
+			self.rule_weights[self.cohesion_vector] = 2000000000
+			--self.sight_radius = 600
 		elseif b.boidType==5 then
 			
 		end
@@ -731,12 +737,12 @@ function pd:_update_cohesion_rule(dt)
 				nbs[i].emit:remove_boid(nbs[i])
 			end
 			nbs[i]:destroy()
-			self.hunger = self.hunger + 50
+			self.hunger = 100
 			self.preyInView=false
 			self.rule_weights[self.cohesion_vector] = 0.2
 			self.sight_radius = 200
 		end
-	else
+	elseif objectiv~="chase" then
 		local p2 = nbs[i].position
 		local dx, dy, dz = p2.x - p1.x, p2.y - p1.y, p2.z - p1.z
 		coh.x, coh.y, coh.z = coh.x + dx, coh.y + dy, coh.z + dz
@@ -773,7 +779,7 @@ function pd:_update_separation_rule(dt)
 		  count = count + 1
 		end
 	elseif boidType==4 then
-		print('je croise un truc')
+		
 	end
   end
   
@@ -1056,12 +1062,10 @@ function pd:_update_waypoint_rule()
 					self.free=false
 					self.path=nil
 					self.free=false
-					print('AJOUT DUN NID avec un OEUF')
 				else
 					local emit = self.level.treeMap[self.caseNewTreeX][self.caseNewTreeY]:getEmit()
 					if emit:getEgg() < 4 then
 						emit:addEgg(1)
-						print('AJOUT DUN OEUF')
 					else
 						self:setObjectiv("fly")
 					end
@@ -1132,7 +1136,6 @@ function pd:_update_waypoint_rule()
   elseif dist < w.outer_radius+50 and battle == true then
 	self.is_initialized=false
 	self.humanBattle:prepareBattle(self)
-	print('go dormir dans la batayille++++++++++++++')
   end
   local factor = (1 / dist) * power
   wv.x, wv.y, wv.z = dx * factor * power, dy * factor * power, dz * factor * power
@@ -1349,7 +1352,31 @@ function pd:_update_boid_life(dt)
 			self.treeFound=nil
 		end
 	else
-		if needHome and active==false then
+		if hunger < 55 and foodGrab > 0 then 
+			self:feed(50)
+			self:minusFood(1)
+		elseif hunger < 50 and self.emit and active==false then
+			if self.emit:get_food() > 0 then
+				self:goHome()
+			else
+				self:seekFood(searchObjRad)
+				self:set_emote('hungry')
+			end
+		elseif hunger < 50 and foodGrab == 0 and active==false then 
+			self:seekFood(searchObjRad)
+		end
+		if hunger < 0 or tired < 0 then 
+			self.dead = true
+			if self.lover then
+				self:resetLove(self.lover)
+			end
+			self.body_graphic:set_color4(0)
+			if self.emit then
+				self.emit:remove_boid(self)
+			end
+			flock:remove_boid(self)
+		end
+		if needHome and active==false and hunger > 50 then
 			self:seekHome(searchObjRad)
 		end
 		if self.objectiv~="goFloor" then
@@ -1381,7 +1408,6 @@ function pd:_update_boid_life(dt)
 				self.path=nil
 				self.seeker:set_position(self.position.x+math.random(-10,10), self.position.y+math.random(-10,10), self.position.z+math.random(-10,10))
 				self:setObjectiv("fly")
-				print("GO VOLER !!")
 				self:setHome(false)
 				--self.body_graphic:set_color1(255)
 				--self.rule_weights[self.separation_vector] = 3
@@ -1399,30 +1425,6 @@ function pd:_update_boid_life(dt)
 				--self.rule_weights[self.separation_vector] = 3
 				self.treeFound=nil
 			end
-		end
-		if hunger < 55 and foodGrab > 0 then 
-			self:feed(50)
-			self:minusFood(1)
-		elseif hunger < 50 and self.emit and active==false then
-			if self.emit:get_food() > 0 then
-				self:goHome()
-			else
-				self:seekFood(searchObjRad)
-				self:set_emote('hungry')
-			end
-		elseif hunger < 50 and foodGrab == 0 and active==false then 
-			self:seekFood(searchObjRad)
-		end
-		if hunger < 0 or tired < 0 then 
-			self.dead = true
-			if self.lover then
-				self:resetLove(self.lover)
-			end
-			self.body_graphic:set_color4(0)
-			if self.emit then
-				self.emit:remove_boid(self)
-			end
-			flock:remove_boid(self)
 		end
 		if tired < 40 then 
 			if tired > 20 and math.random(1,300) == 3 and self.objectiv~="goFloor" then
@@ -1700,7 +1702,6 @@ function pd:prepareBattle(human)
 end
 
 function pd:deactivateBattle()
-	print('go retourner voler')
 	self.battle = false
 	self.humanBattle = nil
 	self.is_initialized = true
@@ -1798,6 +1799,7 @@ if self.treeFound==nil then
 									destinationX = math.floor(stepX/32)
 									destinationY = math.floor(stepY/32)
 									self.seekTree = mapTrees[stepX][stepY]:getTree()
+									self.seekTree:set_typeOfBoid("predator")
 								end
 							elseif mapTrees[stepX][stepY]:getNumEmits()>0 then
 								if mapTrees[stepX][stepY]:getState() == true and mapTrees[stepX][stepY]:getNumBoids()<20 and (mapTrees[stepX][stepY]:get_typeOfBoid()=="predator" or mapTrees[stepX][stepY]:get_typeOfBoid()=="") then
@@ -1818,7 +1820,19 @@ if self.treeFound==nil then
 	end
 end	
 
-if self.treeFound ==nil and active==false then
+if self.treeFound ~= nil then
+	if self.seekTree:get_typeOfBoid()=="prey" then
+		self.treeFound=nil
+		tree = nil
+		self.caseNewTreeX = nil
+		self.caseNewTreeY = nil
+		destinationX = nil
+		destinationY = nil
+		self.seekTree = nil
+	end
+end
+
+if self.treeFound == nil and active==false then
 	local randX = math.random(-300,300)
 	local randY = math.random(-300,300)
 	if x+randX > 500 and x+randX < 12800 and y+randY > 500 and y+randY < 12800 then
@@ -2089,145 +2103,17 @@ if inHome == false and (tree=="Tree" or tree=="freeTree") and active==false then
 				end
 			end
 		end
-		local posX = math.floor( self.path[self.step].x * h ) + 1
-		local posY = math.floor( self.path[self.step].y * w ) + 1
-		self:set_waypoint(posX, posY,500,50,100)
+		if path then
+			local posX = math.floor( self.path[self.step].x * h ) + 1
+			local posY = math.floor( self.path[self.step].y * w ) + 1
+			self:set_waypoint(posX, posY,500,50,100)
+		end
 	end		
 end
 end
 
 function pd:seekFood(radius)
-local active = self.waypoint.is_active
-local selfBody = self.body_graphic
-local level_map = self.level:get_level_map()
-local Poly = level_map.polygonizer
-local w, h = Poly.cell_width, Poly.cell_height
-local x, y, z = self.position.x, self.position.y, self.position.z
-local caseX = math.floor( x / h ) 
-local caseY = math.floor( y / w )
-local startX = caseX
-local startY = caseY
-local maxX = 0
-local maxY= 0
-local tree = self.treeFound
-
-if caseX-radius>5 then
-	startX = caseX-radius
-elseif caseX-radius<5 then
-	startX = caseX-20
-end
-if caseY-radius>5 then
-	startY = caseY-radius
-elseif caseY-radius<5 then
-	startY = caseY-20
-end
-if caseX+radius<Poly.cols-5 then
-	maxX = caseX+radius
-elseif caseX+radius>Poly.cols-5 then
-	maxX = caseX+20
-end
-if caseY+radius<Poly.rows-5 then
-	maxY = caseY+radius
-elseif caseY+radius<Poly.rows-5 then
-	maxY = caseY+20
-end
-
-local mapTrees = self.level:getTreeMap()
-local destinationX = self.caseNewTreeX
-local destinationY = self.caseNewTreeY
-local searchObjRad = self.searchObjRad
-local countPath = self.countPath
-
-if self.treeFound==nil then
-	for stepX = startX, maxX do
-		for stepY = startY, maxY do
-			if mapTrees[stepX] then
-				if mapTrees[stepX][stepY] then
-					if mapTrees[stepX][stepY] ~= nil then
-						if mapTrees[stepX][stepY]:getType() == 3 then
-							if mapTrees[stepX][stepY]:getFood() > 0 then
-								if mapTrees[stepX][stepY]:getState() == true then
-									self.foodFound = 1
-									self.caseNewTreeX = stepX
-									self.caseNewTreeY = stepY
-									destinationX = stepX
-									destinationY = stepY
-									mapTrees[stepX][stepY]:setNumEmits(1)
-									self.treeFound="bush"
-									tree = self.treeFound
-									self.path=nil
-								end
-							end
-						end
-					end
-				end
-			end
-		end
-	end	
-end
-
-if active==false then
-	local randX = nil
-	local randY = nil
-	local rand = math.random(1,4)
-	if rand==1 then
-		randX = math.random(-100,-50)
-		randY = math.random(-100,-50)
-	elseif rand==2 then
-		randX = math.random(50,100)
-		randY = math.random(50,100)
-	elseif rand==3 then
-		randX = math.random(50,50)
-		randY = math.random(-50,-100)
-	elseif rand==4 then
-		randX = math.random(-50,-100)
-		randY = math.random(50,100)
-	end
-	if x+randX > 50 and x+randX < 12800 and y+randY > 50 and y+randY < 12800 then
-		self:set_waypoint(x+randX, y+randY,math.random(100,300),20,50)
-		self:setObjectiv("goOnSeekFood")
-		self.searchObjRad = self.searchObjRad + 20
-		self.path=nil
-	else
-		self:set_waypoint(x+50, y+50,math.random(100,300),20,50)
-		self:setObjectiv("goOnSeekFood")
-		self.searchObjRad = self.searchObjRad + 20
-		self.path=nil
-	end
-end
-
-
-if tree=="bush" and active==false then
-	if self.path==nil then
-		self:updatePath(Vector(caseX,caseY),Vector(destinationX,destinationY))
-		if self.path then
-			self.nbStepPath = #self.path
-		else
-		return end
-		--selfBody:set_color1(0)
-		self.step = self.nbStepPath
-	end
-	self:clear_waypoint()
-	if countPath < self.nbStepPath then
-		self:setObjectiv("goOnSeekFood")
-		local posX = math.floor( self.path[countPath].x * h ) + 1 -------- A REVOIRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR 
-		local posY = math.floor( self.path[countPath].y * w ) + 1
-		self:set_waypoint(posX, posY,500,50,100)
-		--self.step = self.step + self.step
-		self.countPath = countPath + 1
-	else
-		self.step = #self.path
-		self:setObjectiv("fly")
-		self.searchObjRad = 10
-		--local posX = math.floor( self.path[self.step].x * h ) + 1
-		--local posY = math.floor( self.path[self.step].y * w ) + 1
-		self:clear_waypoint()
-		self.path=nil
-		self.treeFound = nil
-		self.countPath = 1
-		--self:set_waypoint(posX, posY,500,50,100)
-	end		
-end
+self.sight_radius = 1000
 end
 
 function pd:seekWood(radius)
@@ -2515,7 +2401,7 @@ function pd:draw_debug()
   
   -- sight
   lg.setColor(0, 0, 0, 255)
-  --lg.circle("line", x1, y1, self.sight_radius)
+  lg.circle("line", x1, y1, self.sight_radius)
   
   
   -- neigbours in view

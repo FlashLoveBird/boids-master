@@ -21,6 +21,10 @@ end
 function food_screen_state.wheelmoved(x, y)
 end
 
+function food_screen_state.escape()
+love.event.quit() 
+end
+
 
 --##########################################################################--
 --[[----------------------------------------------------------------------]]--
@@ -31,6 +35,15 @@ function food_screen_state.load(level)
   lg.setBackgroundColor(255, 255, 255, 255)
   --love.window.setFullscreen(true, "desktop")
   title = lg.newImage("images/ui/intro.png")
+  
+  
+  lw.setFullscreen(true)
+  local width = lg.getWidth()
+  local height = lg.getHeight()
+  --newLightWorld:Resize(width, height)
+  --state.resize(width, height)
+  FULLSCREEN = 1
+  
 end
 
 
