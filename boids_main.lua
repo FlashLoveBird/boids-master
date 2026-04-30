@@ -5,6 +5,23 @@ local scrnum = 0
 
 local TLfres = require "tlfres"
 
+-- ============================================================================
+-- PROFILING SETUP
+-- ============================================================================
+local ENABLE_PROFILING = true
+local profiler = nil
+local profile_data = {}
+local last_profile_report = 0
+local profile_report_interval = 2 -- Report every 2 seconds
+
+if ENABLE_PROFILING then
+  profiler = require("profile")
+  profiler.start()
+end
+
+-- ============================================================================
+-- INPUT HANDLERS
+-- ============================================================================
 function love.keypressed(key, unicode)
 
   if key == "escape" then
@@ -12,7 +29,7 @@ function love.keypressed(key, unicode)
 	BOIDS:escape()
   end
   
-  if (DEBUG or true) and key == '1' then
+  if DEBUG and key == '1' then
     FREEZE = not FREEZE
   end
 
@@ -25,10 +42,24 @@ function love.keypressed(key, unicode)
   if key == "backspace" then
     BOIDS:load_previous_state()
   end
+  
+  -- Profile hotkey: Ctrl+P or Cmd+P
+  if (lk.isDown("lctrl") or lk.isDown("rctrl") or lk.isDown("lgui") or lk.isDown("rgui")) and key == "p" then
+    if ENABLE_PROFILING then
+      profiler.stop()
+      local report = profiler.report(20)
+      print("\n" .. report)
+      print("\n✅ Profile report printed to console (top 20 functions)")
+      profiler.reset()
+      profiler.start()
+    end
+  end
 end
+
 function love.keyreleased(key)
   BOIDS:keyreleased(key)
 end
+
 function love.mousepressed(x, y, button)
   local mpos = MOUSE_INPUT:get_position()
   BOIDS:mousepressed(mpos.x, mpos.y, button)
@@ -50,12 +81,14 @@ function love.mousereleased(x, y, button)
 end
 
 function love.resize(w, h)
-  print(("Fenêtre redimensionnéeeeee à la largeur : %d et la hauteur : %d."):format(w, h))
   SCR_WIDTH  = w
   SCR_HEIGHT = h
   BOIDS:resize(w, h)
 end
 
+-- ============================================================================
+-- INITIALIZATION
+-- ============================================================================
 function love.load(args)
   -- GLOBALS -------------------------------------------------------------------
   lg = love.graphics
@@ -65,7 +98,7 @@ function love.load(args)
   li = love.image
   
   ARGS = args
-  DEBUG = true
+  DEBUG = false  -- Set to false by default for performance
   FREEZE = false
   SCR_WIDTH  = args[1]
   SCR_HEIGHT = args[2]
@@ -166,12 +199,15 @@ function love.load(args)
                      text = text,
                      bbox = bbox:new(x, y, tw+2*pad, th+2*pad),
                      color = {255, 255, 255, 255}}--]]
-					 
+				 
   --love.window.setFullscreen(true)
   --love.resize(lg.getDimensions())
   
 end
 
+-- ============================================================================
+-- UPDATE LOOP
+-- ============================================================================
 function love.update(dt)
   if FREEZE then
     return
@@ -201,6 +237,11 @@ function love.update(dt)
   end
 end
 
+-- ============================================================================
+-- RENDER LOOP
+-- ============================================================================
+local fps_display_cache = {text = "", time = 0}
+
 function love.draw()
   --TLfres.beginRendering(1920, 1080)
   --lg.setPointStyle("rough")
@@ -208,11 +249,21 @@ function love.draw()
   BOIDS:draw()
   MOUSE_INPUT:draw()
   
-  lg.setFont(FONTS.rubik)
-  --if DEBUG then
+  -- Only update FPS display periodically (not every frame)
+  if DEBUG then
+    local current_fps = love.timer.getFPS()
+    fps_display_cache.text = "FPS: " .. current_fps
+    lg.setFont(FONTS.rubik)
     lg.setColor(255, 0, 0, 255)
-    lg.print("FPS "..love.timer.getFPS(), 0, 0)
-  --end
+    lg.print(fps_display_cache.text, 0, 0)
+    
+    -- Profiling hint
+    if ENABLE_PROFILING then
+      lg.setFont(FONTS.rubik)
+      lg.setColor(0, 255, 0, 255)
+      lg.print("Profiling ACTIVE - Press Ctrl+P for report", 0, 30)
+    end
+  end
   
   --[[local b = STATES.continue_button
   lg.setFont(b.font)
@@ -221,15 +272,3 @@ function love.draw()
   --TLfres.endRendering()
   --print(TLfres.getScale(800, 600))
 end
-
-
-
-
-
-
-
-
-
-
-
-
