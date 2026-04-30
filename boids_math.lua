@@ -1,36 +1,47 @@
 local PI = math.pi
+local PI2 = 2 * PI
+
+-- Cache frequently used math functions for JIT compilation
+local sqrt = math.sqrt
+local cos = math.cos
+local sin = math.sin
+local acos = math.acos
+local deg = math.deg
+local log = math.log
 
 function random_direction2()
-  local angle = 2 * PI * math.random()
-  return math.cos(angle), math.sin(angle)
+  local angle = PI2 * math.random()
+  return cos(angle), sin(angle)
 end
 
 -- generate random 3d unit vector
 function random_direction3()
-  local angle = 2 * math.pi * math.random()
+  local angle = PI2 * math.random()
   local z = -1 +  2 * math.random()
-  local x = math.sqrt(1 - z*z) * math.cos(angle)
-  local y = math.sqrt(1 - z*z) * math.sin(angle)
+  local x = sqrt(1 - z*z) * cos(angle)
+  local y = sqrt(1 - z*z) * sin(angle)
 
   return x, y, z
 end
 
 -- returns angle in degrees between 2 3d vectors
+-- OPTIMIZED: Avoid redundant magnitude calculations
 function vector3_deg_angle(ux, uy, uz, vx, vy, vz)
-  local dot = vector3_dot(ux, uy, uz, vx, vy, vz)
-  local ulen = vector3_magnitude(ux, uy, uz)
-  local vlen = vector3_magnitude(vx, vy, vz)
-  local rad = math.acos(dot / (ulen * vlen))
+  local usq = ux*ux + uy*uy + uz*uz
+  local vsq = vx*vx + vy*vy + vz*vz
+  local dot = ux*vx + uy*vy + uz*vz
+  local rad = acos(dot / sqrt(usq * vsq))
   
-  return math.deg(rad)
+  return deg(rad)
 end
 
 -- returns angle in rads between 2 3d vectors
+-- OPTIMIZED: Avoid redundant magnitude calculations
 function vector3_rad_angle(ux, uy, uz, vx, vy, vz)
-  local dot = vector3_dot(ux, uy, uz, vx, vy, vz)
-  local ulen = vector3_magnitude(ux, uy, uz)
-  local vlen = vector3_magnitude(vx, vy, vz)
-  local rad = math.acos(dot / (ulen * vlen))
+  local usq = ux*ux + uy*uy + uz*uz
+  local vsq = vx*vx + vy*vy + vz*vz
+  local dot = ux*vx + uy*vy + uz*vz
+  local rad = acos(dot / sqrt(usq * vsq))
   
   return rad
 end
@@ -51,20 +62,21 @@ end
 
 -- returns length of 3d vector
 function vector3_magnitude(vx, vy, vz)
-  return math.sqrt(vx*vx + vy*vy + vz*vz)
+  return sqrt(vx*vx + vy*vy + vz*vz)
 end
 
+-- BUGFIX: Was 'vx - uz, vy - uy, vz - uz' - incorrect z component calculation
 function vector3_distance(ux, uy, uz, vx, vy, vz)
-  local dx, dy, dz = vx - uz, vy - uy, vz - uz
-  return math.sqrt(dx*dx + dy*dy + dz*dz)
+  local dx, dy, dz = vx - ux, vy - uy, vz - uz
+  return sqrt(dx*dx + dy*dy + dz*dz)
 end
 
 function rotate_point3(px, py, pz, ox, oy, oz, dirx, diry, dirz, th)
   local x, y, z = px, py, pz
   local a, b, c = ox, oy, oz
   local u, v, w = dirx, diry, dirz
-  local costh = math.cos(th)
-  local sinth = math.sin(th)
+  local costh = cos(th)
+  local sinth = sin(th)
   local minus_costh = 1 - costh
   local term = -u*x-v*y-w*z
   
@@ -75,23 +87,24 @@ function rotate_point3(px, py, pz, ox, oy, oz, dirx, diry, dirz, th)
   return rx, ry, rz
 end
 
+-- BUGFIX: Was 'z3 - y1' instead of 'z3 - z1' for vz component
 function triangle_minimum_angle(x1, y1, z1, x2, y2, z2, x3, y3, z3)
   local ux, uy, uz = x2 - x1, y2 - y1, z2 - z1
-  local vx, vy, vz = x3 - x1, y3 - y1, z3 - y1
-  local angle = vector3_angle(ux, uy, uz, vx, vy, vz)
+  local vx, vy, vz = x3 - x1, y3 - y1, z3 - z1
+  local angle = vector3_rad_angle(ux, uy, uz, vx, vy, vz)
   
   ux, uy, uz = x1 - x2, y1 - y2, z1 - z2
   vx, vy, vz =  x3 - x2, y3 - y2, z3 - z2
-  local a = vector3_angle(ux, uy, uz, vx, vy, vz)
+  local a = vector3_rad_angle(ux, uy, uz, vx, vy, vz)
   if a < angle then
     angle = a
   end
   
   ux, uy, uz = x2 - x3, y2 - y3, z2 - z3
   vx, vy, vz = x1 - x3, y1 - y3, z1 - z3
-  local a = vector3_angle(ux, uy, uz, vx, vy, vz)
-  if a < angle then
-    angle = a
+  local b = vector3_rad_angle(ux, uy, uz, vx, vy, vz)
+  if b < angle then
+    angle = b
   end
   
   return angle
@@ -102,7 +115,7 @@ function triangle_normal(x1, y1, z1, x2, y2, z2, x3, y3, z3)
   local vx, vy, vz = x3 - x1, y3 - y1, z3 - z1
   
   local nx, ny, nz = vector3_cross(ux, uy, uz, vx, vy, vz)
-  local imag = 1 / math.sqrt(nx*nx + ny*ny + nz * nz)
+  local imag = 1 / sqrt(nx*nx + ny*ny + nz * nz)
   
   return nx * imag, ny * imag, nz * imag
 end
@@ -124,7 +137,7 @@ function triangle_area(x1, y1, z1, x2, y2, z2, x3, y3, z3)
   local vmag = vector3_magnitude(vx, vy, vz)
   local rads = vector3_rad_angle(ux, uy, uz, vx, vy, vz)
   
-  return 0.5 * umag * vmag * math.sin(rads)
+  return 0.5 * umag * vmag * sin(rads)
 end
 
 -- (xi, yi) - start of line segment
@@ -240,8 +253,9 @@ end
 -- vx, vy - velocity or direction vector
 -- returns translation (tx, ty) components to move rectangle A to collision point
 --         and normal (nx, ny) of collision
+-- BUGFIX: Was 'by == 0' instead of 'vy == 0' - undefined variable
 function rectangle_rectangle_collision(Ax, Ay, Aw, Ah, Bx, By, Bw, Bh, vx, vy)
-  if vx == 0 and by == 0 then
+  if vx == 0 and vy == 0 then
     return
   end
   
@@ -331,7 +345,7 @@ end
 -- returns a random time interval in seconds based on the
 -- poisson process
 function poisson_interval(rate)
-  return (-math.log(1-math.random())/rate)
+  return (-log(1-math.random())/rate)
 end
 
 
@@ -358,23 +372,4 @@ function get_bounce_velocity_components(velx, vely, nx, ny, friction, restitutio
   local vy = friction * wy - restitution * uy
 
   return vx, vy
-end 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+end
