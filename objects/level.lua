@@ -71,7 +71,7 @@ level.pollution = 10
 level.wood_source = {}
 level.initMap=false
 
-level.nbTree = 0
+level.nbTree = 10
 level.nbNuage = 0
 
 level.imageAnimationBushInspire = nil
