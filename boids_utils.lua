@@ -13,12 +13,9 @@ utils.load_graphics_settings = function()
     local fs_width, fs_height = modes[1].width, modes[1].height
     fs_width, fs_height = math.min(fs_width, 1920), math.min(fs_height, 1080)
     
-    -- set default size to fullscreen size padded so that window is
-    -- not too large
-    local width_pad = 0--1000
-    local height_pad = 0--1000
-    local width = fs_width - width_pad
-    local height = fs_height - height_pad
+    -- set default size to fullscreen size
+    local width = fs_width
+    local height = fs_height
                       
     local default_settings = require("config/default_graphics_settings")
     default_settings.window_width = width
@@ -43,8 +40,6 @@ utils.load_graphics_settings = function()
     local width, height, flags = love.window.getMode()
     width = settings.window_width
     height = settings.window_height
-	print("width")
-	print(width)
     flags.fullscreen = settings.fullscreen
     
     love.window.setMode(width, height, flags)
@@ -59,13 +54,13 @@ utils.load_graphics_settings = function()
   local ok, chunk, settings
   ok, chunk = pcall( love.filesystem.load, "graphics_settings.lua")
   if not ok then
-    print('The following error happend: ' .. tostring(chunk))
+    print('The following error happened: ' .. tostring(chunk))
     return
   else
     ok, settings = pcall(chunk)
   
     if not ok then -- will be false if there is an error
-      print('The following error happened: ' .. tostring(result))
+      print('The following error happened: ' .. tostring(settings))
       return
     end
   end
@@ -78,14 +73,3 @@ utils.load_graphics_settings = function()
 end
 
 return utils
-
-
-
-
-
-
-
-
-
-
-
